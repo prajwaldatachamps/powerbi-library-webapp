@@ -1,0 +1,1458 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Visual Details — DataChamps</title>
+  <script>
+  (function() {
+    var p = new URLSearchParams(window.location.search);
+    if (p.get('auth') === '1') { sessionStorage.setItem('dc_authed','1'); window.history.replaceState({},'','visual.html'); return; }
+    if (!sessionStorage.getItem('dc_authed')) window.location.replace('login.html');
+  })();
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="logo/favicon.png" />
+  <link rel="stylesheet" href="css/visual.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════ NAVBAR ═══════════════════════ -->
+<nav class="navbar">
+  <a class="navbar-brand" href="index.html">
+    <img src="logo/favicon.png" alt="DataChamps" class="brand-logo" onerror="this.style.display='none'" />
+    <span class="brand-name">DataChamps</span>
+  </a>
+
+  <ul class="navbar-nav" id="navbarNav">
+    <li><a class="nav-link" href="index.html"><i class="fa fa-th-large"></i> Dashboards</a></li>
+    <li><a class="nav-link" href="kpi.html"><i class="fa fa-chart-line"></i> KPI Details</a></li>
+    <li><a class="nav-link active" href="visual.html"><i class="fa fa-eye"></i> Visual Details</a></li>
+  </ul>
+
+  <div class="navbar-actions">
+    <!-- Guest -->
+    <div id="guestActions">
+      <button class="btn-login" onclick="window.location.href='login.html'">
+        <i class="fa fa-lock"></i>
+        <span class="btn-text">Login</span>
+      </button>
+    </div>
+
+    <!-- Logged in — single profile button with dropdown (same as index.html) -->
+    <div id="adminActions" style="display:none; align-items:center; gap:10px;" class="profile-wrapper">
+      <div class="profile-dropdown-wrap" id="profileDropdownWrap">
+        <button class="btn-profile" id="profileBtn" onclick="toggleProfileDropdown(event)" aria-haspopup="true" aria-expanded="false">
+          <div id="profileAvatarWrap">
+            <div class="avatar" id="adminAvatar">A</div>
+          </div>
+          <div class="profile-info">
+            <span class="admin-name" id="adminName">User</span>
+            <span class="role-badge" id="roleBadge">—</span>
+          </div>
+          <i class="fa fa-chevron-down profile-chevron" id="profileChevron"></i>
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div class="profile-dropdown" id="profileDropdown" role="menu">
+          <!-- User info header -->
+          <div class="dropdown-header">
+            <div class="dropdown-avatar" id="dropdownAvatarWrap">
+              <div class="avatar-lg" id="dropdownAvatar">A</div>
+            </div>
+            <div class="dropdown-user-info">
+              <div class="dropdown-name" id="dropdownName">User</div>
+              <div class="dropdown-role" id="dropdownRole">—</div>
+            </div>
+          </div>
+          <div class="dropdown-divider"></div>
+
+          <!-- Menu items -->
+          <a class="dropdown-item" href="profile.html" role="menuitem">
+            <span class="dropdown-item-icon"><i class="fa fa-user-circle"></i></span>
+            <span class="dropdown-item-text">My Profile</span>
+          </a>
+
+          <!-- Admin only: Manage Users -->
+          <button class="dropdown-item" id="manageUsersItem" style="display:none;" onclick="closeProfileDropdown();openUsersModal();" role="menuitem">
+            <span class="dropdown-item-icon admin-icon"><i class="fa fa-users-cog"></i></span>
+            <span class="dropdown-item-text">Manage Users</span>
+            <span class="dropdown-item-badge">Admin</span>
+          </button>
+
+          <div class="dropdown-divider"></div>
+
+          <button class="dropdown-item danger" onclick="logout()" role="menuitem">
+            <span class="dropdown-item-icon"><i class="fa fa-sign-out-alt"></i></span>
+            <span class="dropdown-item-text">Logout</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ═══════════════════════ HERO ═════════════════════════ -->
+<div class="hero">
+  <div class="hero-breadcrumb"><i class="fa fa-eye"></i> <span>Visual Details</span></div>
+  <h1>Visual Details</h1>
+  <p>Industry-wise Power BI visual reference — custom &amp; marketplace visuals grouped by KPI</p>
+</div>
+
+<!-- ═══════════════════════ STAT BAR ═════════════════════ -->
+<div class="stat-bar">
+  <div class="stat-item">
+    <div class="stat-icon blue"><i class="fa fa-images"></i></div>
+    <div class="stat-info"><span class="stat-num" id="statTotal">—</span><span class="stat-lbl">Total Visuals</span></div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-icon blue"><i class="fa fa-code"></i></div>
+    <div class="stat-info"><span class="stat-num" id="statCustom">—</span><span class="stat-lbl">Custom Visuals</span></div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-icon green"><i class="fa fa-store"></i></div>
+    <div class="stat-info"><span class="stat-num" id="statMarketplace">—</span><span class="stat-lbl">Marketplace Visuals</span></div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-icon amber"><i class="fa fa-chart-line"></i></div>
+    <div class="stat-info"><span class="stat-num" id="statKpis">—</span><span class="stat-lbl">KPIs Covered</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ MAIN ═════════════════════════ -->
+<div class="main-container">
+
+  <!-- Industry tabs -->
+  <div class="industry-tabs" id="industryTabs">
+    <div class="ind-tab active" data-id="0" onclick="filterByIndustry(0,this)">
+      <i class="fa fa-th-large"></i> All Industries
+    </div>
+  </div>
+
+  <!-- Section heading -->
+  <div class="section-heading">
+    <h2 id="sectionTitle">All Visuals</h2>
+    <span class="count-badge" id="sectionCount">0</span>
+  </div>
+
+  <!-- Toolbar: search + type pills + add button -->
+  <div class="toolbar">
+    <div class="search-box">
+      <i class="fa fa-search"></i>
+      <input type="text" id="searchInput" placeholder="Search visuals or KPI name..." oninput="onSearch()" />
+    </div>
+    <div class="type-pills-inline">
+      <div class="type-pill active-all" id="typePillAll" onclick="filterByType('',this)">
+        <i class="fa fa-th-large"></i> All <span class="pill-count" id="countAll">0</span>
+      </div>
+      <div class="type-pill" id="typePillCustom" onclick="filterByType('custom',this)">
+        <i class="fa fa-code"></i> Custom <span class="pill-count" id="countCustom">0</span>
+      </div>
+      <div class="type-pill" id="typePillMarketplace" onclick="filterByType('marketplace',this)">
+        <i class="fa fa-store"></i> Marketplace <span class="pill-count" id="countMarketplace">0</span>
+      </div>
+    </div>
+    <div class="toolbar-right">
+      <button class="btn btn-primary" id="addBtn" style="display:none;" onclick="openAddModal()">
+        <i class="fa fa-plus"></i> Add Visual
+      </button>
+    </div>
+  </div>
+
+  <div id="cardsArea"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     ADD / EDIT VISUAL MODAL
+═══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="visualOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fa fa-eye"></i> <span id="visualModalTitle">Add Visual</span></span>
+      <button class="modal-close" onclick="closeModal('visualOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="visualId" />
+      <input type="hidden" id="visualLinkedKpiId" />
+
+      <!-- Industry -->
+      <div class="form-group">
+        <label class="form-label">Industry <span class="required">*</span></label>
+        <select class="form-control" id="visualIndustryId" onchange="onIndustryChangeForKpi()">
+          <option value="">— Select Industry —</option>
+        </select>
+      </div>
+
+      <!-- KPI Mode Toggle -->
+      <div class="form-group">
+        <label class="form-label">KPI Category <span class="required">*</span></label>
+
+        <div class="kpi-mode-toggle" id="kpiModeToggle">
+          <button type="button" class="kpi-mode-btn active" id="kpiBtnLink" onclick="setKpiMode('link')">
+            <i class="fa fa-link"></i> Link to existing KPI
+          </button>
+          <button type="button" class="kpi-mode-btn" id="kpiBtnCustom" onclick="setKpiMode('custom')">
+            <i class="fa fa-pencil-alt"></i> Type custom KPI name
+          </button>
+        </div>
+
+        <!-- LINK mode -->
+        <div id="kpiLinkWrap" style="margin-top:10px;">
+          <div class="kpi-link-status" id="kpiLinkStatus">
+            <i class="fa fa-info-circle"></i>
+            <span id="kpiLinkStatusText">Select an industry above to load its KPIs.</span>
+          </div>
+          <select class="form-control" id="kpiLinkedSelect" style="display:none; margin-top:0;" onchange="onLinkedKpiSelect()">
+            <option value="">— Select a KPI —</option>
+          </select>
+        </div>
+
+        <!-- CUSTOM mode -->
+        <div id="kpiCustomWrap" style="display:none; margin-top:10px;">
+          <input type="text" class="form-control" id="visualKpiName"
+                 placeholder="e.g. Gross Profit Margin, OEE, Inventory Turnover" />
+        </div>
+
+        <!-- Linked KPI preview -->
+        <div class="kpi-linked-preview" id="kpiLinkedPreview" style="display:none;"></div>
+      </div>
+
+      <!-- Visual Source + Visual Name row -->
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Visual Source <span class="required">*</span></label>
+          <select class="form-control" id="visualType">
+            <option value="custom">🛠 Self Custom Visual</option>
+            <option value="marketplace">🏪 Marketplace Visual</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Visual Name <span class="required">*</span></label>
+          <input type="text" class="form-control" id="visualName" placeholder="e.g. Bar Chart, KPI Card, Waterfall" />
+        </div>
+      </div>
+
+      <!-- Image -->
+      <div class="form-group">
+        <label class="form-label">Image</label>
+        <div class="img-upload-area" id="imgUploadArea"
+             onclick="document.getElementById('visualImageInput').click()"
+             ondragover="onDragOver(event)" ondragleave="onDragLeave(event)" ondrop="onDrop(event)">
+          <i class="fa fa-cloud-arrow-up"></i>
+          <div class="img-upload-label">Click or drag &amp; drop to upload</div>
+          <div class="img-upload-hint">JPG, PNG, GIF, WEBP, SVG · Max 10 MB</div>
+        </div>
+        <input type="file" id="visualImageInput" accept=".jpg,.jpeg,.png,.gif,.webp,.svg"
+               style="display:none;" onchange="onImageSelected(this)" />
+        <div class="img-preview-wrap" id="imgPreviewWrap" style="display:none;">
+          <img id="imgPreviewImg" src="" alt="Preview" />
+          <div class="img-preview-name" id="imgPreviewName"></div>
+          <button class="img-remove-btn" onclick="removeImage()"><i class="fa fa-times"></i> Remove image</button>
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" id="visualDescription" placeholder="Describe what this visual shows..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('visualOverlay')">Cancel</button>
+      <button class="btn btn-primary" id="saveVisualBtn" onclick="saveVisual()"><i class="fa fa-save"></i> Save Visual</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MANAGE USERS MODAL (admin only)
+═══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="usersOverlay">
+  <div class="modal users-modal">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fa fa-users-cog"></i> Manage Users</span>
+      <button class="modal-close" onclick="closeModal('usersOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+        <button class="btn btn-primary btn-sm" onclick="openAddUserModal()"><i class="fa fa-plus"></i> Add User</button>
+      </div>
+      <div id="usersList"><div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading users…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT USER MODAL -->
+<div class="modal-overlay" id="userFormOverlay">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fa fa-user-plus"></i> <span id="userFormTitle">Add User</span></span>
+      <button class="modal-close" onclick="closeModal('userFormOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="userFormId" />
+      <div class="form-group">
+        <label class="form-label">Full Name <span class="required">*</span></label>
+        <input type="text" class="form-control" id="userFormName" placeholder="e.g. Prajwal Shendge" />
+      </div>
+      <div class="form-group" id="userEmailGroup">
+        <label class="form-label">Gmail Address <span class="required">*</span></label>
+        <input type="email" class="form-control" id="userFormEmail" placeholder="user@gmail.com" />
+        <small style="color:var(--text-muted);font-size:11px;margin-top:4px;display:block;font-family:'Sora',sans-serif;">Must match their Google account email exactly.</small>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role <span class="required">*</span></label>
+        <select class="form-control" id="userFormRole">
+          <option value="bi_developer">BI Developer — View &amp; Download only</option>
+          <option value="admin">Admin — Full Access</option>
+        </select>
+      </div>
+      <div class="form-group" id="userActiveGroup" style="display:none;">
+        <label class="form-check">
+          <input type="checkbox" id="userFormActive" checked /> Account Active
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('userFormOverlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveUser()"><i class="fa fa-save"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="modal-overlay" id="confirmOverlay">
+  <div class="modal confirm-dialog">
+    <div class="confirm-body">
+      <div class="confirm-icon"><i class="fa fa-triangle-exclamation"></i></div>
+      <h3 id="confirmTitle">Delete?</h3>
+      <p id="confirmMsg">This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('confirmOverlay')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDeleteAction()"><i class="fa fa-trash"></i> Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- LIGHTBOX -->
+<div class="lightbox-overlay" id="lightboxOverlay" onclick="closeLightboxOnBg(event)">
+  <div class="lightbox-box">
+    <div class="lightbox-header">
+      <div style="display:flex;align-items:center;flex-wrap:wrap;gap:6px;min-width:0;">
+        <span class="lightbox-title" id="lightboxTitle">Visual</span>
+        <span class="lightbox-type-badge" id="lightboxTypeBadge"></span>
+      </div>
+      <button class="lightbox-close" onclick="closeLightboxBtn()"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="lightbox-img-wrap" id="lightboxImgWrap"></div>
+    <div class="lightbox-meta">
+      <div class="lightbox-kpi" id="lightboxKpi"></div>
+      <div class="lightbox-desc" id="lightboxDesc"></div>
+    </div>
+  </div>
+</div>
+
+<!-- USED IN DRAWER -->
+<div class="usage-overlay" id="usageOverlay" onclick="closeUsageOnBg(event)">
+  <div class="usage-drawer">
+    <div class="usage-drawer-header">
+      <div>
+        <div class="usage-drawer-title" id="usageDrawerTitle">Used In</div>
+        <div class="usage-drawer-sub" id="usageDrawerSub">Dashboards &amp; clients using this visual</div>
+      </div>
+      <button class="usage-close-btn" onclick="closeUsageDrawer()"><i class="fa fa-times"></i></button>
+    </div>
+
+    <!-- Add usage form — admin only -->
+    <div class="usage-add-form" id="usageAddForm" style="display:none;">
+      <div class="usage-add-form-title"><i class="fa fa-plus-circle" style="margin-right:5px;color:var(--blue);"></i>Add New Usage Entry</div>
+      <div class="usage-form-row">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Client <span class="required">*</span></label>
+          <select class="form-control" id="usageClientId" onchange="onUsageClientChange()">
+            <option value="">— Select Client —</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Dashboard <span style="color:var(--text-muted);font-weight:400;text-transform:none;">(optional)</span></label>
+          <select class="form-control" id="usageDashboardId">
+            <option value="">— Select Dashboard —</option>
+          </select>
+        </div>
+      </div>
+      <div class="usage-form-row" style="margin-top:10px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label class="form-label">Notes <span style="color:var(--text-muted);font-weight:400;text-transform:none;">(optional)</span></label>
+          <input type="text" class="form-control" id="usageNotes" placeholder="e.g. Used in header section" />
+        </div>
+        <div style="display:flex;align-items:flex-end;">
+          <button class="btn btn-primary" onclick="addUsage()" style="width:100%;justify-content:center;">
+            <i class="fa fa-plus"></i> Add Entry
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Usage list -->
+    <div class="usage-list" id="usageList">
+      <div class="pbix-loading" style="text-align:center;padding:32px;color:var(--text-muted);">
+        <i class="fa fa-spinner fa-spin" style="font-size:20px;display:block;margin-bottom:10px;color:var(--blue);"></i>
+        Loading...
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══════════════════════ JAVASCRIPT ═══════════════════ -->
+<script>
+'use strict';
+
+var VIS_URL  = 'php/visual_api.php';
+var KPI_URL  = 'php/kpi_api.php';
+var AUTH_URL = 'php/api.php';
+
+var state = {
+  isAdmin:           false,
+  isLoggedIn:        false,
+  userRole:          '',
+  userName:          '',
+  industries:        [],
+  allClients:        [],
+  kpisByIndustry:    {},
+  kpiMode:           'link',
+  currentIndustryId: 0,
+  currentType:       '',
+  searchTimer:       null,
+  deleteCallback:    null,
+  selectedFile:      null,
+  removeCurrentImg:  false,
+  currentVisualId:   null,
+  currentVisualName: ''
+};
+
+// ── Init ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  Promise.all([checkSession(), loadIndustries(), loadAllClients()])
+    .then(function() { loadStats(); renderVisuals(); });
+  setupClickOutsideNav();
+  setupClickOutsideDropdown();
+});
+
+// ── Click outside nav to close (mobile) ──────────────────
+function setupClickOutsideNav() {
+  document.addEventListener('click', function(e) {
+    var nav = document.getElementById('navbarNav');
+    var btn = document.getElementById('hamburger');
+    if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) {
+      closeNav();
+    }
+  });
+}
+
+// ── Click outside profile dropdown to close ───────────────
+function setupClickOutsideDropdown() {
+  document.addEventListener('click', function(e) {
+    var wrap = document.getElementById('profileDropdownWrap');
+    if (wrap && !wrap.contains(e.target)) {
+      closeProfileDropdown();
+    }
+  });
+}
+
+// ── Profile Dropdown ──────────────────────────────────────
+function toggleProfileDropdown(e) {
+  e.stopPropagation();
+  var dropdown = document.getElementById('profileDropdown');
+  var btn      = document.getElementById('profileBtn');
+  var chevron  = document.getElementById('profileChevron');
+  var isOpen   = dropdown.classList.contains('open');
+  if (isOpen) {
+    closeProfileDropdown();
+  } else {
+    dropdown.classList.add('open');
+    btn.setAttribute('aria-expanded', 'true');
+    chevron.style.transform = 'rotate(180deg)';
+  }
+}
+
+function closeProfileDropdown() {
+  var dropdown = document.getElementById('profileDropdown');
+  var btn      = document.getElementById('profileBtn');
+  var chevron  = document.getElementById('profileChevron');
+  if (dropdown) {
+    dropdown.classList.remove('open');
+    if (btn) btn.setAttribute('aria-expanded', 'false');
+    if (chevron) chevron.style.transform = '';
+  }
+}
+
+// ── Session ───────────────────────────────────────────────
+function checkSession() {
+  return fetch(AUTH_URL + '?action=session_check')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      state.isLoggedIn = !!d.logged_in;
+      state.isAdmin    = !!d.is_admin;
+      state.userRole   = d.role || '';
+      state.userName   = d.name || '';
+      updateAuthUI(d);
+    }).catch(function() { updateAuthUI({}); });
+}
+
+function updateAuthUI(d) {
+  var loggedIn = state.isLoggedIn;
+  document.getElementById('guestActions').style.display = loggedIn ? 'none'  : 'block';
+  document.getElementById('adminActions').style.display = loggedIn ? 'flex'  : 'none';
+  document.getElementById('addBtn').style.display       = state.isAdmin ? 'inline-flex' : 'none';
+
+  var manageUsersItem = document.getElementById('manageUsersItem');
+  if (manageUsersItem) manageUsersItem.style.display = state.isAdmin ? 'flex' : 'none';
+
+  if (!loggedIn) return;
+
+  var firstName = state.userName ? state.userName.split(' ')[0] : 'User';
+  var initial   = state.userName ? state.userName.charAt(0).toUpperCase() : 'U';
+
+  // Navbar profile button
+  document.getElementById('adminName').textContent = firstName;
+
+  // Role badge in navbar
+  var rb = document.getElementById('roleBadge');
+  if (state.isAdmin) {
+    rb.className = 'role-badge admin';
+    rb.innerHTML = '<i class="fa fa-shield-alt" style="font-size:9px;"></i> Admin';
+  } else {
+    rb.className = 'role-badge bi_developer';
+    rb.innerHTML = '<i class="fa fa-chart-bar" style="font-size:9px;"></i> BI Dev';
+  }
+
+  // Avatar in navbar
+  var wrap = document.getElementById('profileAvatarWrap');
+  if (d && d.picture) {
+    wrap.innerHTML = '<img src="' + d.picture + '" class="avatar-img" alt="Avatar" onerror="this.parentNode.innerHTML=\'<div class=avatar>' + esc(initial) + '</div>\'" />';
+  } else {
+    wrap.innerHTML = '<div class="avatar">' + esc(initial) + '</div>';
+  }
+
+  // Dropdown header
+  document.getElementById('dropdownName').textContent = state.userName || 'User';
+  var dropdownRole = document.getElementById('dropdownRole');
+  if (state.isAdmin) {
+    dropdownRole.innerHTML = '<i class="fa fa-shield-alt"></i> Administrator';
+    dropdownRole.className = 'dropdown-role admin-role';
+  } else {
+    dropdownRole.innerHTML = '<i class="fa fa-chart-bar"></i> BI Developer';
+    dropdownRole.className = 'dropdown-role dev-role';
+  }
+
+  // Dropdown avatar
+  var dropWrap = document.getElementById('dropdownAvatarWrap');
+  if (d && d.picture) {
+    dropWrap.innerHTML = '<img src="' + d.picture + '" class="dropdown-avatar-img" alt="Avatar" onerror="this.parentNode.innerHTML=\'<div class=avatar-lg>' + esc(initial) + '</div>\'" />';
+  } else {
+    dropWrap.innerHTML = '<div class="avatar-lg">' + esc(initial) + '</div>';
+  }
+}
+
+function logout() {
+  closeProfileDropdown();
+  fetch(AUTH_URL + '?action=logout', { method: 'POST' }).finally(function() {
+    sessionStorage.removeItem('dc_authed');
+    window.location.href = 'login.html';
+  });
+}
+
+// ── Load Industries ───────────────────────────────────────
+function loadIndustries() {
+  return fetch(VIS_URL + '?action=get_industries')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      state.industries = d.data || [];
+      buildIndustryTabs();
+      buildIndustryDropdown();
+    }).catch(function() { state.industries = []; });
+}
+
+function buildIndustryTabs() {
+  var tabs = document.getElementById('industryTabs');
+  tabs.querySelectorAll('[data-injected]').forEach(function(el) { el.remove(); });
+  state.industries.forEach(function(ind) {
+    var tab = document.createElement('div');
+    tab.className = 'ind-tab';
+    tab.setAttribute('data-id', ind.id);
+    tab.setAttribute('data-injected', '1');
+    tab.innerHTML = '<i class="fa ' + esc(ind.icon || 'fa-industry') + '"></i> ' + esc(ind.name);
+    tab.onclick = (function(id, el) { return function() { filterByIndustry(id, el); }; })(ind.id, tab);
+    tabs.appendChild(tab);
+  });
+}
+
+function buildIndustryDropdown() {
+  var sel = document.getElementById('visualIndustryId');
+  var cur = sel.value;
+  sel.innerHTML = '<option value="">— Select Industry —</option>';
+  state.industries.forEach(function(ind) {
+    var o = document.createElement('option');
+    o.value = ind.id; o.textContent = ind.name;
+    sel.appendChild(o);
+  });
+  if (cur) sel.value = cur;
+}
+
+// ── Load All Clients (for usage form) ─────────────────────
+function loadAllClients() {
+  return fetch(VIS_URL + '?action=get_clients')
+    .then(function(r) { return r.json(); })
+    .then(function(d) { state.allClients = d.data || []; })
+    .catch(function() { state.allClients = []; });
+}
+
+function buildClientDropdown() {
+  var sel = document.getElementById('usageClientId');
+  sel.innerHTML = '<option value="">— Select Client —</option>';
+  state.allClients.forEach(function(c) {
+    var o = document.createElement('option');
+    o.value = c.id; o.textContent = c.name;
+    sel.appendChild(o);
+  });
+}
+
+function onUsageClientChange() {
+  var clientId = parseInt(document.getElementById('usageClientId').value);
+  var dashSel  = document.getElementById('usageDashboardId');
+  dashSel.innerHTML = '<option value="">— Loading… —</option>';
+  if (!clientId) { dashSel.innerHTML = '<option value="">— Select Dashboard (optional) —</option>'; return; }
+  fetch(VIS_URL + '?action=get_dashboards_by_client&client_id=' + clientId)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      dashSel.innerHTML = '<option value="">— Select Dashboard (optional) —</option>';
+      (d.data || []).forEach(function(dash) {
+        var o = document.createElement('option');
+        o.value = dash.id; o.textContent = dash.name;
+        dashSel.appendChild(o);
+      });
+    }).catch(function() { dashSel.innerHTML = '<option value="">— Select Dashboard (optional) —</option>'; });
+}
+
+// ══════════════════════════════════════════════════════════
+//  KPI MODE — Link vs Custom
+// ══════════════════════════════════════════════════════════
+function setKpiMode(mode) {
+  state.kpiMode = mode;
+  var btnLink    = document.getElementById('kpiBtnLink');
+  var btnCustom  = document.getElementById('kpiBtnCustom');
+  var linkWrap   = document.getElementById('kpiLinkWrap');
+  var customWrap = document.getElementById('kpiCustomWrap');
+  var preview    = document.getElementById('kpiLinkedPreview');
+
+  if (mode === 'link') {
+    btnLink.classList.add('active');
+    btnCustom.classList.remove('active');
+    linkWrap.style.display   = 'block';
+    customWrap.style.display = 'none';
+    document.getElementById('visualKpiName').value = '';
+    var industryId = parseInt(document.getElementById('visualIndustryId').value) || 0;
+    loadKpisForIndustry(industryId);
+  } else {
+    btnCustom.classList.add('active');
+    btnLink.classList.remove('active');
+    linkWrap.style.display   = 'none';
+    customWrap.style.display = 'block';
+    preview.style.display    = 'none';
+    document.getElementById('visualLinkedKpiId').value = '';
+    document.getElementById('kpiLinkedSelect').value   = '';
+  }
+}
+
+function onIndustryChangeForKpi() {
+  if (state.kpiMode === 'link') {
+    var industryId = parseInt(document.getElementById('visualIndustryId').value) || 0;
+    document.getElementById('visualLinkedKpiId').value = '';
+    document.getElementById('kpiLinkedPreview').style.display = 'none';
+    loadKpisForIndustry(industryId);
+  }
+}
+
+function loadKpisForIndustry(industryId) {
+  var statusEl = document.getElementById('kpiLinkStatus');
+  var selectEl = document.getElementById('kpiLinkedSelect');
+
+  if (!industryId) {
+    statusEl.style.display = 'flex';
+    statusEl.innerHTML = '<i class="fa fa-info-circle"></i><span>Select an industry first to load its KPIs.</span>';
+    selectEl.style.display = 'none';
+    return;
+  }
+
+  var cacheKey = 'ind_' + industryId;
+  if (state.kpisByIndustry[cacheKey]) {
+    populateKpiDropdown(state.kpisByIndustry[cacheKey]);
+    return;
+  }
+
+  statusEl.style.display = 'flex';
+  statusEl.innerHTML = '<i class="fa fa-spinner fa-spin"></i><span>Loading KPIs…</span>';
+  selectEl.style.display = 'none';
+
+  fetch(KPI_URL + '?action=get_kpis&industry_id=' + industryId + '&search=')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var list = d.data || [];
+      state.kpisByIndustry[cacheKey] = list;
+      populateKpiDropdown(list);
+    })
+    .catch(function() {
+      statusEl.style.display = 'flex';
+      statusEl.innerHTML = '<i class="fa fa-triangle-exclamation" style="color:#e67700;"></i><span>Failed to load KPIs. Please try again.</span>';
+      selectEl.style.display = 'none';
+    });
+}
+
+function populateKpiDropdown(list) {
+  var statusEl = document.getElementById('kpiLinkStatus');
+  var selectEl = document.getElementById('kpiLinkedSelect');
+
+  if (!list.length) {
+    statusEl.style.display = 'flex';
+    statusEl.innerHTML = '<i class="fa fa-folder-open"></i><span>No KPIs found for this industry. Use "Type custom KPI name" instead.</span>';
+    selectEl.style.display = 'none';
+    return;
+  }
+
+  statusEl.style.display = 'none';
+  selectEl.innerHTML = '<option value="">— Select a KPI —</option>';
+  list.forEach(function(k) {
+    var o = document.createElement('option');
+    o.value = k.id;
+    o.textContent = k.kpi_name;
+    o.setAttribute('data-name', k.kpi_name);
+    o.setAttribute('data-unit', k.unit || '');
+    o.setAttribute('data-formula', k.formula || '');
+    selectEl.appendChild(o);
+  });
+  selectEl.style.display = 'block';
+
+  var linkedId = document.getElementById('visualLinkedKpiId').value;
+  if (linkedId) {
+    selectEl.value = linkedId;
+    if (selectEl.value) showKpiLinkedPreview(selectEl);
+  }
+}
+
+function onLinkedKpiSelect() {
+  var selectEl = document.getElementById('kpiLinkedSelect');
+  var val      = selectEl.value;
+  document.getElementById('visualLinkedKpiId').value = val || '';
+  if (val) showKpiLinkedPreview(selectEl);
+  else document.getElementById('kpiLinkedPreview').style.display = 'none';
+}
+
+function showKpiLinkedPreview(selectEl) {
+  var opt     = selectEl.options[selectEl.selectedIndex];
+  var name    = opt.getAttribute('data-name') || opt.textContent;
+  var unit    = opt.getAttribute('data-unit') || '';
+  var formula = opt.getAttribute('data-formula') || '';
+  var preview = document.getElementById('kpiLinkedPreview');
+
+  var unitHtml = unit
+    ? '<span class="kpi-preview-pill"><i class="fa fa-ruler"></i> ' + esc(unit) + '</span>'
+    : '';
+  var formulaHtml = formula
+    ? '<span class="kpi-preview-formula">' + esc(formula) + '</span>'
+    : '';
+
+  preview.innerHTML =
+    '<div class="kpi-preview-header">' +
+      '<i class="fa fa-link"></i>' +
+      '<strong>' + esc(name) + '</strong>' +
+      '<span class="kpi-preview-linked-tag">Linked KPI</span>' +
+    '</div>' +
+    (formulaHtml || unitHtml
+      ? '<div class="kpi-preview-meta">' + formulaHtml + unitHtml + '</div>'
+      : '');
+  preview.style.display = 'block';
+}
+
+// ── Filter: Industry ──────────────────────────────────────
+function filterByIndustry(id, el) {
+  state.currentIndustryId = id;
+  document.getElementById('searchInput').value = '';
+  document.querySelectorAll('#industryTabs .ind-tab').forEach(function(t) { t.classList.remove('active'); });
+  el.classList.add('active');
+  renderVisuals();
+}
+
+// ── Filter: Type ──────────────────────────────────────────
+function filterByType(type, el) {
+  state.currentType = type;
+  document.getElementById('typePillAll').className         = 'type-pill';
+  document.getElementById('typePillCustom').className      = 'type-pill';
+  document.getElementById('typePillMarketplace').className = 'type-pill';
+  if (type === '')             el.className = 'type-pill active-all';
+  else if (type === 'custom') el.className = 'type-pill active-custom';
+  else                        el.className = 'type-pill active-marketplace';
+  renderVisuals();
+}
+
+// ── Stats ─────────────────────────────────────────────────
+function loadStats() {
+  fetch(VIS_URL + '?action=get_visual_stats')
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (!d.success) return;
+      document.getElementById('statTotal').textContent       = d.total;
+      document.getElementById('statCustom').textContent      = d.custom;
+      document.getElementById('statMarketplace').textContent = d.marketplace;
+      document.getElementById('statKpis').textContent        = d.kpis;
+      document.getElementById('countAll').textContent         = d.total;
+      document.getElementById('countCustom').textContent      = d.custom;
+      document.getElementById('countMarketplace').textContent = d.marketplace;
+    }).catch(function() {});
+}
+
+function onSearch() { clearTimeout(state.searchTimer); state.searchTimer = setTimeout(renderVisuals, 350); }
+
+// ── Skeleton ──────────────────────────────────────────────
+function showSkeleton() {
+  var h = '<div class="skeleton-visual-grid">';
+  for (var i = 0; i < 8; i++) {
+    h += '<div class="skeleton-visual-card">' +
+      '<div class="skel" style="height:14px;margin:12px 14px 10px;border-radius:4px;width:60%;"></div>' +
+      '<div class="skel skeleton-img"></div>' +
+      '<div class="skeleton-body">' +
+        '<div class="skel" style="width:75%;height:11px;margin-bottom:7px;"></div>' +
+        '<div class="skel" style="width:50%;height:10px;"></div>' +
+      '</div></div>';
+  }
+  h += '</div>';
+  document.getElementById('cardsArea').innerHTML = h;
+}
+
+// ── Render Visuals ────────────────────────────────────────
+function renderVisuals() {
+  showSkeleton();
+  var search = document.getElementById('searchInput').value.trim();
+  var url    = VIS_URL + '?action=get_visuals&search=' + encodeURIComponent(search);
+  if (state.currentIndustryId) url += '&industry_id=' + state.currentIndustryId;
+  if (state.currentType)       url += '&visual_type='  + state.currentType;
+
+  var titleParts = [];
+  if (state.currentIndustryId) {
+    var ind = state.industries.find(function(i) { return i.id == state.currentIndustryId; });
+    if (ind) titleParts.push(ind.name);
+  }
+  if      (state.currentType === 'custom')      titleParts.push('Custom Visuals');
+  else if (state.currentType === 'marketplace') titleParts.push('Marketplace Visuals');
+  else                                          titleParts.push('All Visuals');
+  document.getElementById('sectionTitle').textContent = titleParts.join(' — ');
+
+  fetch(url)
+    .then(function(r) { if (!r.ok) throw new Error('Server error ' + r.status); return r.json(); })
+    .then(function(d) {
+      if (!d.success) throw new Error(d.message || 'Failed to load');
+      var list = d.data || [];
+      document.getElementById('sectionCount').textContent = list.length;
+
+      if (!list.length) {
+        document.getElementById('cardsArea').innerHTML = emptyState(
+          search ? 'No visuals found' : 'No visuals yet',
+          search ? 'No results for "' + esc(search) + '"'
+                 : (state.isAdmin ? 'Click "Add Visual" to get started.' : 'No visuals have been added yet.')
+        );
+        return;
+      }
+
+      var html = '<div class="visual-grid">';
+      list.forEach(function(v) {
+        var payload = {
+          id: v.id, visual_name: v.visual_name, visual_type: v.visual_type,
+          kpi_name: v.kpi_name, kpi_id: v.kpi_id,
+          image_url: v.image_url, image_path: v.image_path,
+          description: v.description, industry_id: v.industry_id
+        };
+        var enc = encodeURIComponent(JSON.stringify(payload));
+
+        var typeLabel = v.visual_type === 'marketplace' ? 'Marketplace' : 'Custom';
+        var typeIcon  = v.visual_type === 'marketplace' ? 'fa-store' : 'fa-code';
+        var typeBadge = '<span class="visual-type-badge ' + esc(v.visual_type || 'custom') + '">' +
+          '<i class="fa ' + typeIcon + '"></i>' + typeLabel + '</span>';
+
+        var linkedBadge = v.kpi_id
+          ? '<span class="kpi-linked-badge" title="Linked to KPI Details"><i class="fa fa-link"></i></span>'
+          : '';
+
+        var imgHtml = v.image_url
+          ? '<img src="' + esc(v.image_url) + '" alt="' + esc(v.visual_name) + '" loading="lazy" ' +
+            'onerror="this.parentNode.innerHTML=\'<div class=visual-img-placeholder><i class=\\\'fa fa-image\\\'></i><span>Image not found</span></div>\'" />'
+          : '<div class="visual-img-placeholder"><i class="fa fa-image"></i><span>No image</span></div>';
+
+        var adminOverlay = state.isAdmin
+          ? '<div class="visual-img-overlay">' +
+              '<button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="event.stopPropagation();editVisual(\'' + enc + '\')">' +
+                '<i class="fa fa-pen"></i></button>' +
+              '<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="event.stopPropagation();deleteVisual(' + v.id + ',\'' + esc(v.visual_name) + '\')">' +
+                '<i class="fa fa-trash"></i></button>' +
+            '</div>'
+          : '';
+
+        var usedInBtn = state.isLoggedIn
+          ? '<button class="btn-used-in" title="View where this visual is used" onclick="event.stopPropagation();openUsageDrawer(' + v.id + ',\'' + esc(v.visual_name) + '\')">' +
+              '<i class="fa fa-map-marker-alt"></i> Used In' +
+              (v.usage_count > 0 ? '<span class="usage-count-badge">' + v.usage_count + '</span>' : '') +
+            '</button>'
+          : '';
+
+        var kpiDisplay = '';
+        if (v.kpi_id) {
+          kpiDisplay = '<a class="visual-kpi-tag visual-kpi-tag-linked" href="kpi.html" title="View in KPI Details" target="_blank">' +
+            '<i class="fa fa-link" style="font-size:8px;"></i>' +
+            '<i class="fa fa-chart-line" style="font-size:9px;"></i> ' + esc(v.kpi_name || '—') + '</a>';
+        } else {
+          kpiDisplay = '<span class="visual-kpi-tag"><i class="fa fa-chart-line" style="font-size:9px;"></i> ' + esc(v.kpi_name || '—') + '</span>';
+        }
+
+        html += '<div class="visual-card">' +
+          '<div class="visual-strip"></div>' +
+          '<div class="visual-card-name-bar">' +
+            '<span class="visual-card-name" title="' + esc(v.visual_name) + '">' + esc(v.visual_name) + '</span>' +
+            '<div class="visual-card-name-actions">' + linkedBadge + typeBadge + '</div>' +
+          '</div>' +
+          '<div class="visual-img-wrap" onclick="openLightbox(\'' + enc + '\')">' +
+            imgHtml + adminOverlay +
+          '</div>' +
+          '<div class="visual-card-body">' +
+            '<div class="visual-kpi-row">' +
+              kpiDisplay +
+              '<span class="visual-ind-tag"><i class="fa ' + esc(v.industry_icon || 'fa-industry') + '" style="font-size:9px;"></i> ' + esc(v.industry_name || '') + '</span>' +
+            '</div>' +
+            (v.description ? '<div class="visual-desc">' + esc(v.description) + '</div>' : '') +
+          '</div>' +
+          '<div class="visual-card-footer">' +
+            usedInBtn +
+            '<span class="visual-date" style="margin-left:auto;">' + formatDate(v.created_at) + '</span>' +
+          '</div>' +
+        '</div>';
+      });
+      html += '</div>';
+      document.getElementById('cardsArea').innerHTML = html;
+    })
+    .catch(function(err) {
+      document.getElementById('cardsArea').innerHTML = errorState('Could not load visuals', err.message || 'Check server connection.');
+    });
+}
+
+// ══════════════════════════════════════════════════════════
+//  USER MANAGEMENT
+// ══════════════════════════════════════════════════════════
+function openUsersModal() { openModal('usersOverlay'); loadUsers(); }
+
+function loadUsers() {
+  var el = document.getElementById('usersList');
+  el.innerHTML = '<div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading users…</div>';
+  fetch(AUTH_URL + '?action=get_users')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var users = data.data || [];
+      if (!users.length) { el.innerHTML = '<div class="pbix-empty">No users found.</div>'; return; }
+      var html = '';
+      users.forEach(function(u) {
+        var roleLabel = u.role === 'admin' ? 'Admin' : 'BI Developer';
+        html += '<div class="user-row">' +
+          '<div class="user-avatar-sm">' + esc(u.name.charAt(0).toUpperCase()) + '</div>' +
+          '<div class="user-info"><div class="user-name">' + esc(u.name) + '</div><div class="user-email">' + esc(u.email) + '</div></div>' +
+          '<div class="user-actions">' +
+            '<span class="badge-role ' + esc(u.role) + '">' + roleLabel + '</span>' +
+            '<span class="' + (u.is_active ? 'badge-active' : 'badge-inactive') + '">' + (u.is_active ? 'Active' : 'Inactive') + '</span>' +
+            '<button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="editUser(' + u.id + ',\'' + esc(u.name) + '\',\'' + esc(u.role) + '\',' + u.is_active + ')"><i class="fa fa-pen"></i></button>' +
+            '<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="deleteUser(' + u.id + ',\'' + esc(u.name) + '\')"><i class="fa fa-trash"></i></button>' +
+          '</div>' +
+        '</div>';
+      });
+      el.innerHTML = html;
+    }).catch(function() { el.innerHTML = '<div class="pbix-empty">Error loading users.</div>'; });
+}
+
+function openAddUserModal() {
+  document.getElementById('userFormId').value    = '';
+  document.getElementById('userFormName').value  = '';
+  document.getElementById('userFormEmail').value = '';
+  document.getElementById('userFormRole').value  = 'bi_developer';
+  document.getElementById('userFormTitle').textContent     = 'Add User';
+  document.getElementById('userEmailGroup').style.display  = 'block';
+  document.getElementById('userActiveGroup').style.display = 'none';
+  openModal('userFormOverlay');
+}
+
+function editUser(id, name, role, isActive) {
+  document.getElementById('userFormId').value       = id;
+  document.getElementById('userFormName').value     = name;
+  document.getElementById('userFormRole').value     = role;
+  document.getElementById('userFormActive').checked = !!isActive;
+  document.getElementById('userFormTitle').textContent     = 'Edit User';
+  document.getElementById('userEmailGroup').style.display  = 'none';
+  document.getElementById('userActiveGroup').style.display = 'block';
+  openModal('userFormOverlay');
+}
+
+function saveUser() {
+  var id     = document.getElementById('userFormId').value;
+  var name   = document.getElementById('userFormName').value.trim();
+  var email  = document.getElementById('userFormEmail').value.trim();
+  var role   = document.getElementById('userFormRole').value;
+  var active = document.getElementById('userFormActive').checked ? 1 : 0;
+  if (!name) { showToast('Name is required', 'error'); return; }
+  if (!id && !email) { showToast('Email is required', 'error'); return; }
+  var body = { name: name, role: role };
+  if (id) { body.id = parseInt(id); body.is_active = active; }
+  else    { body.email = email.toLowerCase(); }
+
+  fetch(AUTH_URL + '?action=' + (id ? 'update_user' : 'create_user'), {
+    method: id ? 'PUT' : 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(body)
+  }).then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      showToast(id ? 'User updated' : 'User added', 'success');
+      closeModal('userFormOverlay');
+      loadUsers();
+    } else {
+      showToast(data.message || 'Error saving', 'error');
+    }
+  }).catch(function() { showToast('Network error', 'error'); });
+}
+
+function deleteUser(id, name) {
+  document.getElementById('confirmTitle').textContent = 'Delete User?';
+  document.getElementById('confirmMsg').textContent   = 'Remove "' + name + '" from the system? They will no longer be able to login.';
+  state.deleteCallback = function() {
+    fetch(AUTH_URL + '?action=delete_user', {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: parseInt(id) })
+    }).then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.success) { showToast('User removed', 'success'); closeModal('confirmOverlay'); loadUsers(); }
+      else showToast(data.message || 'Error deleting', 'error');
+    }).catch(function() { showToast('Network error', 'error'); });
+  };
+  openModal('confirmOverlay');
+}
+
+// ══════════════════════════════════════════════════════════
+//  USED IN DRAWER
+// ══════════════════════════════════════════════════════════
+function openUsageDrawer(visualId, visualName) {
+  state.currentVisualId   = visualId;
+  state.currentVisualName = visualName;
+  document.getElementById('usageDrawerTitle').textContent = '"' + visualName + '" — Used In';
+  document.getElementById('usageDrawerSub').textContent   = 'Clients & dashboards using this visual';
+  document.getElementById('usageAddForm').style.display = state.isAdmin ? 'block' : 'none';
+  buildClientDropdown();
+  document.getElementById('usageClientId').value    = '';
+  document.getElementById('usageDashboardId').innerHTML = '<option value="">— Select Dashboard (optional) —</option>';
+  document.getElementById('usageNotes').value       = '';
+  document.getElementById('usageOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  loadUsageList();
+}
+
+function closeUsageDrawer() {
+  document.getElementById('usageOverlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function closeUsageOnBg(e) {
+  if (e.target === document.getElementById('usageOverlay')) closeUsageDrawer();
+}
+
+function loadUsageList() {
+  var listEl = document.getElementById('usageList');
+  listEl.innerHTML = '<div style="text-align:center;padding:32px;color:var(--text-muted);"><i class="fa fa-spinner fa-spin" style="font-size:20px;display:block;margin-bottom:10px;color:var(--blue);"></i> Loading...</div>';
+
+  fetch(VIS_URL + '?action=get_visual_usage&visual_id=' + state.currentVisualId)
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      var rows = d.data || [];
+      if (!rows.length) {
+        listEl.innerHTML = '<div class="usage-empty"><i class="fa fa-map-marker-alt"></i>' +
+          'Not used anywhere yet.' +
+          (state.isAdmin ? '<br><small style="font-size:11px;">Use the form above to add where this visual is used.</small>' : '') +
+          '</div>';
+        return;
+      }
+      var html = '';
+      rows.forEach(function(row) {
+        html += '<div class="usage-item">' +
+          '<div class="usage-item-icon"><i class="fa fa-building"></i></div>' +
+          '<div class="usage-item-info">' +
+            '<div class="usage-client"><i class="fa fa-user-tie" style="font-size:10px;margin-right:4px;color:var(--text-muted);"></i>' + esc(row.client_name || '—') + '</div>' +
+            (row.dashboard_name
+              ? '<div class="usage-dashboard"><i class="fa fa-chart-bar" style="font-size:10px;margin-right:4px;"></i>' + esc(row.dashboard_name) + '</div>'
+              : '<div class="usage-dashboard" style="color:#c1ccdf;"><i class="fa fa-minus" style="font-size:10px;margin-right:4px;"></i>No specific dashboard</div>') +
+            (row.notes ? '<div class="usage-notes">"' + esc(row.notes) + '"</div>' : '') +
+          '</div>' +
+          (state.isAdmin
+            ? '<div class="usage-item-actions">' +
+                '<button class="btn btn-danger btn-icon btn-sm" title="Remove this entry" onclick="removeUsage(' + row.id + ')">' +
+                  '<i class="fa fa-trash"></i>' +
+                '</button>' +
+              '</div>'
+            : '') +
+        '</div>';
+      });
+      listEl.innerHTML = html;
+    })
+    .catch(function() {
+      listEl.innerHTML = '<div class="usage-empty"><i class="fa fa-triangle-exclamation"></i>Error loading usage data.</div>';
+    });
+}
+
+function addUsage() {
+  var clientId    = parseInt(document.getElementById('usageClientId').value);
+  var dashboardId = parseInt(document.getElementById('usageDashboardId').value) || 0;
+  var notes       = document.getElementById('usageNotes').value.trim();
+  if (!clientId) { showToast('Please select a client.', 'error'); return; }
+
+  fetch(VIS_URL + '?action=add_visual_usage', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ visual_id: state.currentVisualId, client_id: clientId, dashboard_id: dashboardId || null, notes: notes })
+  }).then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.success) {
+      showToast('Usage entry added!', 'success');
+      document.getElementById('usageClientId').value = '';
+      document.getElementById('usageDashboardId').innerHTML = '<option value="">— Select Dashboard (optional) —</option>';
+      document.getElementById('usageNotes').value = '';
+      loadUsageList(); renderVisuals();
+    } else { showToast(d.message || 'Error adding entry', 'error'); }
+  }).catch(function() { showToast('Network error.', 'error'); });
+}
+
+function removeUsage(id) {
+  fetch(VIS_URL + '?action=delete_visual_usage', {
+    method: 'DELETE',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: id })
+  }).then(function(r) { return r.json(); })
+  .then(function(d) {
+    if (d.success) { showToast('Entry removed.', 'success'); loadUsageList(); renderVisuals(); }
+    else showToast(d.message || 'Error removing', 'error');
+  }).catch(function() { showToast('Network error.', 'error'); });
+}
+
+// ── Lightbox ──────────────────────────────────────────────
+function openLightbox(enc) {
+  var v = JSON.parse(decodeURIComponent(enc));
+  document.getElementById('lightboxTitle').textContent = v.visual_name || 'Visual';
+  var tb    = document.getElementById('lightboxTypeBadge');
+  var tType = v.visual_type || 'custom';
+  tb.className = 'lightbox-type-badge ' + tType;
+  tb.innerHTML = tType === 'marketplace' ? '<i class="fa fa-store"></i> Marketplace' : '<i class="fa fa-code"></i> Custom';
+
+  var kpiEl = document.getElementById('lightboxKpi');
+  if (v.kpi_name) {
+    var linkIcon = v.kpi_id ? '<i class="fa fa-link" style="font-size:9px;margin-right:3px;"></i>' : '';
+    kpiEl.innerHTML = '<i class="fa fa-chart-line"></i> KPI: ' + linkIcon + '<strong>' + esc(v.kpi_name) + '</strong>' +
+      (v.kpi_id ? ' <a href="kpi.html" target="_blank" class="lightbox-kpi-link" title="View in KPI Details"><i class="fa fa-arrow-up-right-from-square"></i></a>' : '');
+  } else {
+    kpiEl.innerHTML = '';
+  }
+  document.getElementById('lightboxDesc').textContent = v.description || '';
+  var wrap = document.getElementById('lightboxImgWrap');
+  wrap.innerHTML = v.image_url
+    ? '<img src="' + esc(v.image_url) + '" alt="' + esc(v.visual_name) + '" />'
+    : '<div class="lightbox-no-img"><i class="fa fa-image"></i><span>No image uploaded</span></div>';
+  document.getElementById('lightboxOverlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeLightboxOnBg(e) { if (e.target === document.getElementById('lightboxOverlay')) closeLightboxBtn(); }
+function closeLightboxBtn()   { document.getElementById('lightboxOverlay').classList.remove('open'); document.body.style.overflow = ''; }
+
+// ── Add Modal ─────────────────────────────────────────────
+function openAddModal() {
+  buildIndustryDropdown();
+  document.getElementById('visualId').value          = '';
+  document.getElementById('visualLinkedKpiId').value = '';
+  document.getElementById('visualIndustryId').value  = state.currentIndustryId || '';
+  document.getElementById('visualType').value        = state.currentType || 'custom';
+  document.getElementById('visualName').value        = '';
+  document.getElementById('visualKpiName').value     = '';
+  document.getElementById('visualDescription').value = '';
+  document.getElementById('kpiLinkedPreview').style.display = 'none';
+  document.getElementById('kpiLinkedSelect').innerHTML = '<option value="">— Select a KPI —</option>';
+  document.getElementById('kpiLinkedSelect').style.display = 'none';
+  document.getElementById('kpiLinkStatus').style.display = 'flex';
+  document.getElementById('kpiLinkStatus').innerHTML = '<i class="fa fa-info-circle"></i><span>Select an industry first to load its KPIs.</span>';
+
+  state.selectedFile = null; state.removeCurrentImg = false;
+  resetImageUI();
+  document.getElementById('visualModalTitle').textContent = 'Add Visual';
+  document.getElementById('saveVisualBtn').disabled  = false;
+  document.getElementById('saveVisualBtn').innerHTML = '<i class="fa fa-save"></i> Save Visual';
+
+  state.kpiMode = 'link';
+  document.getElementById('kpiBtnLink').classList.add('active');
+  document.getElementById('kpiBtnCustom').classList.remove('active');
+  document.getElementById('kpiLinkWrap').style.display   = 'block';
+  document.getElementById('kpiCustomWrap').style.display = 'none';
+
+  var industryId = parseInt(document.getElementById('visualIndustryId').value) || 0;
+  if (industryId) loadKpisForIndustry(industryId);
+
+  openModal('visualOverlay');
+}
+
+// ── Edit Visual ───────────────────────────────────────────
+function editVisual(enc) {
+  var v = JSON.parse(decodeURIComponent(enc));
+  buildIndustryDropdown();
+
+  document.getElementById('visualId').value          = v.id;
+  document.getElementById('visualLinkedKpiId').value = v.kpi_id || '';
+  document.getElementById('visualIndustryId').value  = v.industry_id;
+  document.getElementById('visualType').value        = v.visual_type || 'custom';
+  document.getElementById('visualName').value        = v.visual_name || '';
+  document.getElementById('visualDescription').value = v.description || '';
+  document.getElementById('kpiLinkedPreview').style.display = 'none';
+
+  state.selectedFile = null; state.removeCurrentImg = false;
+
+  if (v.image_url) {
+    document.getElementById('imgUploadArea').style.display  = 'none';
+    document.getElementById('imgPreviewWrap').style.display = 'block';
+    document.getElementById('imgPreviewImg').src            = v.image_url;
+    document.getElementById('imgPreviewName').textContent   = v.image_path || '';
+  } else { resetImageUI(); }
+
+  document.getElementById('visualModalTitle').textContent = 'Edit Visual';
+  document.getElementById('saveVisualBtn').disabled  = false;
+  document.getElementById('saveVisualBtn').innerHTML = '<i class="fa fa-save"></i> Save Visual';
+
+  if (v.kpi_id) {
+    state.kpiMode = 'link';
+    document.getElementById('kpiBtnLink').classList.add('active');
+    document.getElementById('kpiBtnCustom').classList.remove('active');
+    document.getElementById('kpiLinkWrap').style.display   = 'block';
+    document.getElementById('kpiCustomWrap').style.display = 'none';
+    document.getElementById('visualKpiName').value = '';
+    document.getElementById('kpiLinkedSelect').innerHTML = '<option value="">— Select a KPI —</option>';
+    document.getElementById('kpiLinkedSelect').style.display = 'none';
+    document.getElementById('kpiLinkStatus').style.display = 'flex';
+    document.getElementById('kpiLinkStatus').innerHTML = '<i class="fa fa-spinner fa-spin"></i><span>Loading KPIs…</span>';
+    var cacheKey = 'ind_' + v.industry_id;
+    delete state.kpisByIndustry[cacheKey];
+    loadKpisForIndustry(v.industry_id);
+  } else {
+    state.kpiMode = 'custom';
+    document.getElementById('kpiBtnCustom').classList.add('active');
+    document.getElementById('kpiBtnLink').classList.remove('active');
+    document.getElementById('kpiLinkWrap').style.display   = 'none';
+    document.getElementById('kpiCustomWrap').style.display = 'block';
+    document.getElementById('visualKpiName').value = v.kpi_name || '';
+    document.getElementById('visualLinkedKpiId').value = '';
+  }
+
+  openModal('visualOverlay');
+}
+
+// ── Image Handling ────────────────────────────────────────
+function onImageSelected(input) {
+  var file = input.files[0]; if (!file) return;
+  var ext  = file.name.split('.').pop().toLowerCase();
+  if (!['jpg','jpeg','png','gif','webp','svg'].includes(ext)) { showToast('Only JPG, PNG, GIF, WEBP, SVG allowed.', 'error'); input.value = ''; return; }
+  if (file.size > 10*1024*1024) { showToast('Image too large. Max 10 MB.', 'error'); input.value = ''; return; }
+  state.selectedFile = file;
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    document.getElementById('imgUploadArea').style.display  = 'none';
+    document.getElementById('imgPreviewWrap').style.display = 'block';
+    document.getElementById('imgPreviewImg').src            = e.target.result;
+    var sz = file.size >= 1048576 ? (file.size/1048576).toFixed(1)+' MB' : Math.round(file.size/1024)+' KB';
+    document.getElementById('imgPreviewName').textContent   = file.name + ' (' + sz + ')';
+  };
+  reader.readAsDataURL(file);
+}
+function removeImage() {
+  state.selectedFile = null; state.removeCurrentImg = true;
+  document.getElementById('visualImageInput').value = '';
+  resetImageUI();
+}
+function resetImageUI() {
+  document.getElementById('imgUploadArea').style.display  = 'block';
+  document.getElementById('imgPreviewWrap').style.display = 'none';
+  document.getElementById('imgPreviewImg').src            = '';
+  document.getElementById('imgPreviewName').textContent   = '';
+}
+function onDragOver(e)  { e.preventDefault(); document.getElementById('imgUploadArea').classList.add('drag-over'); }
+function onDragLeave()  { document.getElementById('imgUploadArea').classList.remove('drag-over'); }
+function onDrop(e) {
+  e.preventDefault(); onDragLeave();
+  var file = e.dataTransfer.files[0]; if (!file) return;
+  var dt = new DataTransfer(); dt.items.add(file);
+  var inp = document.getElementById('visualImageInput'); inp.files = dt.files; onImageSelected(inp);
+}
+
+// ── Save Visual ───────────────────────────────────────────
+function saveVisual() {
+  var id          = document.getElementById('visualId').value;
+  var industry_id = parseInt(document.getElementById('visualIndustryId').value);
+  var visual_type = document.getElementById('visualType').value;
+  var visual_name = document.getElementById('visualName').value.trim();
+  var description = document.getElementById('visualDescription').value.trim();
+
+  var kpi_name = '';
+  var kpi_id   = '';
+
+  if (state.kpiMode === 'link') {
+    kpi_id  = document.getElementById('visualLinkedKpiId').value || '';
+    var sel = document.getElementById('kpiLinkedSelect');
+    if (kpi_id && sel.value) {
+      var opt  = sel.options[sel.selectedIndex];
+      kpi_name = opt.getAttribute('data-name') || opt.textContent;
+    }
+    if (!kpi_id) { showToast('Please select a KPI to link, or switch to "Type custom KPI name".', 'error'); return; }
+  } else {
+    kpi_name = document.getElementById('visualKpiName').value.trim();
+    kpi_id   = '';
+    if (!kpi_name) { showToast('KPI name is required.', 'error'); return; }
+  }
+
+  if (!industry_id) { showToast('Please select an industry.', 'error'); return; }
+  if (!visual_name) { showToast('Visual name is required.', 'error'); return; }
+
+  var fd = new FormData();
+  fd.append('industry_id', industry_id);
+  fd.append('kpi_name',    kpi_name);
+  fd.append('kpi_id',      kpi_id);
+  fd.append('visual_type', visual_type);
+  fd.append('visual_name', visual_name);
+  fd.append('description', description);
+  if (id)                     fd.append('id', id);
+  if (state.selectedFile)     fd.append('visual_image', state.selectedFile);
+  if (state.removeCurrentImg) fd.append('remove_image', '1');
+
+  var isEdit = !!id;
+  var btn    = document.getElementById('saveVisualBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving…';
+
+  fetch(VIS_URL + '?action=' + (isEdit ? 'update_visual' : 'create_visual'), { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(d) {
+      btn.disabled = false; btn.innerHTML = '<i class="fa fa-save"></i> Save Visual';
+      if (d.success) {
+        showToast(isEdit ? 'Visual updated!' : 'Visual added!', 'success');
+        closeModal('visualOverlay'); loadStats(); renderVisuals();
+      } else { showToast(d.message || 'Error saving visual', 'error'); }
+    })
+    .catch(function() {
+      btn.disabled = false; btn.innerHTML = '<i class="fa fa-save"></i> Save Visual';
+      showToast('Network error. Please try again.', 'error');
+    });
+}
+
+// ── Delete Visual ─────────────────────────────────────────
+function deleteVisual(id, name) {
+  document.getElementById('confirmTitle').textContent = 'Delete Visual?';
+  document.getElementById('confirmMsg').textContent   = 'Delete "' + name + '"? The image will be permanently removed.';
+  state.deleteCallback = function() {
+    fetch(VIS_URL + '?action=delete_visual', {
+      method: 'DELETE', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: parseInt(id) })
+    }).then(function(r) { return r.json(); })
+    .then(function(d) {
+      if (d.success) { showToast('Visual deleted.', 'success'); closeModal('confirmOverlay'); loadStats(); renderVisuals(); }
+      else showToast(d.message || 'Error deleting', 'error');
+    }).catch(function() { showToast('Network error.', 'error'); });
+  };
+  openModal('confirmOverlay');
+}
+function confirmDeleteAction() { if (state.deleteCallback) state.deleteCallback(); }
+
+// ── Modals ────────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open');    document.body.style.overflow = 'hidden'; }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
+
+document.querySelectorAll('.modal-overlay').forEach(function(o) {
+  o.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); });
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeProfileDropdown();
+    closeLightboxBtn();
+    closeUsageDrawer();
+    document.querySelectorAll('.modal-overlay.open').forEach(function(m) { closeModal(m.id); });
+  }
+});
+
+// ── Hamburger ─────────────────────────────────────────────
+function toggleNav() {
+  var nav = document.getElementById('navbarNav');
+  var btn = document.getElementById('hamburger');
+  var isOpen = nav.classList.toggle('open');
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  var spans = btn.querySelectorAll('span');
+  if (isOpen) {
+    spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+    spans[1].style.opacity   = '0';
+    spans[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
+  } else {
+    spans[0].style.transform = '';
+    spans[1].style.opacity   = '';
+    spans[2].style.transform = '';
+  }
+}
+
+function closeNav() {
+  var nav = document.getElementById('navbarNav');
+  var btn = document.getElementById('hamburger');
+  nav.classList.remove('open');
+  btn.setAttribute('aria-expanded', 'false');
+  var spans = btn.querySelectorAll('span');
+  spans[0].style.transform = '';
+  spans[1].style.opacity   = '';
+  spans[2].style.transform = '';
+}
+
+// ── Toast ─────────────────────────────────────────────────
+function showToast(msg, type) {
+  var icons = { success:'fa-circle-check', error:'fa-circle-xmark', info:'fa-circle-info' };
+  var t = document.createElement('div');
+  t.className = 'toast ' + (type || 'info');
+  t.innerHTML = '<i class="fa ' + (icons[type] || icons.info) + '"></i> <span>' + msg + '</span>';
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(function() {
+    t.style.opacity = '0'; t.style.transition = 'opacity .3s';
+    setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 300);
+  }, 4000);
+}
+
+// ── Helpers ───────────────────────────────────────────────
+function formatDate(s) {
+  if (!s) return '';
+  var d = new Date(s);
+  return isNaN(d) ? s : d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+function esc(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function emptyState(t,s) {
+  return '<div class="state-box"><div class="state-icon empty"><i class="fa fa-folder-open"></i></div><div class="state-title">'+t+'</div><div class="state-sub">'+s+'</div></div>';
+}
+function errorState(t,s) {
+  return '<div class="state-box"><div class="state-icon warn"><i class="fa fa-triangle-exclamation"></i></div><div class="state-title">'+t+'</div><div class="state-sub">'+s+'</div></div>';
+}
+</script>
+</body>
+</html>

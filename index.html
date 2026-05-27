@@ -1,0 +1,1215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- ═══ AUTH GUARD — runs before anything renders ═══ -->
+  <script>
+  (function() {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('auth') === '1') {
+      sessionStorage.setItem('dc_authed', '1');
+      window.history.replaceState({}, '', window.location.pathname);
+      return;
+    }
+    if (!sessionStorage.getItem('dc_authed')) {
+      window.location.replace('login.html');
+    }
+  })();
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Industry Wise Dashboards — DataChamps</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="logo/favicon.png">
+  <link rel="stylesheet" href="css/index.css" />
+</head>
+<body>
+
+<!-- ═══════════════════════ NAVBAR ═══════════════════════ -->
+<nav class="navbar">
+  <a class="navbar-brand" href="index.html">
+    <img src="logo/favicon.png" alt="DataChamps Logo" class="brand-logo" onerror="this.style.display='none'" />
+    <span class="brand-name">DataChamps</span>
+  </a>
+
+  <ul class="navbar-nav" id="navbarNav">
+    <li><a class="nav-link active" onclick="navigateTo('industries');closeNav()"><i class="fa fa-th-large"></i> Dashboards</a></li>
+    <li><a class="nav-link" href="kpi.html"><i class="fa fa-chart-line"></i> KPI Details</a></li>
+    <li><a class="nav-link" href="visual.html"><i class="fa fa-eye"></i> Visual Details</a></li>
+    <li><a class="nav-link" href="wireframe"><i class="fa fa-eye"></i> Wireframe</a></li>
+  </ul>
+
+  <div class="navbar-actions">
+    <!-- Guest -->
+    <div id="guestActions">
+      <button class="btn-login" onclick="openLoginModal()">
+        <i class="fa fa-lock"></i>
+        <span class="btn-text">Login</span>
+      </button>
+    </div>
+
+    <!-- Logged in — single profile button with dropdown -->
+    <div id="adminActions" style="display:none; align-items:center; gap:10px;" class="profile-wrapper">
+      <!-- Profile Dropdown Trigger -->
+      <div class="profile-dropdown-wrap" id="profileDropdownWrap">
+        <button class="btn-profile" id="profileBtn" onclick="toggleProfileDropdown(event)" aria-haspopup="true" aria-expanded="false">
+          <div id="profileAvatarWrap">
+            <div class="avatar" id="adminAvatar">A</div>
+          </div>
+          <div class="profile-info">
+            <span class="admin-name" id="adminName">User</span>
+            <span class="role-badge" id="roleBadge">—</span>
+          </div>
+          <i class="fa fa-chevron-down profile-chevron" id="profileChevron"></i>
+        </button>
+
+        <!-- Dropdown Menu -->
+        <div class="profile-dropdown" id="profileDropdown" role="menu">
+          <!-- User info header -->
+          <div class="dropdown-header">
+            <div class="dropdown-avatar" id="dropdownAvatarWrap">
+              <div class="avatar-lg" id="dropdownAvatar">A</div>
+            </div>
+            <div class="dropdown-user-info">
+              <div class="dropdown-name" id="dropdownName">User</div>
+              <div class="dropdown-role" id="dropdownRole">—</div>
+            </div>
+          </div>
+          <div class="dropdown-divider"></div>
+
+          <!-- Menu items -->
+          <a class="dropdown-item" href="profile.html" role="menuitem">
+            <span class="dropdown-item-icon"><i class="fa fa-user-circle"></i></span>
+            <span class="dropdown-item-text">My Profile</span>
+          </a>
+
+          <!-- Admin only: Manage Users -->
+          <button class="dropdown-item" id="manageUsersItem" style="display:none;" onclick="closeProfileDropdown();openUsersModal();" role="menuitem">
+            <span class="dropdown-item-icon admin-icon"><i class="fa fa-users-cog"></i></span>
+            <span class="dropdown-item-text">Manage Users</span>
+            <span class="dropdown-item-badge">Admin</span>
+          </button>
+
+          <div class="dropdown-divider"></div>
+
+          <button class="dropdown-item danger" onclick="logout()" role="menuitem">
+            <span class="dropdown-item-icon"><i class="fa fa-sign-out-alt"></i></span>
+            <span class="dropdown-item-text">Logout</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ═══════════════════════ HERO ═════════════════════════ -->
+<div class="hero">
+  <div class="hero-breadcrumb"><i class="fa fa-th-large"></i><span id="heroPath">All Industries</span></div>
+  <h1 id="heroTitle">Industry Wise Dashboards</h1>
+  <p id="heroSubtitle">Select an industry to browse its Power BI dashboards</p>
+</div>
+
+<!-- ═══════════════════════ STAT BAR ═════════════════════ -->
+<div class="stat-bar">
+  <div class="stat-item">
+    <div class="stat-icon blue"><i class="fa fa-industry"></i></div>
+    <div class="stat-info"><span class="stat-num" id="statIndustries">—</span><span class="stat-lbl">Industries</span></div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-icon green"><i class="fa fa-users"></i></div>
+    <div class="stat-info"><span class="stat-num" id="statClients">—</span><span class="stat-lbl">Clients</span></div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-icon amber"><i class="fa fa-chart-bar"></i></div>
+    <div class="stat-info"><span class="stat-num" id="statDashboards">—</span><span class="stat-lbl">Total Dashboards</span></div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ MAIN ═════════════════════════ -->
+<div class="main-container">
+  <div class="page-breadcrumb" id="pageBreadcrumb" style="display:none;"></div>
+  <div class="section-heading">
+    <h2 id="sectionTitle">Industries</h2>
+    <span class="count-badge" id="sectionCount">0</span>
+  </div>
+  <p class="section-sub" id="sectionSub">Click an industry to view its clients and dashboards</p>
+  <div class="toolbar">
+    <div class="search-box">
+      <i class="fa fa-search"></i>
+      <input type="text" id="searchInput" placeholder="Search industries..." oninput="onSearch()" />
+    </div>
+    <div class="toolbar-right">
+      <button class="btn btn-primary" id="addBtn" style="display:none;" onclick="openAddModal()">
+        <i class="fa fa-plus"></i> <span id="addBtnLabel">Add Industry</span>
+      </button>
+    </div>
+  </div>
+  <div id="cardsArea"></div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     LOGIN MODAL
+═══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="loginOverlay">
+  <div class="modal login-modal" style="max-width:420px;">
+    <div class="modal-body">
+      <div class="login-logo">
+        <i class="fa fa-shield-alt"></i>
+        <h2>Welcome to DataChamps</h2>
+        <p>Sign in with your organization Google account</p>
+      </div>
+
+      <div class="access-notice" id="loginNotice" style="display:none;">
+        <i class="fa fa-triangle-exclamation"></i>
+        <span id="loginNoticeMsg">Your account is not authorized. Contact your administrator.</span>
+      </div>
+
+      <a class="btn-google" href="php/google_auth.php" id="googleLoginBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Continue with Google
+      </a>
+
+      <p style="text-align:center;font-family:'Sora',sans-serif;font-size:11px;color:var(--text-muted);margin-top:18px;line-height:1.6;">
+        Only pre-approved organization accounts can access this system.<br>Contact your admin if you need access.
+      </p>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     INDUSTRY MODAL
+═══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="industryOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fa fa-industry"></i> <span id="industryModalTitle">Add Industry</span></span>
+      <button class="modal-close" onclick="closeModal('industryOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="industryId" />
+      <div class="form-group">
+        <label class="form-label">Industry Name <span class="required">*</span></label>
+        <input type="text" class="form-control" id="industryName" placeholder="e.g. Construction, Healthcare" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Icon (Font Awesome class)</label>
+        <input type="text" class="form-control" id="industryIcon" placeholder="e.g. fa-building" value="fa-industry" />
+        <small style="color:var(--text-muted);font-size:11px;margin-top:5px;display:block;font-family:'Sora',sans-serif;">
+          Browse at <a href="https://fontawesome.com/icons" target="_blank" style="color:var(--blue);font-weight:600;">fontawesome.com</a>
+        </small>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" id="industryDesc" placeholder="Brief description..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('industryOverlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveIndustry()"><i class="fa fa-save"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- Functions MODAL -->
+<div class="modal-overlay" id="clientOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fa fa-user-tie"></i> <span id="clientModalTitle">Add Functions</span></span>
+      <button class="modal-close" onclick="closeModal('clientOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="clientId" />
+      <input type="hidden" id="clientIndustryId" />
+      <div class="form-group">
+        <label class="form-label">Function <span class="required">*</span></label>
+        <input type="text" class="form-control" id="clientName" placeholder="e.g. Acme Corp" />
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Email</label>
+          <input type="email" class="form-control" id="clientEmail" placeholder="client@example.com" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Phone</label>
+          <input type="text" class="form-control" id="clientPhone" placeholder="+91 XXXXX XXXXX" />
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" id="clientDesc" placeholder="About this client..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('clientOverlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveClient()"><i class="fa fa-save"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD MODAL -->
+<div class="modal-overlay" id="dashboardOverlay">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fa fa-chart-pie"></i> <span id="dashboardModalTitle">Add Dashboard</span></span>
+      <button class="modal-close" onclick="closeModal('dashboardOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="dashboardId" />
+      <input type="hidden" id="dashboardClientId" />
+      <input type="hidden" id="dashboardIndustryId" />
+      <div class="form-group">
+        <label class="form-label">Dashboard Name <span class="required">*</span></label>
+        <input type="text" class="form-control" id="dashboardName" placeholder="e.g. Sales Dashboard" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Power BI Embed URL <span class="required">*</span></label>
+        <input type="url" class="form-control" id="dashboardUrl" placeholder="https://app.powerbi.com/reportEmbed?..." />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" id="dashboardDesc" placeholder="What insights does this dashboard show?"></textarea>
+      </div>
+      <div class="form-group">
+        <label class="form-check">
+          <input type="checkbox" id="dashboardActive" checked /> Mark as Active
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('dashboardOverlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveDashboard()"><i class="fa fa-save"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════
+     MANAGE USERS MODAL (admin only)
+═══════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="usersOverlay">
+  <div class="modal users-modal">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fa fa-users-cog"></i> Manage Users</span>
+      <button class="modal-close" onclick="closeModal('usersOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+        <button class="btn btn-primary btn-sm" onclick="openAddUserModal()"><i class="fa fa-plus"></i> Add User</button>
+      </div>
+      <div id="usersList"><div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading users…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT USER MODAL -->
+<div class="modal-overlay" id="userFormOverlay">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fa fa-user-plus"></i> <span id="userFormTitle">Add User</span></span>
+      <button class="modal-close" onclick="closeModal('userFormOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="userFormId" />
+      <div class="form-group">
+        <label class="form-label">Full Name <span class="required">*</span></label>
+        <input type="text" class="form-control" id="userFormName" placeholder="e.g. Prajwal Shendge" />
+      </div>
+      <div class="form-group" id="userEmailGroup">
+        <label class="form-label">Gmail Address <span class="required">*</span></label>
+        <input type="email" class="form-control" id="userFormEmail" placeholder="user@gmail.com" />
+        <small style="color:var(--text-muted);font-size:11px;margin-top:4px;display:block;font-family:'Sora',sans-serif;">Must match their Google account email exactly.</small>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role <span class="required">*</span></label>
+        <select class="form-control" id="userFormRole">
+          <option value="bi_developer">BI Developer — View &amp; Download only</option>
+          <option value="admin">Admin — Full Access</option>
+        </select>
+      </div>
+      <div class="form-group" id="userActiveGroup" style="display:none;">
+        <label class="form-check">
+          <input type="checkbox" id="userFormActive" checked /> Account Active
+        </label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('userFormOverlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveUser()"><i class="fa fa-save"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- PBIX MODAL -->
+<div class="modal-overlay" id="pbixOverlay">
+  <div class="modal pbix-modal">
+    <div class="modal-header">
+      <span class="modal-title">
+        <i class="fa fa-file-powerpoint" style="color:#f76707;"></i>
+        <span id="pbixModalDashboardName">Power BI Files</span>
+      </span>
+      <button class="modal-close" onclick="closeModal('pbixOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div id="pbixUploadSection" style="display:none;">
+      <div class="pbix-upload-area" id="pbixUploadArea">
+        <div class="pbix-upload-inner">
+          <div class="pbix-upload-icon"><i class="fa fa-cloud-arrow-up"></i></div>
+          <div class="pbix-upload-label">Upload Power BI File</div>
+          <div class="pbix-upload-hint">Click to browse or drag &amp; drop · .pbix / .pbit · max 2 GB</div>
+          <input type="file" id="pbixFileInput" accept=".pbix,.pbit" style="display:none;" onchange="onPbixFileSelected(this)" />
+          <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="document.getElementById('pbixFileInput').click()">
+            <i class="fa fa-folder-open"></i> Choose File
+          </button>
+        </div>
+      </div>
+      <div id="pbixUploadForm" style="display:none;padding:0 26px 20px;">
+        <div class="pbix-selected-file" id="pbixSelectedFile"></div>
+        <div class="form-group" style="margin-top:14px;">
+          <label class="form-label">Display Name <span class="required">*</span></label>
+          <input type="text" class="form-control" id="pbixDisplayName" placeholder="e.g. Sales Analysis v2" />
+        </div>
+        <div class="form-group">
+          <label class="form-label">Notes / Description</label>
+          <textarea class="form-control" id="pbixDescription" placeholder="e.g. Contains DAX measures for Q1..." style="min-height:64px;"></textarea>
+        </div>
+        <div style="display:flex;gap:10px;justify-content:flex-end;">
+          <button class="btn btn-secondary btn-sm" onclick="cancelPbixUpload()"><i class="fa fa-times"></i> Cancel</button>
+          <button class="btn btn-primary btn-sm" id="pbixUploadBtn" onclick="uploadPbixFile()"><i class="fa fa-upload"></i> Upload File</button>
+        </div>
+      </div>
+    </div>
+    <div id="pbixDivider" style="height:1px;background:var(--border);display:none;"></div>
+    <div class="modal-body" style="padding-top:20px;">
+      <div id="pbixFileList"><div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading files…</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- PBIX EDIT MODAL -->
+<div class="modal-overlay" id="pbixEditOverlay">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fa fa-pen"></i> Edit File Info</span>
+      <button class="modal-close" onclick="closeModal('pbixEditOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="pbixEditId" />
+      <div class="form-group">
+        <label class="form-label">Display Name <span class="required">*</span></label>
+        <input type="text" class="form-control" id="pbixEditDisplayName" />
+      </div>
+      <div class="form-group">
+        <label class="form-label">Notes / Description</label>
+        <textarea class="form-control" id="pbixEditDescription" style="min-height:64px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('pbixEditOverlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="savePbixEdit()"><i class="fa fa-save"></i> Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
+<div class="modal-overlay" id="confirmOverlay">
+  <div class="modal confirm-dialog">
+    <div class="confirm-body">
+      <div class="confirm-icon"><i class="fa fa-triangle-exclamation"></i></div>
+      <h3 id="confirmTitle">Delete Item?</h3>
+      <p id="confirmMsg">This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('confirmOverlay')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDeleteAction()"><i class="fa fa-trash"></i> Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══════════════════════ JAVASCRIPT ═══════════════════ -->
+<script>
+'use strict';
+
+var API_URL = 'php/api.php';
+
+var state = {
+  view: 'industries',
+  isAdmin: false,
+  isLoggedIn: false,
+  userRole: '',
+  userName: '',
+  currentIndustry: null,
+  currentClient: null,
+  searchTimer: null,
+  deleteCallback: null,
+  pbixCurrentDashboardId: null,
+  pbixSelectedFile: null
+};
+
+document.addEventListener('DOMContentLoaded', function() {
+  var params = new URLSearchParams(window.location.search);
+  if (params.get('login') === 'success') {
+    showToast('Logged in successfully!', 'success');
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+  if (params.get('error')) {
+    var errMap = {
+      not_authorized:        'Your Google account is not authorized. Contact your admin.',
+      google_denied:         'Google sign-in was cancelled.',
+      token_exchange_failed: 'Authentication failed. Please try again.',
+      invalid_state:         'Security check failed. Please try again.',
+      userinfo_failed:       'Could not retrieve your Google profile. Please try again.'
+    };
+    var errMsg = errMap[params.get('error')] || 'Login failed. Please try again.';
+    if (params.get('email')) errMsg += ' (' + params.get('email') + ')';
+    setTimeout(function() {
+      document.getElementById('loginNotice').style.display = 'flex';
+      document.getElementById('loginNoticeMsg').textContent = errMsg;
+      openModal('loginOverlay');
+    }, 300);
+    window.history.replaceState({}, '', window.location.pathname);
+  }
+
+  checkSession().then(function() {
+    loadStats();
+    navigateTo('industries');
+  });
+  setupPbixDragDrop();
+  setupClickOutsideNav();
+  setupClickOutsideDropdown();
+});
+
+// ── Click outside nav to close (mobile) ──────────────────
+function setupClickOutsideNav() {
+  document.addEventListener('click', function(e) {
+    var nav = document.getElementById('navbarNav');
+    var btn = document.getElementById('hamburger');
+    if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) {
+      closeNav();
+    }
+  });
+}
+
+// ── Click outside profile dropdown to close ───────────────
+function setupClickOutsideDropdown() {
+  document.addEventListener('click', function(e) {
+    var wrap = document.getElementById('profileDropdownWrap');
+    if (wrap && !wrap.contains(e.target)) {
+      closeProfileDropdown();
+    }
+  });
+}
+
+// ── Profile Dropdown ──────────────────────────────────────
+function toggleProfileDropdown(e) {
+  e.stopPropagation();
+  var dropdown = document.getElementById('profileDropdown');
+  var btn      = document.getElementById('profileBtn');
+  var chevron  = document.getElementById('profileChevron');
+  var isOpen   = dropdown.classList.contains('open');
+  if (isOpen) {
+    closeProfileDropdown();
+  } else {
+    dropdown.classList.add('open');
+    btn.setAttribute('aria-expanded', 'true');
+    chevron.style.transform = 'rotate(180deg)';
+  }
+}
+
+function closeProfileDropdown() {
+  var dropdown = document.getElementById('profileDropdown');
+  var btn      = document.getElementById('profileBtn');
+  var chevron  = document.getElementById('profileChevron');
+  if (dropdown) {
+    dropdown.classList.remove('open');
+    btn.setAttribute('aria-expanded', 'false');
+    chevron.style.transform = '';
+  }
+}
+
+// ── API ───────────────────────────────────────────────────
+function api(method, action, body) {
+  var url  = API_URL + '?action=' + action;
+  var opts = { method: method, headers: { 'Content-Type': 'application/json' } };
+  if (body) opts.body = JSON.stringify(body);
+  return fetch(url, opts).then(function(res) {
+    var ct = res.headers.get('content-type') || '';
+    if (ct.indexOf('application/json') === -1) {
+      return res.text().then(function(txt) { console.error('Non-JSON:', txt); throw new Error('Server error. Check console (F12).'); });
+    }
+    return res.json().then(function(data) {
+      if (!res.ok && !data.success) throw new Error(data.message || 'Request failed (' + res.status + ')');
+      return data;
+    });
+  }).catch(function(err) { showToast(err.message || 'Network error', 'error'); throw err; });
+}
+
+// ── Session ───────────────────────────────────────────────
+function checkSession() {
+  return api('GET', 'session_check').then(function(data) {
+    state.isLoggedIn = !!data.logged_in;
+    state.isAdmin    = !!data.is_admin;
+    state.userRole   = data.role   || '';
+    state.userName   = data.name   || '';
+    updateAuthUI(data);
+  }).catch(function() { updateAuthUI({}); });
+}
+
+function updateAuthUI(data) {
+  var loggedIn = state.isLoggedIn;
+  document.getElementById('guestActions').style.display   = loggedIn ? 'none'  : 'block';
+  document.getElementById('adminActions').style.display   = loggedIn ? 'flex'  : 'none';
+  document.getElementById('addBtn').style.display         = state.isAdmin ? 'inline-flex' : 'none';
+
+  // Show Manage Users in dropdown only for admin
+  var manageUsersItem = document.getElementById('manageUsersItem');
+  if (manageUsersItem) manageUsersItem.style.display = state.isAdmin ? 'flex' : 'none';
+
+  if (loggedIn) {
+    var firstName = state.userName ? state.userName.split(' ')[0] : 'User';
+    var initial   = state.userName ? state.userName.charAt(0).toUpperCase() : 'U';
+
+    // Navbar profile button
+    document.getElementById('adminName').textContent = firstName;
+
+    // Role badge in navbar
+    var rb = document.getElementById('roleBadge');
+    if (state.isAdmin) {
+      rb.className = 'role-badge admin';
+      rb.innerHTML = '<i class="fa fa-shield-alt" style="font-size:9px;"></i> Admin';
+    } else {
+      rb.className = 'role-badge bi_developer';
+      rb.innerHTML = '<i class="fa fa-chart-bar" style="font-size:9px;"></i> BI Dev';
+    }
+
+    // Avatar in navbar
+    var wrap = document.getElementById('profileAvatarWrap');
+    if (data && data.picture) {
+      wrap.innerHTML = '<img src="' + data.picture + '" class="avatar-img" alt="Avatar" onerror="this.parentNode.innerHTML=\'<div class=avatar>' + esc(initial) + '</div>\'" />';
+    } else {
+      wrap.innerHTML = '<div class="avatar">' + esc(initial) + '</div>';
+    }
+
+    // Dropdown header
+    document.getElementById('dropdownName').textContent = state.userName || 'User';
+    var dropdownRole = document.getElementById('dropdownRole');
+    if (state.isAdmin) {
+      dropdownRole.innerHTML = '<i class="fa fa-shield-alt"></i> Administrator';
+      dropdownRole.className = 'dropdown-role admin-role';
+    } else {
+      dropdownRole.innerHTML = '<i class="fa fa-chart-bar"></i> BI Developer';
+      dropdownRole.className = 'dropdown-role dev-role';
+    }
+
+    // Dropdown avatar
+    var dropWrap = document.getElementById('dropdownAvatarWrap');
+    if (data && data.picture) {
+      dropWrap.innerHTML = '<img src="' + data.picture + '" class="dropdown-avatar-img" alt="Avatar" onerror="this.parentNode.innerHTML=\'<div class=avatar-lg>' + esc(initial) + '</div>\'" />';
+    } else {
+      dropWrap.innerHTML = '<div class="avatar-lg">' + esc(initial) + '</div>';
+    }
+  }
+}
+
+function openLoginModal() {
+  document.getElementById('loginNotice').style.display = 'none';
+  openModal('loginOverlay');
+}
+
+function logout() {
+  closeProfileDropdown();
+  api('POST', 'logout').then(function() {
+    sessionStorage.removeItem('dc_authed');
+    window.location.href = 'login.html';
+  }).catch(function() {
+    sessionStorage.removeItem('dc_authed');
+    window.location.href = 'login.html';
+  });
+}
+
+// ── Navigation ────────────────────────────────────────────
+function navigateTo(view, industry, client) {
+  state.view = view;
+  state.currentIndustry = industry || null;
+  state.currentClient   = client   || null;
+  document.getElementById('searchInput').value = '';
+  updateHero(); updateBreadcrumb(); updateToolbar(); renderCurrentView();
+}
+
+function updateHero() {
+  var v = state.view, i = state.currentIndustry, c = state.currentClient;
+  var map = {
+    industries: { path: 'All Industries', title: 'Industry Wise Dashboards', sub: 'Select an industry to browse its Power BI dashboards' },
+    clients:    { path: i ? i.name : '', title: (i ? i.name : '') + ' — Clients', sub: 'Select a client to view their dashboards' },
+    dashboards: { path: (i ? i.name : '') + ' › ' + (c ? c.name : ''), title: (c ? c.name : '') + ' — Dashboards', sub: 'Power BI dashboards for this client' }
+  };
+  var cfg = map[v] || map.industries;
+  document.getElementById('heroPath').textContent     = cfg.path;
+  document.getElementById('heroTitle').textContent    = cfg.title;
+  document.getElementById('heroSubtitle').textContent = cfg.sub;
+}
+
+function updateBreadcrumb() {
+  var bc = document.getElementById('pageBreadcrumb');
+  if (state.view === 'industries') { bc.style.display = 'none'; return; }
+  bc.style.display = 'flex';
+  var html = '<span class="crumb" onclick="navigateTo(\'industries\')"><i class="fa fa-home"></i> All Industries</span>';
+  if (state.view === 'clients') {
+    html += '<span class="sep"><i class="fa fa-chevron-right"></i></span><span class="current">' + esc(state.currentIndustry ? state.currentIndustry.name : '') + '</span>';
+  } else {
+    html += '<span class="sep"><i class="fa fa-chevron-right"></i></span>';
+    html += '<span class="crumb" onclick="navigateTo(\'clients\', state.currentIndustry)">' + esc(state.currentIndustry ? state.currentIndustry.name : '') + '</span>';
+    html += '<span class="sep"><i class="fa fa-chevron-right"></i></span><span class="current">' + esc(state.currentClient ? state.currentClient.name : '') + '</span>';
+  }
+  bc.innerHTML = html;
+}
+
+function updateToolbar() {
+  var v = state.view;
+  var labels       = { industries: 'Add Industry', clients: 'Add Client', dashboards: 'Add Dashboard' };
+  var placeholders = { industries: 'Search industries...', clients: 'Search clients...', dashboards: 'Search dashboards...' };
+  var titles       = { industries: 'Industries', clients: 'Clients', dashboards: 'Dashboards' };
+  var subs         = {
+    industries: 'Click an industry to view its clients and dashboards',
+    clients:    'Click a client to view their dashboards',
+    dashboards: 'Manage Power BI dashboards for this client'
+  };
+  document.getElementById('addBtnLabel').textContent  = labels[v];
+  document.getElementById('searchInput').placeholder  = placeholders[v];
+  document.getElementById('sectionTitle').textContent = titles[v];
+  document.getElementById('sectionSub').textContent   = subs[v];
+  document.getElementById('addBtn').style.display     = state.isAdmin ? 'inline-flex' : 'none';
+}
+
+// ── Render ────────────────────────────────────────────────
+function renderCurrentView() {
+  var s = document.getElementById('searchInput').value.trim();
+  if      (state.view === 'industries') renderIndustries(s);
+  else if (state.view === 'clients')    renderClients(s);
+  else                                  renderDashboards(s);
+}
+
+function onSearch() { clearTimeout(state.searchTimer); state.searchTimer = setTimeout(renderCurrentView, 350); }
+
+function showSkeleton() {
+  var h = '';
+  for (var i = 0; i < 6; i++) {
+    h += '<div class="skeleton-card"><div class="skel" style="width:52px;height:52px;border-radius:12px;margin-bottom:16px;"></div>' +
+         '<div class="skel" style="width:65%;height:16px;margin-bottom:10px;"></div>' +
+         '<div class="skel" style="width:90%;height:12px;margin-bottom:6px;"></div>' +
+         '<div class="skel" style="width:55%;height:12px;"></div></div>';
+  }
+  document.getElementById('cardsArea').innerHTML = '<div class="skeleton-grid">' + h + '</div>';
+}
+
+// ── Industries ────────────────────────────────────────────
+function renderIndustries(search) {
+  showSkeleton();
+  api('GET', 'get_industries&search=' + encodeURIComponent(search || '')).then(function(data) {
+    var list = data.data || [];
+    document.getElementById('sectionCount').textContent = list.length;
+    if (!list.length) { document.getElementById('cardsArea').innerHTML = emptyState(search ? 'No industries found' : 'No industries yet', search ? 'No results for "' + search + '"' : 'Click "Add Industry" to get started.'); return; }
+    var cards = list.map(function(ind) {
+      var adminBtns = state.isAdmin
+        ? '<button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="event.stopPropagation();editIndustry(' + ind.id + ',\'' + esc(ind.name) + '\',\'' + esc(ind.icon) + '\',\'' + esc(ind.description || '') + '\')"><i class="fa fa-pen"></i></button>' +
+          '<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="event.stopPropagation();deleteItem(\'industry\',' + ind.id + ',\'' + esc(ind.name) + '\')"><i class="fa fa-trash"></i></button>'
+        : '';
+      return '<div class="card" onclick="navigateTo(\'clients\',{id:' + ind.id + ',name:\'' + esc(ind.name) + '\',icon:\'' + esc(ind.icon) + '\'})">' +
+        '<div class="card-header-strip"></div>' +
+        '<div class="card-body">' +
+          '<div class="card-icon-row"><div class="card-icon"><i class="fa ' + esc(ind.icon || 'fa-industry') + '"></i></div><div class="card-actions-inline">' + adminBtns + '</div></div>' +
+          '<div class="card-title">' + esc(ind.name) + '</div>' +
+          '<div class="card-desc">' + esc(ind.description || 'No description provided.') + '</div>' +
+          '<div class="card-meta"><span class="meta-pill"><i class="fa fa-users"></i> ' + ind.total_clients + ' Client' + (ind.total_clients != 1 ? 's' : '') + '</span><span class="meta-pill"><i class="fa fa-chart-bar"></i> ' + ind.total_dashboards + ' Dashboard' + (ind.total_dashboards != 1 ? 's' : '') + '</span></div>' +
+        '</div>' +
+        '<div class="card-footer"><button class="view-btn">View Clients <i class="fa fa-arrow-right"></i></button></div>' +
+      '</div>';
+    }).join('');
+    document.getElementById('cardsArea').innerHTML = '<div class="cards-grid industry-grid">' + cards + '</div>';
+  }).catch(function() { document.getElementById('cardsArea').innerHTML = errorState('Could not load industries', 'Check your server and database.'); });
+}
+
+// ── Clients ───────────────────────────────────────────────
+function renderClients(search) {
+  showSkeleton();
+  var indId = state.currentIndustry ? state.currentIndustry.id : 0;
+  api('GET', 'get_clients&industry_id=' + indId + '&search=' + encodeURIComponent(search || '')).then(function(data) {
+    var list = data.data || [];
+    document.getElementById('sectionCount').textContent = list.length;
+    if (!list.length) { document.getElementById('cardsArea').innerHTML = emptyState(search ? 'No clients found' : 'No clients yet', search ? 'No results for "' + search + '"' : 'Click "Add Client" to get started.'); return; }
+    var cards = list.map(function(cl) {
+      var adminBtns = state.isAdmin
+        ? '<button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="event.stopPropagation();editClient(' + cl.id + ',\'' + esc(cl.name) + '\',\'' + esc(cl.email || '') + '\',\'' + esc(cl.phone || '') + '\',\'' + esc(cl.description || '') + '\')"><i class="fa fa-pen"></i></button>' +
+          '<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="event.stopPropagation();deleteItem(\'client\',' + cl.id + ',\'' + esc(cl.name) + '\')"><i class="fa fa-trash"></i></button>'
+        : '';
+      return '<div class="card" onclick="navigateTo(\'dashboards\',state.currentIndustry,{id:' + cl.id + ',name:\'' + esc(cl.name) + '\'})">' +
+        '<div class="card-header-strip"></div>' +
+        '<div class="card-body">' +
+          '<div class="card-icon-row"><div class="card-icon"><i class="fa fa-user-tie"></i></div><div class="card-actions-inline">' + adminBtns + '</div></div>' +
+          '<div class="card-title">' + esc(cl.name) + '</div>' +
+          '<div class="card-desc">' + esc(cl.description || 'No description provided.') + '</div>' +
+          '<div class="card-meta">' + (cl.email ? '<span class="meta-pill"><i class="fa fa-envelope"></i> ' + esc(cl.email) + '</span>' : '') + '<span class="meta-pill"><i class="fa fa-chart-pie"></i> ' + cl.total_dashboards + ' Dashboard' + (cl.total_dashboards != 1 ? 's' : '') + '</span></div>' +
+        '</div>' +
+        '<div class="card-footer"><button class="view-btn">View Dashboards <i class="fa fa-arrow-right"></i></button></div>' +
+      '</div>';
+    }).join('');
+    document.getElementById('cardsArea').innerHTML = '<div class="cards-grid client-grid">' + cards + '</div>';
+  }).catch(function() { document.getElementById('cardsArea').innerHTML = errorState('Could not load clients', 'Check your server and database.'); });
+}
+
+// ── Dashboards ────────────────────────────────────────────
+function renderDashboards(search) {
+  showSkeleton();
+  var clId  = state.currentClient   ? state.currentClient.id   : 0;
+  var indId = state.currentIndustry ? state.currentIndustry.id : 0;
+  api('GET', 'get_dashboards&client_id=' + clId + '&industry_id=' + indId + '&search=' + encodeURIComponent(search || '')).then(function(data) {
+    var list = data.data || [];
+    document.getElementById('sectionCount').textContent = list.length;
+    if (!list.length) { document.getElementById('cardsArea').innerHTML = emptyState(search ? 'No dashboards found' : 'No dashboards yet', search ? 'No results for "' + search + '"' : 'Click "Add Dashboard" to get started.'); return; }
+    var cards = list.map(function(d) {
+      var isActive  = d.is_active == 1;
+      var pbixCount = parseInt(d.total_pbix_files) || 0;
+      var badge     = '<span class="badge-status ' + (isActive ? 'active' : 'inactive') + '"><i class="fa fa-circle" style="font-size:7px;"></i> ' + (isActive ? 'Active' : 'Inactive') + '</span>';
+      var enc       = encodeURIComponent(JSON.stringify(d));
+      var adminBtns = state.isAdmin
+        ? '<button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="event.stopPropagation();editDashboardEncoded(\'' + enc + '\')"><i class="fa fa-pen"></i></button>' +
+          '<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="event.stopPropagation();deleteItem(\'dashboard\',' + d.id + ',\'' + esc(d.name) + '\')"><i class="fa fa-trash"></i></button>'
+        : '';
+      var pbixPill = '<span class="meta-pill pbix-pill" title="Power BI source files" onclick="event.stopPropagation();handlePbixClick(' + d.id + ',\'' + esc(d.name) + '\')">' +
+        '<i class="fa fa-file-powerpoint" style="color:#f76707;"></i> ' + pbixCount + ' PBI File' + (pbixCount !== 1 ? 's' : '') + '</span>';
+      return '<div class="card">' +
+        '<div class="card-header-strip"></div>' +
+        '<div class="card-body">' +
+          '<div class="card-icon-row"><div class="card-icon"><i class="fa fa-chart-bar"></i></div><div class="card-actions-inline" style="align-items:center;gap:6px;">' + badge + adminBtns + '</div></div>' +
+          '<div class="card-title">' + esc(d.name) + '</div>' +
+          '<div class="card-desc">' + esc(d.description || 'No description provided.') + '</div>' +
+          '<div class="card-meta">' + pbixPill + '</div>' +
+        '</div>' +
+        '<div class="card-footer">' +
+          '<a class="view-btn" href="' + esc(d.embed_url) + '" target="_blank" onclick="event.stopPropagation()">Open Dashboard <i class="fa fa-external-link-alt"></i></a>' +
+          '<button class="pbix-footer-btn" onclick="event.stopPropagation();handlePbixClick(' + d.id + ',\'' + esc(d.name) + '\')">' +
+            '<i class="fa fa-file-powerpoint"></i> PBI Files' +
+          '</button>' +
+        '</div>' +
+      '</div>';
+    }).join('');
+    document.getElementById('cardsArea').innerHTML = '<div class="cards-grid dashboard-grid">' + cards + '</div>';
+  }).catch(function() { document.getElementById('cardsArea').innerHTML = errorState('Could not load dashboards', 'Check your server and database.'); });
+}
+
+function handlePbixClick(dashboardId, dashboardName) {
+  if (!state.isLoggedIn) { showToast('Please login to view Power BI files.', 'info'); openLoginModal(); return; }
+  openPbixModal(dashboardId, dashboardName);
+}
+
+// ── Stats ─────────────────────────────────────────────────
+function loadStats() {
+  api('GET', 'get_stats').then(function(data) {
+    if (data.success) {
+      document.getElementById('statIndustries').textContent = data.industries;
+      document.getElementById('statClients').textContent    = data.clients;
+      document.getElementById('statDashboards').textContent = data.dashboards;
+    }
+  }).catch(function() {});
+}
+
+// ── CRUD ──────────────────────────────────────────────────
+function openAddModal() {
+  var v = state.view;
+  if (v === 'industries') {
+    document.getElementById('industryId').value = ''; document.getElementById('industryName').value = '';
+    document.getElementById('industryIcon').value = 'fa-industry'; document.getElementById('industryDesc').value = '';
+    document.getElementById('industryModalTitle').textContent = 'Add Industry'; openModal('industryOverlay');
+  } else if (v === 'clients') {
+    document.getElementById('clientId').value = ''; document.getElementById('clientIndustryId').value = state.currentIndustry ? state.currentIndustry.id : '';
+    document.getElementById('clientName').value = ''; document.getElementById('clientEmail').value = '';
+    document.getElementById('clientPhone').value = ''; document.getElementById('clientDesc').value = '';
+    document.getElementById('clientModalTitle').textContent = 'Add Client'; openModal('clientOverlay');
+  } else {
+    document.getElementById('dashboardId').value = ''; document.getElementById('dashboardClientId').value = state.currentClient ? state.currentClient.id : '';
+    document.getElementById('dashboardIndustryId').value = state.currentIndustry ? state.currentIndustry.id : '';
+    document.getElementById('dashboardName').value = ''; document.getElementById('dashboardUrl').value = '';
+    document.getElementById('dashboardDesc').value = ''; document.getElementById('dashboardActive').checked = true;
+    document.getElementById('dashboardModalTitle').textContent = 'Add Dashboard'; openModal('dashboardOverlay');
+  }
+}
+
+function editIndustry(id, name, icon, desc) {
+  document.getElementById('industryId').value = id; document.getElementById('industryName').value = name;
+  document.getElementById('industryIcon').value = icon; document.getElementById('industryDesc').value = desc;
+  document.getElementById('industryModalTitle').textContent = 'Edit Industry'; openModal('industryOverlay');
+}
+
+function saveIndustry() {
+  var id   = document.getElementById('industryId').value;
+  var name = document.getElementById('industryName').value.trim();
+  var icon = document.getElementById('industryIcon').value.trim() || 'fa-industry';
+  var desc = document.getElementById('industryDesc').value.trim();
+  if (!name) { showToast('Industry name is required', 'error'); return; }
+  var body = { name: name, icon: icon, description: desc };
+  if (id) body.id = parseInt(id);
+  api(id ? 'PUT' : 'POST', id ? 'update_industry' : 'create_industry', body).then(function(data) {
+    if (data.success) { showToast(id ? 'Industry updated' : 'Industry created', 'success'); closeModal('industryOverlay'); loadStats(); renderCurrentView(); }
+    else showToast(data.message || 'Error saving', 'error');
+  }).catch(function() {});
+}
+
+function editClient(id, name, email, phone, desc) {
+  document.getElementById('clientId').value = id; document.getElementById('clientIndustryId').value = state.currentIndustry ? state.currentIndustry.id : '';
+  document.getElementById('clientName').value = name; document.getElementById('clientEmail').value = email;
+  document.getElementById('clientPhone').value = phone; document.getElementById('clientDesc').value = desc;
+  document.getElementById('clientModalTitle').textContent = 'Edit Client'; openModal('clientOverlay');
+}
+
+function saveClient() {
+  var id    = document.getElementById('clientId').value;
+  var indId = document.getElementById('clientIndustryId').value;
+  var name  = document.getElementById('clientName').value.trim();
+  var email = document.getElementById('clientEmail').value.trim();
+  var phone = document.getElementById('clientPhone').value.trim();
+  var desc  = document.getElementById('clientDesc').value.trim();
+  if (!name) { showToast('Client name is required', 'error'); return; }
+  var body = { name: name, email: email, phone: phone, description: desc };
+  if (id) body.id = parseInt(id); else body.industry_id = parseInt(indId);
+  api(id ? 'PUT' : 'POST', id ? 'update_client' : 'create_client', body).then(function(data) {
+    if (data.success) { showToast(id ? 'Client updated' : 'Client created', 'success'); closeModal('clientOverlay'); loadStats(); renderCurrentView(); }
+    else showToast(data.message || 'Error saving', 'error');
+  }).catch(function() {});
+}
+
+function editDashboardEncoded(encoded) {
+  var d = JSON.parse(decodeURIComponent(encoded));
+  document.getElementById('dashboardId').value = d.id; document.getElementById('dashboardClientId').value = d.client_id;
+  document.getElementById('dashboardIndustryId').value = d.industry_id; document.getElementById('dashboardName').value = d.name;
+  document.getElementById('dashboardUrl').value = d.embed_url; document.getElementById('dashboardDesc').value = d.description || '';
+  document.getElementById('dashboardActive').checked = d.is_active == 1;
+  document.getElementById('dashboardModalTitle').textContent = 'Edit Dashboard'; openModal('dashboardOverlay');
+}
+
+function saveDashboard() {
+  var id         = document.getElementById('dashboardId').value;
+  var clientId   = document.getElementById('dashboardClientId').value;
+  var industryId = document.getElementById('dashboardIndustryId').value;
+  var name       = document.getElementById('dashboardName').value.trim();
+  var url        = document.getElementById('dashboardUrl').value.trim();
+  var desc       = document.getElementById('dashboardDesc').value.trim();
+  var active     = document.getElementById('dashboardActive').checked ? 1 : 0;
+  if (!name) { showToast('Dashboard name is required', 'error'); return; }
+  if (!url)  { showToast('Embed URL is required', 'error'); return; }
+  var body = { name: name, embed_url: url, description: desc, is_active: active };
+  if (id) body.id = parseInt(id); else { body.client_id = parseInt(clientId); body.industry_id = parseInt(industryId); }
+  api(id ? 'PUT' : 'POST', id ? 'update_dashboard' : 'create_dashboard', body).then(function(data) {
+    if (data.success) { showToast(id ? 'Dashboard updated' : 'Dashboard created', 'success'); closeModal('dashboardOverlay'); loadStats(); renderCurrentView(); }
+    else showToast(data.message || 'Error saving', 'error');
+  }).catch(function() {});
+}
+
+function deleteItem(type, id, name) {
+  var msgs = {
+    industry:  'Delete industry "' + name + '"? All clients, dashboards and Power BI files will be removed.',
+    client:    'Delete client "' + name + '"? All dashboards and Power BI files will be removed.',
+    dashboard: 'Delete dashboard "' + name + '"? All linked Power BI files will also be permanently removed.'
+  };
+  document.getElementById('confirmTitle').textContent = 'Delete ' + type.charAt(0).toUpperCase() + type.slice(1) + '?';
+  document.getElementById('confirmMsg').textContent   = msgs[type];
+  state.deleteCallback = function() {
+    var acts = { industry: 'delete_industry', client: 'delete_client', dashboard: 'delete_dashboard' };
+    api('DELETE', acts[type], { id: parseInt(id) }).then(function(data) {
+      if (data.success) { showToast(type.charAt(0).toUpperCase() + type.slice(1) + ' deleted', 'success'); closeModal('confirmOverlay'); loadStats(); renderCurrentView(); }
+      else showToast(data.message || 'Error deleting', 'error');
+    }).catch(function() {});
+  };
+  openModal('confirmOverlay');
+}
+
+function confirmDeleteAction() { if (state.deleteCallback) state.deleteCallback(); }
+
+// ══════════════════════════════════════════════════════════
+//  USER MANAGEMENT
+// ══════════════════════════════════════════════════════════
+function openUsersModal() { openModal('usersOverlay'); loadUsers(); }
+
+function loadUsers() {
+  var el = document.getElementById('usersList');
+  el.innerHTML = '<div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading users…</div>';
+  api('GET', 'get_users').then(function(data) {
+    var users = data.data || [];
+    if (!users.length) { el.innerHTML = '<div class="pbix-empty">No users found.</div>'; return; }
+    var html = '';
+    users.forEach(function(u) {
+      var roleLabel = u.role === 'admin' ? 'Admin' : 'BI Developer';
+      html += '<div class="user-row">' +
+        '<div class="user-avatar-sm">' + esc(u.name.charAt(0).toUpperCase()) + '</div>' +
+        '<div class="user-info"><div class="user-name">' + esc(u.name) + '</div><div class="user-email">' + esc(u.email) + '</div></div>' +
+        '<div class="user-actions">' +
+          '<span class="badge-role ' + esc(u.role) + '">' + roleLabel + '</span>' +
+          '<span class="' + (u.is_active ? 'badge-active' : 'badge-inactive') + '">' + (u.is_active ? 'Active' : 'Inactive') + '</span>' +
+          '<button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="editUser(' + u.id + ',\'' + esc(u.name) + '\',\'' + esc(u.role) + '\',' + u.is_active + ')"><i class="fa fa-pen"></i></button>' +
+          '<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="deleteUser(' + u.id + ',\'' + esc(u.name) + '\')"><i class="fa fa-trash"></i></button>' +
+        '</div>' +
+      '</div>';
+    });
+    el.innerHTML = html;
+  }).catch(function() { el.innerHTML = '<div class="pbix-empty">Error loading users.</div>'; });
+}
+
+function openAddUserModal() {
+  document.getElementById('userFormId').value    = '';
+  document.getElementById('userFormName').value  = '';
+  document.getElementById('userFormEmail').value = '';
+  document.getElementById('userFormRole').value  = 'bi_developer';
+  document.getElementById('userFormTitle').textContent = 'Add User';
+  document.getElementById('userEmailGroup').style.display  = 'block';
+  document.getElementById('userActiveGroup').style.display = 'none';
+  openModal('userFormOverlay');
+}
+
+function editUser(id, name, role, isActive) {
+  document.getElementById('userFormId').value       = id;
+  document.getElementById('userFormName').value     = name;
+  document.getElementById('userFormRole').value     = role;
+  document.getElementById('userFormActive').checked = !!isActive;
+  document.getElementById('userFormTitle').textContent = 'Edit User';
+  document.getElementById('userEmailGroup').style.display  = 'none';
+  document.getElementById('userActiveGroup').style.display = 'block';
+  openModal('userFormOverlay');
+}
+
+function saveUser() {
+  var id     = document.getElementById('userFormId').value;
+  var name   = document.getElementById('userFormName').value.trim();
+  var email  = document.getElementById('userFormEmail').value.trim();
+  var role   = document.getElementById('userFormRole').value;
+  var active = document.getElementById('userFormActive').checked ? 1 : 0;
+  if (!name) { showToast('Name is required', 'error'); return; }
+  if (!id && !email) { showToast('Email is required', 'error'); return; }
+  var body = { name: name, role: role };
+  if (id) { body.id = parseInt(id); body.is_active = active; }
+  else    { body.email = email.toLowerCase(); }
+  api(id ? 'PUT' : 'POST', id ? 'update_user' : 'create_user', body).then(function(data) {
+    if (data.success) { showToast(id ? 'User updated' : 'User added', 'success'); closeModal('userFormOverlay'); loadUsers(); }
+    else showToast(data.message || 'Error saving', 'error');
+  }).catch(function() {});
+}
+
+function deleteUser(id, name) {
+  document.getElementById('confirmTitle').textContent = 'Delete User?';
+  document.getElementById('confirmMsg').textContent   = 'Remove "' + name + '" from the system? They will no longer be able to login.';
+  state.deleteCallback = function() {
+    api('DELETE', 'delete_user', { id: parseInt(id) }).then(function(data) {
+      if (data.success) { showToast('User removed', 'success'); closeModal('confirmOverlay'); loadUsers(); }
+      else showToast(data.message || 'Error deleting', 'error');
+    }).catch(function() {});
+  };
+  openModal('confirmOverlay');
+}
+
+// ══════════════════════════════════════════════════════════
+//  POWER BI FILES MANAGER
+// ══════════════════════════════════════════════════════════
+function openPbixModal(dashboardId, dashboardName) {
+  state.pbixCurrentDashboardId = dashboardId;
+  state.pbixSelectedFile       = null;
+  document.getElementById('pbixModalDashboardName').textContent = dashboardName + ' — PBI Files';
+  var uploadSection = document.getElementById('pbixUploadSection');
+  var divider       = document.getElementById('pbixDivider');
+  uploadSection.style.display = state.isAdmin ? 'block' : 'none';
+  divider.style.display       = state.isAdmin ? 'block' : 'none';
+  cancelPbixUpload();
+  openModal('pbixOverlay');
+  loadPbixFiles();
+}
+
+function loadPbixFiles() {
+  var listEl = document.getElementById('pbixFileList');
+  listEl.innerHTML = '<div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading files…</div>';
+  fetch(API_URL + '?action=get_pbix_files&dashboard_id=' + state.pbixCurrentDashboardId)
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (!data.success) { listEl.innerHTML = '<div class="pbix-empty"><i class="fa fa-triangle-exclamation"></i> ' + (data.message || 'Error loading') + '</div>'; return; }
+      var files = data.data || [];
+      if (!files.length) {
+        listEl.innerHTML = '<div class="pbix-empty"><i class="fa fa-file-circle-xmark"></i><br>No Power BI files uploaded yet.' +
+          (state.isAdmin ? '<br><span style="font-size:12px;color:var(--text-muted);">Use the upload area above to add .pbix files.</span>' : '') + '</div>';
+        return;
+      }
+      var html = '<div class="pbix-file-list">';
+      files.forEach(function(f) {
+        var ext = f.original_name.split('.').pop().toLowerCase();
+        var extColor = ext === 'pbit' ? '#7048e8' : '#f76707';
+        html += '<div class="pbix-file-row">' +
+          '<div class="pbix-file-icon" style="color:' + extColor + '"><i class="fa fa-file-powerpoint"></i></div>' +
+          '<div class="pbix-file-info">' +
+            '<div class="pbix-file-name">' + esc(f.display_name) + '</div>' +
+            '<div class="pbix-file-meta"><span>' + esc(f.original_name) + '</span><span class="pbix-dot">·</span><span>' + esc(f.file_size_kb) + '</span><span class="pbix-dot">·</span><span>' + esc(f.uploaded_by_name || 'Admin') + '</span><span class="pbix-dot">·</span><span>' + formatDate(f.created_at) + '</span></div>' +
+            (f.description ? '<div class="pbix-file-desc">' + esc(f.description) + '</div>' : '') +
+          '</div>' +
+          '<div class="pbix-file-actions">' +
+            '<a class="btn btn-primary btn-sm" href="' + API_URL + '?action=download_pbix&id=' + f.id + '" title="Download"><i class="fa fa-download"></i> Open File</a>' +
+            (state.isAdmin
+              ? '<button class="btn btn-secondary btn-icon btn-sm" onclick="openPbixEdit(' + f.id + ',\'' + esc(f.display_name) + '\',\'' + esc(f.description || '') + '\')"><i class="fa fa-pen"></i></button>' +
+                '<button class="btn btn-danger btn-icon btn-sm" onclick="deletePbixFile(' + f.id + ',\'' + esc(f.display_name) + '\')"><i class="fa fa-trash"></i></button>'
+              : '') +
+          '</div>' +
+        '</div>';
+      });
+      html += '</div>';
+      listEl.innerHTML = html;
+    }).catch(function() { listEl.innerHTML = '<div class="pbix-empty"><i class="fa fa-triangle-exclamation"></i> Network error loading files.</div>'; });
+}
+
+function onPbixFileSelected(input) {
+  var file = input.files[0]; if (!file) return;
+  var ext = file.name.split('.').pop().toLowerCase();
+  if (!['pbix','pbit'].includes(ext)) { showToast('Only .pbix and .pbit files are allowed.', 'error'); input.value = ''; return; }
+  if (file.size > 2 * 1024 * 1024 * 1024) { showToast('File too large. Max 2 GB.', 'error'); input.value = ''; return; }
+  state.pbixSelectedFile = file;
+  document.getElementById('pbixDisplayName').value = file.name.replace(/\.(pbix|pbit)$/i, '');
+  var kb = file.size >= 1048576 ? (file.size / 1048576).toFixed(1) + ' MB' : Math.round(file.size / 1024) + ' KB';
+  document.getElementById('pbixSelectedFile').innerHTML = '<i class="fa fa-file-powerpoint" style="color:#f76707;font-size:18px;"></i><div><div style="font-weight:700;font-size:13px;">' + esc(file.name) + '</div><div style="font-size:11px;color:var(--text-muted);">' + kb + '</div></div>';
+  document.getElementById('pbixUploadForm').style.display = 'block';
+  document.getElementById('pbixUploadArea').style.display = 'none';
+}
+
+function cancelPbixUpload() {
+  state.pbixSelectedFile = null;
+  document.getElementById('pbixFileInput').value = '';
+  document.getElementById('pbixDisplayName').value = '';
+  document.getElementById('pbixDescription').value = '';
+  document.getElementById('pbixUploadForm').style.display = 'none';
+  document.getElementById('pbixUploadArea').style.display = 'block';
+}
+
+function uploadPbixFile() {
+  if (!state.pbixSelectedFile) { showToast('No file selected.', 'error'); return; }
+  var displayName = document.getElementById('pbixDisplayName').value.trim();
+  if (!displayName) { showToast('Please enter a display name.', 'error'); return; }
+  var btn = document.getElementById('pbixUploadBtn');
+  btn.disabled = true; btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Uploading…';
+  var fd = new FormData();
+  fd.append('dashboard_id',  state.pbixCurrentDashboardId);
+  fd.append('display_name',  displayName);
+  fd.append('description',   document.getElementById('pbixDescription').value.trim());
+  fd.append('pbix_file',     state.pbixSelectedFile);
+  fetch(API_URL + '?action=upload_pbix_file', { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.disabled = false; btn.innerHTML = '<i class="fa fa-upload"></i> Upload File';
+      if (data.success) { showToast('File uploaded successfully!', 'success'); cancelPbixUpload(); loadPbixFiles(); renderCurrentView(); }
+      else showToast(data.message || 'Upload failed', 'error');
+    }).catch(function() { btn.disabled = false; btn.innerHTML = '<i class="fa fa-upload"></i> Upload File'; showToast('Upload failed.', 'error'); });
+}
+
+function openPbixEdit(id, displayName, description) {
+  document.getElementById('pbixEditId').value = id;
+  document.getElementById('pbixEditDisplayName').value = displayName;
+  document.getElementById('pbixEditDescription').value = description;
+  openModal('pbixEditOverlay');
+}
+
+function savePbixEdit() {
+  var id   = document.getElementById('pbixEditId').value;
+  var name = document.getElementById('pbixEditDisplayName').value.trim();
+  var desc = document.getElementById('pbixEditDescription').value.trim();
+  if (!name) { showToast('Display name is required.', 'error'); return; }
+  api('PUT', 'update_pbix_file', { id: parseInt(id), display_name: name, description: desc }).then(function(data) {
+    if (data.success) { showToast('File info updated.', 'success'); closeModal('pbixEditOverlay'); loadPbixFiles(); }
+    else showToast(data.message || 'Error saving', 'error');
+  }).catch(function() {});
+}
+
+function deletePbixFile(id, name) {
+  document.getElementById('confirmTitle').textContent = 'Delete Power BI File?';
+  document.getElementById('confirmMsg').textContent   = 'Delete "' + name + '"? The file will be permanently removed.';
+  state.deleteCallback = function() {
+    api('DELETE', 'delete_pbix_file', { id: parseInt(id) }).then(function(data) {
+      if (data.success) { showToast('File deleted.', 'success'); closeModal('confirmOverlay'); loadPbixFiles(); renderCurrentView(); }
+      else showToast(data.message || 'Error deleting', 'error');
+    }).catch(function() {});
+  };
+  openModal('confirmOverlay');
+}
+
+function setupPbixDragDrop() {
+  var area = document.getElementById('pbixUploadArea'); if (!area) return;
+  area.addEventListener('dragover',  function(e) { e.preventDefault(); area.classList.add('drag-over'); });
+  area.addEventListener('dragleave', function()  { area.classList.remove('drag-over'); });
+  area.addEventListener('drop',      function(e) {
+    e.preventDefault(); area.classList.remove('drag-over');
+    var file = e.dataTransfer.files[0]; if (!file) return;
+    var dt = new DataTransfer(); dt.items.add(file);
+    var input = document.getElementById('pbixFileInput'); input.files = dt.files; onPbixFileSelected(input);
+  });
+}
+
+// ── Modals ────────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open');    document.body.style.overflow = 'hidden'; }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
+
+document.querySelectorAll('.modal-overlay').forEach(function(o) {
+  o.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); });
+});
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') {
+    closeProfileDropdown();
+    document.querySelectorAll('.modal-overlay.open').forEach(function(m) { closeModal(m.id); });
+  }
+});
+
+// ── Hamburger ─────────────────────────────────────────────
+function toggleNav() {
+  var nav = document.getElementById('navbarNav');
+  var btn = document.getElementById('hamburger');
+  var isOpen = nav.classList.toggle('open');
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  var spans = btn.querySelectorAll('span');
+  if (isOpen) {
+    spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
+    spans[1].style.opacity   = '0';
+    spans[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
+  } else {
+    spans[0].style.transform = '';
+    spans[1].style.opacity   = '';
+    spans[2].style.transform = '';
+  }
+}
+
+function closeNav() {
+  var nav = document.getElementById('navbarNav');
+  var btn = document.getElementById('hamburger');
+  nav.classList.remove('open');
+  btn.setAttribute('aria-expanded', 'false');
+  var spans = btn.querySelectorAll('span');
+  spans[0].style.transform = '';
+  spans[1].style.opacity   = '';
+  spans[2].style.transform = '';
+}
+
+// ── Toast ─────────────────────────────────────────────────
+function showToast(msg, type) {
+  var icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info' };
+  var t = document.createElement('div'); t.className = 'toast ' + (type || 'info');
+  t.innerHTML = '<i class="fa ' + (icons[type] || icons.info) + '"></i> <span>' + msg + '</span>';
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(function() { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 300); }, 4000);
+}
+
+// ── Utilities ─────────────────────────────────────────────
+function formatDate(str) { if (!str) return ''; var d = new Date(str); return isNaN(d) ? str : d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }); }
+function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+function emptyState(t, s) { return '<div class="state-box"><div class="state-icon empty"><i class="fa fa-folder-open"></i></div><div class="state-title">' + t + '</div><div class="state-sub">' + s + '</div></div>'; }
+function errorState(t, s) { return '<div class="state-box"><div class="state-icon warn"><i class="fa fa-triangle-exclamation"></i></div><div class="state-title">' + t + '</div><div class="state-sub">' + s + '</div></div>'; }
+</script>
+</body>
+</html>

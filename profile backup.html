@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <script>
+  (function() {
+    var p = new URLSearchParams(window.location.search);
+    if (p.get('auth') === '1') { sessionStorage.setItem('dc_authed','1'); window.history.replaceState({},'',window.location.pathname); return; }
+    if (!sessionStorage.getItem('dc_authed')) window.location.replace('login.html');
+  })();
+  </script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Profile — DataChamps</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="logo/favicon.png">
+  <link rel="stylesheet" href="css/index.css" />
+  <link rel="stylesheet" href="css/profile.css" />
+</head>
+<body>
+
+<!-- ══ NAVBAR ══════════════════════════════════════════════════════ -->
+<nav class="navbar">
+  <a class="navbar-brand" href="index.html">
+    <img src="logo/favicon.png" alt="DataChamps Logo" class="brand-logo" onerror="this.style.display='none'" />
+    <span class="brand-name">DataChamps</span>
+  </a>
+  <ul class="navbar-nav" id="navbarNav">
+    <li><a class="nav-link" href="index.html"><i class="fa fa-th-large"></i> Dashboards</a></li>
+    <li><a class="nav-link" href="kpi.html"><i class="fa fa-chart-line"></i> KPI Details</a></li>
+    <li><a class="nav-link" href="visual.html"><i class="fa fa-eye"></i> Visual Details</a></li>
+  </ul>
+  <div class="navbar-actions">
+    <div id="guestActions">
+      <button class="btn-login" onclick="window.location.href='index.html'"><i class="fa fa-lock"></i><span class="btn-text">Login</span></button>
+    </div>
+    <div id="adminActions" style="display:none;align-items:center;gap:10px;" class="profile-wrapper">
+      <div class="profile-dropdown-wrap" id="profileDropdownWrap">
+        <button class="btn-profile" id="profileBtn" onclick="toggleProfileDropdown(event)" aria-haspopup="true" aria-expanded="false">
+          <div id="profileAvatarWrap"><div class="avatar" id="adminAvatar">A</div></div>
+          <div class="profile-info">
+            <span class="admin-name" id="adminName">User</span>
+            <span class="role-badge" id="roleBadge">—</span>
+          </div>
+          <i class="fa fa-chevron-down profile-chevron" id="profileChevron"></i>
+        </button>
+        <div class="profile-dropdown" id="profileDropdown" role="menu">
+          <div class="dropdown-header">
+            <div class="dropdown-avatar" id="dropdownAvatarWrap"><div class="avatar-lg">A</div></div>
+            <div class="dropdown-user-info">
+              <div class="dropdown-name" id="dropdownName">User</div>
+              <div class="dropdown-role" id="dropdownRole">—</div>
+            </div>
+          </div>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item active-page" href="profile.html" role="menuitem">
+            <span class="dropdown-item-icon"><i class="fa fa-user-circle"></i></span>
+            <span class="dropdown-item-text">My Profile</span>
+            <i class="fa fa-check" style="font-size:10px;color:var(--blue);margin-left:auto;"></i>
+          </a>
+          <button class="dropdown-item" id="manageUsersItem" style="display:none;" onclick="closeProfileDropdown();" role="menuitem">
+            <span class="dropdown-item-icon admin-icon"><i class="fa fa-users-cog"></i></span>
+            <span class="dropdown-item-text">Manage Users</span>
+            <span class="dropdown-item-badge">Admin</span>
+          </button>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item danger" onclick="logout()" role="menuitem">
+            <span class="dropdown-item-icon"><i class="fa fa-sign-out-alt"></i></span>
+            <span class="dropdown-item-text">Logout</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ══ HERO BANNER ══════════════════════════════════════════════════ -->
+<div class="profile-hero">
+  <div class="hero-orb o1"></div>
+  <div class="hero-orb o2"></div>
+  <div class="profile-hero-inner">
+    <div class="hero-identity">
+
+      <!-- Avatar + Name/Email/Role grouped together -->
+      <div class="hero-top-row">
+        <div class="hero-avatar-wrap">
+          <div class="hero-avatar-circle" id="profileAvatarCircle"><span id="profileAvatarLetter">?</span></div>
+          <div class="hero-online-dot"></div>
+        </div>
+        <div class="hero-text">
+          <div class="hero-name" id="profileHeroName">Loading…</div>
+          <div class="hero-email" id="profileHeroEmail">—</div>
+          <span class="hero-role-pill admin" id="profileRolePill"><i class="fa fa-shield-alt"></i><span id="profileRoleLabel">—</span></span>
+        </div>
+      </div>
+
+      <!-- Chips — pushed right on desktop, full-width row on mobile -->
+      <div class="hero-chips" id="heroChips">
+        <div class="hchip">
+          <div class="hchip-icon blue"><i class="fa fa-circle-check"></i></div>
+          <div><div class="hchip-val">Active</div><div class="hchip-lbl">Status</div></div>
+        </div>
+        <div class="hchip-sep"></div>
+        <div class="hchip">
+          <div class="hchip-icon purple"><i class="fa fa-shield-halved"></i></div>
+          <div><div class="hchip-val">Google</div><div class="hchip-lbl">Auth</div></div>
+        </div>
+        <div class="hchip-sep" id="sep1" style="display:none;"></div>
+        <div class="hchip" id="chipUsers" style="display:none;">
+          <div class="hchip-icon orange"><i class="fa fa-users"></i></div>
+          <div><div class="hchip-val" id="statTotalUsers">—</div><div class="hchip-lbl">Users</div></div>
+        </div>
+        <div class="hchip-sep" id="sep2" style="display:none;"></div>
+        <div class="hchip" id="chipActive" style="display:none;">
+          <div class="hchip-icon green"><i class="fa fa-user-check"></i></div>
+          <div><div class="hchip-val" id="statActiveUsers">—</div><div class="hchip-lbl">Active</div></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ══ PAGE CONTENT ═════════════════════════════════════════════════ -->
+<div class="profile-page">
+  <div class="profile-grid">
+
+    <!-- ══ LEFT: Account Details ══ -->
+    <div class="pcard left-card">
+      <div class="pcard-head">
+        <div class="pcard-head-left">
+          <div class="pcard-hicon blue"><i class="fa fa-id-card"></i></div>
+          <span class="pcard-htitle">Account Details</span>
+        </div>
+      </div>
+      <div class="pcard-body">
+        <div class="afield">
+          <div class="afield-icon" style="background:#eef1fd;color:var(--blue);"><i class="fa fa-user"></i></div>
+          <div class="afield-info">
+            <div class="afield-lbl">Full Name</div>
+            <div class="afield-val" id="detailName">—</div>
+          </div>
+        </div>
+        <div class="afield">
+          <div class="afield-icon" style="background:#eef1fd;color:var(--blue);"><i class="fa fa-envelope"></i></div>
+          <div class="afield-info">
+            <div class="afield-lbl">Email Address</div>
+            <div class="afield-val" id="detailEmail">—</div>
+          </div>
+        </div>
+        <div class="afield">
+          <div class="afield-icon" style="background:#fff4ed;color:#f76707;"><i class="fa fa-user-tag"></i></div>
+          <div class="afield-info">
+            <div class="afield-lbl">Role</div>
+            <div class="afield-val" id="detailRole">—</div>
+          </div>
+        </div>
+        <div class="afield">
+          <div class="afield-icon" style="background:#e9faf0;color:#2f9e44;"><i class="fa fa-circle-check"></i></div>
+          <div class="afield-info">
+            <div class="afield-lbl">Account Status</div>
+            <div class="afield-val"><span class="status-pill"><i class="fa fa-circle" style="font-size:7px;"></i> Active</span></div>
+          </div>
+        </div>
+        <div class="afield last">
+          <div class="afield-icon" style="background:#f0ebff;color:#7048e8;"><i class="fa fa-shield-halved"></i></div>
+          <div class="afield-info">
+            <div class="afield-lbl">Login Method</div>
+            <div class="afield-val google-val">
+              <svg width="14" height="14" viewBox="0 0 24 24" style="flex-shrink:0;">
+                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+              </svg>
+              Google OAuth 2.0
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="quick-actions">
+          <div class="qa-label">Quick Actions</div>
+          <div class="qa-row">
+            <a href="index.html" class="qa-btn blue"><i class="fa fa-th-large"></i> Dashboards</a>
+            <a href="kpi.html" class="qa-btn green"><i class="fa fa-chart-line"></i> KPI</a>
+            <a href="visual.html" class="qa-btn amber"><i class="fa fa-eye"></i> Visuals</a>
+            <button onclick="logout()" class="qa-btn red"><i class="fa fa-sign-out-alt"></i> Logout</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ RIGHT column ══ -->
+    <div class="right-col">
+
+      <!-- Access & Permissions -->
+      <div class="pcard">
+        <div class="pcard-head">
+          <div class="pcard-head-left">
+            <div class="pcard-hicon amber"><i class="fa fa-lock"></i></div>
+            <span class="pcard-htitle">Access &amp; Permissions</span>
+          </div>
+          <div class="role-chip" id="permRoleChip"></div>
+        </div>
+        <div class="pcard-body">
+          <div class="acc-summary" id="accessBadgeRow"></div>
+          <div class="perm-list" id="permsList"></div>
+        </div>
+      </div>
+
+      <!-- Manage Users (admin only) -->
+      <div class="pcard users-pcard" id="manageUsersPanel" style="display:none;">
+        <div class="pcard-head">
+          <div class="pcard-head-left">
+            <div class="pcard-hicon purple"><i class="fa fa-users-cog"></i></div>
+            <span class="pcard-htitle">Manage Users</span>
+            <span class="count-badge" id="usersCountBadge" style="margin-left:6px;">0</span>
+          </div>
+          <div class="users-head-right">
+            <div class="users-search-box">
+              <i class="fa fa-search"></i>
+              <input type="text" id="usersSearchInput" placeholder="Search users…" oninput="filterUsers()" />
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="openAddUserModal()"><i class="fa fa-plus"></i> Add User</button>
+          </div>
+        </div>
+        <div class="pcard-body">
+          <div class="users-table-wrap">
+            <table class="users-table">
+              <thead>
+                <tr>
+                  <th>User</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th style="text-align:right;">Actions</th>
+                </tr>
+              </thead>
+              <tbody id="usersTableBody">
+                <tr><td colspan="4"><div class="tbl-empty"><i class="fa fa-spinner fa-spin"></i> Loading…</div></td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /right-col -->
+  </div><!-- /profile-grid -->
+</div><!-- /profile-page -->
+
+<!-- ══ ADD/EDIT USER MODAL ══ -->
+<div class="modal-overlay" id="userFormOverlay">
+  <div class="modal" style="max-width:460px;">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fa fa-user-plus"></i> <span id="userFormTitle">Add User</span></span>
+      <button class="modal-close" onclick="closeModal('userFormOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="userFormId" />
+      <div class="form-group">
+        <label class="form-label">Full Name <span class="required">*</span></label>
+        <input type="text" class="form-control" id="userFormName" placeholder="e.g. Prajwal Shendge" />
+      </div>
+      <div class="form-group" id="userEmailGroup">
+        <label class="form-label">Gmail Address <span class="required">*</span></label>
+        <input type="email" class="form-control" id="userFormEmail" placeholder="user@gmail.com" />
+        <small style="color:var(--text-muted);font-size:11px;margin-top:4px;display:block;">Must match their Google account email exactly.</small>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Role <span class="required">*</span></label>
+        <select class="form-control" id="userFormRole">
+          <option value="bi_developer">BI Developer — View &amp; Download only</option>
+          <option value="admin">Admin — Full Access</option>
+        </select>
+      </div>
+      <div class="form-group" id="userActiveGroup" style="display:none;">
+        <label class="form-check"><input type="checkbox" id="userFormActive" checked /> Account Active</label>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('userFormOverlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveUser()"><i class="fa fa-save"></i> Save User</button>
+    </div>
+  </div>
+</div>
+
+<!-- ══ CONFIRM DELETE ══ -->
+<div class="modal-overlay" id="confirmOverlay">
+  <div class="modal confirm-dialog">
+    <div class="confirm-body">
+      <div class="confirm-icon"><i class="fa fa-triangle-exclamation"></i></div>
+      <h3 id="confirmTitle">Delete User?</h3>
+      <p id="confirmMsg">This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('confirmOverlay')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDeleteAction()"><i class="fa fa-trash"></i> Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<script>
+'use strict';
+var API_URL = 'php/api.php';
+var state = { isAdmin:false, isLoggedIn:false, userRole:'', userName:'', userEmail:'', userPicture:'', allUsers:[], deleteCallback:null };
+
+document.addEventListener('DOMContentLoaded', function() {
+  checkSession().then(function() {
+    if (!state.isLoggedIn) { window.location.href='login.html'; return; }
+    renderProfile();
+    if (state.isAdmin) loadUsers();
+  });
+  setupOutsideNav();
+  setupOutsideDropdown();
+});
+
+function setupOutsideNav() {
+  document.addEventListener('click', function(e) {
+    var nav=document.getElementById('navbarNav'), btn=document.getElementById('hamburger');
+    if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) closeNav();
+  });
+}
+function setupOutsideDropdown() {
+  document.addEventListener('click', function(e) {
+    var w=document.getElementById('profileDropdownWrap');
+    if (w && !w.contains(e.target)) closeProfileDropdown();
+  });
+}
+
+function toggleProfileDropdown(e) {
+  e.stopPropagation();
+  var dd=document.getElementById('profileDropdown'), btn=document.getElementById('profileBtn'), ch=document.getElementById('profileChevron');
+  if (dd.classList.contains('open')) { closeProfileDropdown(); }
+  else { dd.classList.add('open'); btn.setAttribute('aria-expanded','true'); ch.style.transform='rotate(180deg)'; }
+}
+function closeProfileDropdown() {
+  var dd=document.getElementById('profileDropdown'), btn=document.getElementById('profileBtn'), ch=document.getElementById('profileChevron');
+  if (dd) { dd.classList.remove('open'); btn.setAttribute('aria-expanded','false'); ch.style.transform=''; }
+}
+
+function checkSession() {
+  return api('GET','session_check').then(function(d) {
+    state.isLoggedIn=!!d.logged_in; state.isAdmin=!!d.is_admin;
+    state.userRole=d.role||''; state.userName=d.name||''; state.userEmail=d.email||''; state.userPicture=d.picture||'';
+    updateNavUI(d);
+  }).catch(function(){ updateNavUI({}); });
+}
+
+function updateNavUI(d) {
+  var li=state.isLoggedIn;
+  document.getElementById('guestActions').style.display=li?'none':'block';
+  document.getElementById('adminActions').style.display=li?'flex':'none';
+  var mi=document.getElementById('manageUsersItem'); if(mi) mi.style.display=state.isAdmin?'flex':'none';
+  if (!li) return;
+  var init=state.userName?state.userName.charAt(0).toUpperCase():'U';
+  var fn=state.userName?state.userName.split(' ')[0]:'User';
+  document.getElementById('adminName').textContent=fn;
+  var rb=document.getElementById('roleBadge');
+  rb.className='role-badge '+(state.isAdmin?'admin':'bi_developer');
+  rb.innerHTML=state.isAdmin?'<i class="fa fa-shield-alt" style="font-size:9px;"></i> Admin':'<i class="fa fa-chart-bar" style="font-size:9px;"></i> BI Dev';
+  var wrap=document.getElementById('profileAvatarWrap');
+  wrap.innerHTML=d&&d.picture?'<img src="'+d.picture+'" class="avatar-img" alt="Avatar" onerror="this.parentNode.innerHTML=\'<div class=avatar>'+esc(init)+'</div>\'" />':'<div class="avatar">'+esc(init)+'</div>';
+  document.getElementById('dropdownName').textContent=state.userName||'User';
+  var dr=document.getElementById('dropdownRole');
+  dr.className='dropdown-role '+(state.isAdmin?'admin-role':'dev-role');
+  dr.innerHTML=state.isAdmin?'<i class="fa fa-shield-alt"></i> Administrator':'<i class="fa fa-chart-bar"></i> BI Developer';
+  var dw=document.getElementById('dropdownAvatarWrap');
+  dw.innerHTML=d&&d.picture?'<img src="'+d.picture+'" class="dropdown-avatar-img" alt="Avatar" onerror="this.parentNode.innerHTML=\'<div class=avatar-lg>'+esc(init)+'</div>\'" />':'<div class="avatar-lg">'+esc(init)+'</div>';
+}
+
+function renderProfile() {
+  var name=state.userName, email=state.userEmail, isAdmin=state.isAdmin;
+  var init=name?name.charAt(0).toUpperCase():'?';
+  var ac=document.getElementById('profileAvatarCircle');
+  if (state.userPicture) { ac.innerHTML='<img src="'+esc(state.userPicture)+'" alt="Avatar" onerror="this.parentNode.innerHTML=\'<span>'+init+'</span>\'" />'; }
+  else { document.getElementById('profileAvatarLetter').textContent=init; }
+  document.getElementById('profileHeroName').textContent=name||'My Profile';
+  document.getElementById('profileHeroEmail').textContent=email||'—';
+  var pill=document.getElementById('profileRolePill');
+  pill.className='hero-role-pill '+(isAdmin?'admin':'dev');
+  document.getElementById('profileRoleLabel').textContent=isAdmin?'Admin':'BI Developer';
+  pill.querySelector('i').className='fa '+(isAdmin?'fa-shield-alt':'fa-chart-bar');
+  if (isAdmin) {
+    ['sep1','chipUsers','sep2','chipActive'].forEach(function(id){
+      var el=document.getElementById(id); if(el) el.style.display=id.startsWith('sep')?'flex':'flex';
+    });
+    document.getElementById('manageUsersPanel').style.display='flex';
+  }
+  document.getElementById('detailName').textContent=name||'—';
+  document.getElementById('detailEmail').textContent=email||'—';
+  document.getElementById('detailRole').textContent=isAdmin?'Admin — Full Access':'BI Developer — View & Download';
+  var chip=document.getElementById('permRoleChip');
+  chip.className='role-chip '+(isAdmin?'admin':'dev');
+  chip.innerHTML=isAdmin?'<i class="fa fa-shield-alt"></i> Admin':'<i class="fa fa-chart-bar"></i> BI Developer';
+  renderPermissions(isAdmin);
+}
+
+function renderPermissions(isAdmin) {
+  var badges='';
+  if (isAdmin) {
+    badges+=mkBadge('granted','fa-shield-alt','Full Access','All features enabled');
+    badges+=mkBadge('granted','fa-users-cog','User Management','Add, edit & remove users');
+    badges+=mkBadge('granted','fa-upload','File Upload','Upload Power BI files');
+  } else {
+    badges+=mkBadge('view','fa-eye','View Dashboards','Browse all dashboards');
+    badges+=mkBadge('granted','fa-download','Download Files','Download .pbix files');
+    badges+=mkBadge('denied','fa-lock','Admin Features','No admin access');
+  }
+  document.getElementById('accessBadgeRow').innerHTML=badges;
+  var perms=[
+    {icon:'fa-th-large',ib:'#eef1fd',ic:'var(--blue)',t:'View Industries & Clients',s:'Browse industry and client cards',tag:'view',lbl:'View'},
+    {icon:'fa-chart-pie',ib:'#eef1fd',ic:'var(--blue)',t:'View Dashboards',s:'Open Power BI embedded reports',tag:'view',lbl:'View'},
+    {icon:'fa-download',ib:'#e9faf0',ic:'#2f9e44',t:'Download PBI Files',s:'Download .pbix and .pbit files',tag:'yes',lbl:'Allowed'},
+    {icon:'fa-plus-circle',ib:isAdmin?'#e9faf0':'#fff0f0',ic:isAdmin?'#2f9e44':'#c92a2a',t:'Create & Edit Data',s:'Add industries, clients, dashboards',tag:isAdmin?'yes':'no',lbl:isAdmin?'Allowed':'Denied'},
+    {icon:'fa-upload',ib:isAdmin?'#e9faf0':'#fff0f0',ic:isAdmin?'#2f9e44':'#c92a2a',t:'Upload PBI Files',s:'Upload new .pbix files',tag:isAdmin?'yes':'no',lbl:isAdmin?'Allowed':'Denied'},
+    {icon:'fa-users-cog',ib:isAdmin?'#e9faf0':'#fff0f0',ic:isAdmin?'#2f9e44':'#c92a2a',t:'Manage Users',s:'Add, edit, delete user accounts',tag:isAdmin?'yes':'no',lbl:isAdmin?'Allowed':'Denied'},
+    {icon:'fa-trash',ib:isAdmin?'#e9faf0':'#fff0f0',ic:isAdmin?'#2f9e44':'#c92a2a',t:'Delete Records',s:'Delete industries, clients etc.',tag:isAdmin?'yes':'no',lbl:isAdmin?'Allowed':'Denied'},
+  ];
+  var ti={yes:'fa-check',no:'fa-times',view:'fa-eye'};
+  document.getElementById('permsList').innerHTML=perms.map(function(p){
+    return '<div class="perm-row"><div class="perm-icon" style="background:'+p.ib+';color:'+p.ic+'"><i class="fa '+p.icon+'"></i></div><div class="perm-body"><div class="perm-title">'+p.t+'</div><div class="perm-sub">'+p.s+'</div></div><span class="perm-tag '+p.tag+'"><i class="fa '+ti[p.tag]+'"></i> '+p.lbl+'</span></div>';
+  }).join('');
+}
+
+function mkBadge(type,icon,main,sub){
+  return '<div class="acc-badge '+type+'"><div class="acc-badge-icon"><i class="fa '+icon+'"></i></div><div><div class="acc-badge-main">'+main+'</div><div class="acc-badge-sub">'+sub+'</div></div></div>';
+}
+
+function loadUsers(){
+  document.getElementById('usersTableBody').innerHTML='<tr><td colspan="4"><div class="tbl-empty"><i class="fa fa-spinner fa-spin"></i> Loading…</div></td></tr>';
+  api('GET','get_users').then(function(data){
+    state.allUsers=data.data||[];
+    var total=state.allUsers.length, active=state.allUsers.filter(function(u){return u.is_active;}).length;
+    document.getElementById('statTotalUsers').textContent=total;
+    document.getElementById('statActiveUsers').textContent=active;
+    document.getElementById('usersCountBadge').textContent=total;
+    renderUsersTable(state.allUsers);
+  }).catch(function(){document.getElementById('usersTableBody').innerHTML='<tr><td colspan="4"><div class="tbl-empty"><i class="fa fa-triangle-exclamation"></i> Error loading users.</div></td></tr>';});
+}
+
+function filterUsers(){
+  var q=document.getElementById('usersSearchInput').value.toLowerCase().trim();
+  var list=q?state.allUsers.filter(function(u){return u.name.toLowerCase().indexOf(q)!==-1||u.email.toLowerCase().indexOf(q)!==-1;}):state.allUsers;
+  document.getElementById('usersCountBadge').textContent=list.length;
+  renderUsersTable(list);
+}
+
+function renderUsersTable(users){
+  if(!users.length){document.getElementById('usersTableBody').innerHTML='<tr><td colspan="4"><div class="tbl-empty"><i class="fa fa-user-slash"></i> No users found.</div></td></tr>';return;}
+  var cols=['linear-gradient(135deg,#2d4cc8,#4c6ef5)','linear-gradient(135deg,#0c7c59,#20b87a)','linear-gradient(135deg,#9c36b5,#c56fe8)','linear-gradient(135deg,#c9280a,#f05c3c)','linear-gradient(135deg,#d97706,#f59e0b)','linear-gradient(135deg,#0369a1,#0ea5e9)'];
+  document.getElementById('usersTableBody').innerHTML=users.map(function(u,i){
+    var cl=u.role==='admin'?'admin':'bi_developer',rl=u.role==='admin'?'Admin':'BI Developer',self=u.email===state.userEmail;
+    return '<tr><td><div class="ut-cell"><div class="ut-av" style="background:'+cols[i%cols.length]+'">'+esc(u.name.charAt(0).toUpperCase())+'</div><div><div class="ut-name">'+esc(u.name)+(self?' <span class="you-tag">you</span>':'')+'</div><div class="ut-email">'+esc(u.email)+'</div></div></div></td><td><span class="badge-role '+cl+'">'+rl+'</span></td><td><span class="'+(u.is_active?'badge-active':'badge-inactive')+'">'+(u.is_active?'Active':'Inactive')+'</span></td><td><div class="ut-actions"><button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="editUser('+u.id+',\''+esc(u.name)+'\',\''+esc(u.role)+'\','+u.is_active+')"><i class="fa fa-pen"></i></button>'+(!self?'<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="deleteUser('+u.id+',\''+esc(u.name)+'\')"><i class="fa fa-trash"></i></button>':'')+'</div></td></tr>';
+  }).join('');
+}
+
+function openAddUserModal(){
+  document.getElementById('userFormId').value='';document.getElementById('userFormName').value='';
+  document.getElementById('userFormEmail').value='';document.getElementById('userFormRole').value='bi_developer';
+  document.getElementById('userFormTitle').textContent='Add User';
+  document.getElementById('userEmailGroup').style.display='block';
+  document.getElementById('userActiveGroup').style.display='none';
+  openModal('userFormOverlay');
+}
+function editUser(id,name,role,isActive){
+  document.getElementById('userFormId').value=id;document.getElementById('userFormName').value=name;
+  document.getElementById('userFormRole').value=role;document.getElementById('userFormActive').checked=!!isActive;
+  document.getElementById('userFormTitle').textContent='Edit User';
+  document.getElementById('userEmailGroup').style.display='none';
+  document.getElementById('userActiveGroup').style.display='block';
+  openModal('userFormOverlay');
+}
+function saveUser(){
+  var id=document.getElementById('userFormId').value,name=document.getElementById('userFormName').value.trim();
+  var email=document.getElementById('userFormEmail').value.trim(),role=document.getElementById('userFormRole').value;
+  var active=document.getElementById('userFormActive').checked?1:0;
+  if(!name){showToast('Name is required','error');return;}
+  if(!id&&!email){showToast('Email is required','error');return;}
+  var body={name:name,role:role};
+  if(id){body.id=parseInt(id);body.is_active=active;}else{body.email=email.toLowerCase();}
+  api(id?'PUT':'POST',id?'update_user':'create_user',body).then(function(d){
+    if(d.success){showToast(id?'User updated':'User added','success');closeModal('userFormOverlay');loadUsers();}
+    else showToast(d.message||'Error saving','error');
+  }).catch(function(){});
+}
+function deleteUser(id,name){
+  document.getElementById('confirmTitle').textContent='Delete User?';
+  document.getElementById('confirmMsg').textContent='Remove "'+name+'" from the system?';
+  state.deleteCallback=function(){
+    api('DELETE','delete_user',{id:parseInt(id)}).then(function(d){
+      if(d.success){showToast('User removed','success');closeModal('confirmOverlay');loadUsers();}
+      else showToast(d.message||'Error','error');
+    }).catch(function(){});
+  };
+  openModal('confirmOverlay');
+}
+function confirmDeleteAction(){if(state.deleteCallback)state.deleteCallback();}
+
+function api(method,action,body){
+  var url=API_URL+'?action='+action,opts={method:method,headers:{'Content-Type':'application/json'}};
+  if(body)opts.body=JSON.stringify(body);
+  return fetch(url,opts).then(function(res){
+    var ct=res.headers.get('content-type')||'';
+    if(ct.indexOf('application/json')===-1)return res.text().then(function(){throw new Error('Server error');});
+    return res.json().then(function(d){if(!res.ok&&!d.success)throw new Error(d.message||'Request failed');return d;});
+  }).catch(function(err){showToast(err.message||'Network error','error');throw err;});
+}
+
+function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
+document.querySelectorAll('.modal-overlay').forEach(function(o){o.addEventListener('click',function(e){if(e.target===this)closeModal(this.id);});});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeProfileDropdown();document.querySelectorAll('.modal-overlay.open').forEach(function(m){closeModal(m.id);});}});
+
+function logout(){
+  closeProfileDropdown();
+  api('POST','logout').then(function(){sessionStorage.removeItem('dc_authed');window.location.href='login.html';})
+  .catch(function(){sessionStorage.removeItem('dc_authed');window.location.href='login.html';});
+}
+
+function toggleNav(){
+  var nav=document.getElementById('navbarNav'),btn=document.getElementById('hamburger'),open=nav.classList.toggle('open');
+  btn.setAttribute('aria-expanded',open?'true':'false');
+  var s=btn.querySelectorAll('span');
+  if(open){s[0].style.transform='rotate(45deg) translate(5px,5px)';s[1].style.opacity='0';s[2].style.transform='rotate(-45deg) translate(5px,-5px)';}
+  else{s[0].style.transform='';s[1].style.opacity='';s[2].style.transform='';}
+}
+function closeNav(){
+  var nav=document.getElementById('navbarNav'),btn=document.getElementById('hamburger');
+  nav.classList.remove('open');btn.setAttribute('aria-expanded','false');
+  var s=btn.querySelectorAll('span');s[0].style.transform='';s[1].style.opacity='';s[2].style.transform='';
+}
+
+function showToast(msg,type){
+  var ic={success:'fa-circle-check',error:'fa-circle-xmark',info:'fa-circle-info'};
+  var t=document.createElement('div');t.className='toast '+(type||'info');
+  t.innerHTML='<i class="fa '+(ic[type]||ic.info)+'"></i> <span>'+msg+'</span>';
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(function(){t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},300);},4000);
+}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+</script>
+</body>
+</html>
