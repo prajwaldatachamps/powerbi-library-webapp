@@ -4,8 +4,6 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>KPI Details — DataChamps</title>
-
-  <!-- Auth Guard -->
   <script>
   (function() {
     var params = new URLSearchParams(window.location.search);
@@ -19,81 +17,206 @@
     }
   })();
   </script>
-
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
   <link rel="icon" type="image/png" href="logo/favicon.png" />
   <link rel="stylesheet" href="css/kpi.css" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <!-- Bulk Tag Modal Styles (self-contained, no changes to kpi.css) -->
+  <style>
+    /* ── Bulk Tag Modal ─────────────────────────────────── */
+    .bulk-tag-modal { max-width: 540px; }
+    .bulk-tag-summary {
+      display: flex; align-items: center; gap: 12px;
+      background: linear-gradient(135deg, #eef1fd, #e5eaff);
+      border: 1.5px solid #c5d0f8; border-radius: 10px;
+      padding: 14px 18px; margin-bottom: 20px;
+    }
+    .bulk-tag-summary-icon {
+      width: 42px; height: 42px; background: var(--blue); border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 18px; color: #fff; flex-shrink: 0;
+    }
+    .bulk-tag-summary-text { display: flex; flex-direction: column; gap: 3px; }
+    .bulk-tag-summary-count { font-size: 16px; font-weight: 800; color: var(--text); }
+    .bulk-tag-summary-sub   { font-size: 12px; color: var(--text-muted); }
+
+    /* Tag type selector tabs */
+    .tag-type-tabs {
+      display: flex; gap: 6px; margin-bottom: 16px;
+    }
+    .tag-type-tab {
+      flex: 1; padding: 10px 8px; border-radius: 9px;
+      border: 2px solid var(--border); background: var(--white);
+      font-size: 12px; font-weight: 600; cursor: pointer;
+      transition: all .2s ease; text-align: center;
+      display: flex; flex-direction: column; align-items: center; gap: 5px;
+      color: var(--text-muted);
+    }
+    .tag-type-tab i { font-size: 16px; }
+    .tag-type-tab.active.type-industry     { background: #eef1fd; border-color: #2d4cc8; color: #2d4cc8; }
+    .tag-type-tab.active.type-function     { background: #e9faf0; border-color: #2b8a3e; color: #2b8a3e; }
+    .tag-type-tab.active.type-company_size { background: #fff4ed; border-color: #c45200; color: #c45200; }
+    .tag-type-tab:not(.active):hover       { background: var(--bg); border-color: #b8c4de; color: var(--text); }
+
+    /* Tag label search + list */
+    .tag-label-search-wrap { position: relative; margin-bottom: 10px; }
+    .tag-label-search-wrap i { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 12px; pointer-events: none; }
+    .tag-label-search { width: 100%; padding: 9px 12px 9px 34px; border: 1.5px solid var(--border); border-radius: 8px; font-size: 13px; color: var(--text); background: var(--bg); outline: none; transition: border-color .2s; font-family: 'Sora', sans-serif; }
+    .tag-label-search:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(59,91,219,.1); background: var(--white); }
+
+    .tag-label-list {
+      max-height: 220px; overflow-y: auto; border: 1.5px solid var(--border);
+      border-radius: 9px; background: var(--white);
+      scrollbar-width: thin; scrollbar-color: #c1ccdf transparent;
+    }
+    .tag-label-list:empty::after {
+      content: 'No tags available'; display: block; padding: 18px;
+      text-align: center; color: var(--text-muted); font-size: 13px; font-style: italic;
+    }
+    .tag-label-option {
+      display: flex; align-items: center; gap: 10px; padding: 11px 14px;
+      cursor: pointer; transition: background .15s; border-bottom: 1px solid var(--border);
+      font-size: 13px; font-weight: 500;
+    }
+    .tag-label-option:last-child { border-bottom: none; }
+    .tag-label-option:hover { background: var(--bg); }
+    .tag-label-option.selected { background: #eef1fd; }
+    .tag-label-option.selected.type-function     { background: #e9faf0; }
+    .tag-label-option.selected.type-company_size { background: #fff4ed; }
+    .tag-label-option-dot {
+      width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0;
+      background: #c1ccdf; transition: background .15s;
+    }
+    .tag-label-option.selected .tag-label-option-dot { background: #2d4cc8; }
+    .tag-label-option.selected.type-function     .tag-label-option-dot { background: #2b8a3e; }
+    .tag-label-option.selected.type-company_size .tag-label-option-dot { background: #c45200; }
+    .tag-label-option-name { flex: 1; color: var(--text); }
+    .tag-label-option-check { font-size: 13px; color: #2d4cc8; opacity: 0; transition: opacity .15s; }
+    .tag-label-option.selected .tag-label-option-check { opacity: 1; }
+    .tag-label-option.selected.type-function     .tag-label-option-check { color: #2b8a3e; }
+    .tag-label-option.selected.type-company_size .tag-label-option-check { color: #c45200; }
+
+    .tag-label-none {
+      padding: 18px; text-align: center; color: var(--text-muted);
+      font-size: 13px; font-style: italic;
+    }
+
+    /* Selected tag preview */
+    .bulk-tag-preview {
+      margin-top: 14px; padding: 12px 16px;
+      background: var(--bg); border-radius: 9px; border: 1.5px solid var(--border);
+      display: flex; align-items: center; gap: 10px; min-height: 46px;
+      transition: border-color .2s, background .2s;
+    }
+    .bulk-tag-preview.has-selection { border-color: #c5d0f8; background: #f5f7ff; }
+    .bulk-tag-preview.has-selection.type-function     { border-color: #b2f2bb; background: #f4fbf6; }
+    .bulk-tag-preview.has-selection.type-company_size { border-color: #ffd8b0; background: #fff9f5; }
+    .bulk-tag-preview-label { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .4px; color: var(--text-muted); flex-shrink: 0; }
+    .bulk-tag-preview-pill  { display: inline-flex; align-items: center; gap: 5px; padding: 5px 12px; border-radius: 999px; font-size: 12px; font-weight: 700; }
+    .bulk-tag-preview-pill.type-industry     { background: #eef1fd; color: #2d4cc8; border: 1.5px solid #c5d0f8; }
+    .bulk-tag-preview-pill.type-function     { background: #e9faf0; color: #2b8a3e; border: 1.5px solid #b2f2bb; }
+    .bulk-tag-preview-pill.type-company_size { background: #fff4ed; color: #c45200; border: 1.5px solid #ffd8b0; }
+    .bulk-tag-preview-empty { font-size: 12px; color: var(--text-muted); font-style: italic; }
+
+    /* Bulk tag result banner */
+    .bulk-result-banner {
+      display: flex; align-items: flex-start; gap: 12px;
+      padding: 14px 16px; border-radius: 9px; margin-top: 16px; border: 1.5px solid;
+    }
+    .bulk-result-banner.success { background: #f2fbf5; border-color: #b2f2bb; color: #1a7a3c; }
+    .bulk-result-banner.info    { background: #eef1fd; border-color: #c5d0f8; color: #2d4cc8; }
+    .bulk-result-banner i { font-size: 17px; flex-shrink: 0; margin-top: 1px; }
+    .bulk-result-banner-text { font-size: 13px; font-weight: 600; line-height: 1.5; }
+
+    /* Toolbar bulk tag button */
+    .btn-bulk-tag {
+      background: linear-gradient(135deg, #2d4cc8, #4c6ef5);
+      color: #fff; border: none; padding: 9px 16px; border-radius: var(--radius-sm);
+      font-size: 13px; font-weight: 700; gap: 8px; box-shadow: 0 2px 10px rgba(45,76,200,.25);
+      transition: var(--transition); white-space: nowrap;
+    }
+    .btn-bulk-tag:hover { background: linear-gradient(135deg, #243e9e, #3b5bdb); transform: translateY(-1px); box-shadow: 0 4px 18px rgba(45,76,200,.38); }
+    .bulk-tag-count-badge {
+      display: inline-flex; align-items: center; justify-content: center;
+      min-width: 20px; height: 20px; padding: 0 6px;
+      background: rgba(255,255,255,.25); border-radius: 999px;
+      font-size: 11px; font-weight: 800; line-height: 1;
+    }
+
+    /* SFB bulk tag button */
+    .sfb-bulk-tag {
+      background: linear-gradient(135deg, #2d4cc8, #4c6ef5);
+      color: #fff;
+      box-shadow: 0 2px 10px rgba(45,76,200,.35);
+    }
+    .sfb-bulk-tag:hover {
+      background: linear-gradient(135deg, #243e9e, #3b5bdb);
+      box-shadow: 0 4px 18px rgba(45,76,200,.5);
+      transform: translateY(-1px);
+    }
+
+    /* Apply button state */
+    .btn-bulk-apply:disabled { opacity: .5; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+  </style>
 </head>
 <body>
 
-<!-- ═══════════════════════ NAVBAR ════════════════════════ -->
+<!-- NAVBAR -->
 <nav class="navbar">
   <a class="navbar-brand" href="index.html">
     <img src="logo/favicon.png" alt="DataChamps Logo" class="brand-logo" onerror="this.style.display='none'" />
     <span class="brand-name">DataChamps</span>
   </a>
-
   <ul class="navbar-nav" id="navbarNav">
     <li><a class="nav-link" href="index.html"><i class="fa fa-th-large"></i> Dashboards</a></li>
     <li><a class="nav-link active" href="kpi.html"><i class="fa fa-chart-line"></i> KPI Details</a></li>
     <li><a class="nav-link" href="visual.html"><i class="fa fa-eye"></i> Visual Details</a></li>
+    <li><a class="nav-link" href="wireframe.html"><i class="fa fa-drafting-compass"></i> Wireframe</a></li>
   </ul>
-
   <div class="navbar-actions">
-    <!-- Guest -->
     <div id="guestActions">
       <button class="btn-login" onclick="window.location.href='login.html'">
-        <i class="fa fa-lock"></i>
-        <span class="btn-text">Login</span>
+        <i class="fa fa-lock"></i><span class="btn-text">Login</span>
       </button>
     </div>
-
-    <!-- Logged in — single profile button with dropdown (matches index.html) -->
     <div id="adminActions" style="display:none; align-items:center; gap:10px;" class="profile-wrapper">
       <div class="profile-dropdown-wrap" id="profileDropdownWrap">
         <button class="btn-profile" id="profileBtn" onclick="toggleProfileDropdown(event)" aria-haspopup="true" aria-expanded="false">
-          <div id="profileAvatarWrap">
-            <div class="avatar" id="adminAvatar">A</div>
-          </div>
+          <div id="profileAvatarWrap"><div class="avatar" id="adminAvatar">A</div></div>
           <div class="profile-info">
             <span class="admin-name" id="adminName">User</span>
             <span class="role-badge" id="roleBadge">—</span>
           </div>
           <i class="fa fa-chevron-down profile-chevron" id="profileChevron"></i>
         </button>
-
-        <!-- Dropdown Menu -->
         <div class="profile-dropdown" id="profileDropdown" role="menu">
-          <!-- User info header -->
           <div class="dropdown-header">
-            <div class="dropdown-avatar" id="dropdownAvatarWrap">
-              <div class="avatar-lg" id="dropdownAvatar">A</div>
-            </div>
+            <div class="dropdown-avatar" id="dropdownAvatarWrap"><div class="avatar-lg" id="dropdownAvatar">A</div></div>
             <div class="dropdown-user-info">
               <div class="dropdown-name" id="dropdownName">User</div>
               <div class="dropdown-role" id="dropdownRole">—</div>
             </div>
           </div>
           <div class="dropdown-divider"></div>
-
-          <!-- Menu items -->
           <a class="dropdown-item" href="profile.html" role="menuitem">
             <span class="dropdown-item-icon"><i class="fa fa-user-circle"></i></span>
             <span class="dropdown-item-text">My Profile</span>
           </a>
-
-          <!-- Admin only: Manage Users -->
-          <button class="dropdown-item" id="manageUsersItem" style="display:none;" onclick="closeProfileDropdown();openUsersModal();" role="menuitem">
-            <span class="dropdown-item-icon admin-icon"><i class="fa fa-users-cog"></i></span>
-            <span class="dropdown-item-text">Manage Users</span>
-            <span class="dropdown-item-badge">Admin</span>
+          <button class="dropdown-item" id="approvalQueueItem" style="display:none;" onclick="openApprovalQueueModal();" role="menuitem">
+            <span class="dropdown-item-icon admin-icon"><i class="fa fa-tasks"></i></span>
+            <span class="dropdown-item-text">Approval Queue</span>
+            <span class="pending-badge-nav" id="pendingBadge" style="display:none;">0</span>
           </button>
-
+          <button class="dropdown-item" id="mySubmissionsItem" style="display:none;" onclick="openMySubmissionsModal();" role="menuitem">
+            <span class="dropdown-item-icon" style="background:#f5eaf9;color:#9c36b5;"><i class="fa fa-paper-plane"></i></span>
+            <span class="dropdown-item-text">My Submissions</span>
+            <span class="submissions-badge-nav" id="submissionsBadge" style="display:none;">0</span>
+          </button>
           <div class="dropdown-divider"></div>
-
           <button class="dropdown-item danger" onclick="logout()" role="menuitem">
             <span class="dropdown-item-icon"><i class="fa fa-sign-out-alt"></i></span>
             <span class="dropdown-item-text">Logout</span>
@@ -102,204 +225,239 @@
       </div>
     </div>
   </div>
-
   <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu" aria-expanded="false">
     <span></span><span></span><span></span>
   </button>
 </nav>
 
-<!-- ═══════════════════════ HERO ══════════════════════════ -->
+<!-- HERO -->
 <div class="hero">
-  <div class="hero-breadcrumb">
-    <i class="fa fa-chart-line"></i>
-    <span>KPI Details</span>
-  </div>
   <h1>KPI Details</h1>
-  <p>Industry-wise Key Performance Indicators — formulas, units and definitions</p>
+  <p>Industry-wise Key Performance Indicators — formulas, units and tags</p>
 </div>
 
-<!-- ═══════════════════════ STAT BAR ══════════════════════ -->
+<!-- STAT BAR -->
 <div class="stat-bar">
   <div class="stat-item">
     <div class="stat-icon blue"><i class="fa fa-chart-line"></i></div>
-    <div class="stat-info">
-      <span class="stat-num" id="statTotal">—</span>
-      <span class="stat-lbl">Total KPIs</span>
-    </div>
+    <div class="stat-info"><span class="stat-num" id="statTotal">—</span><span class="stat-lbl">Total KPIs</span></div>
   </div>
   <div class="stat-item">
     <div class="stat-icon green"><i class="fa fa-industry"></i></div>
-    <div class="stat-info">
-      <span class="stat-num" id="statIndustries">—</span>
-      <span class="stat-lbl">Industries</span>
-    </div>
+    <div class="stat-info"><span class="stat-num" id="statIndustries">—</span><span class="stat-lbl">Industries</span></div>
   </div>
   <div class="stat-item">
     <div class="stat-icon amber"><i class="fa fa-ruler"></i></div>
-    <div class="stat-info">
-      <span class="stat-num" id="statUnits">—</span>
-      <span class="stat-lbl">Unique Units</span>
-    </div>
+    <div class="stat-info"><span class="stat-num" id="statUnits">—</span><span class="stat-lbl">Unique Units</span></div>
   </div>
 </div>
 
-<!-- ═══════════════════════ MAIN ══════════════════════════ -->
+<!-- MAIN -->
 <div class="main-container">
-
-  <!-- Industry filter tabs -->
-  <div class="industry-tabs" id="industryTabs">
-    <div class="ind-tab active" data-id="0" onclick="filterByIndustry(0, this)">
-      <i class="fa fa-th-large"></i> All Industries
+  <!-- TAG PALETTE -->
+  <div class="tag-palette-wrap" id="tagPaletteWrap">
+    <div class="tag-palette-header">
+      <div class="tag-palette-title">
+        <i class="fa fa-tags"></i>
+        <span>Tags</span>
+        <span class="tag-palette-hint" id="tagPaletteHint"></span>
+      </div>
+      <div class="tag-palette-filters">
+        <button class="tag-filter-btn active" data-type="all"           onclick="setPaletteFilter('all',this)">All</button>
+        <button class="tag-filter-btn"         data-type="industry"     onclick="setPaletteFilter('industry',this)">Industry</button>
+        <button class="tag-filter-btn"         data-type="function"     onclick="setPaletteFilter('function',this)">Function</button>
+        <button class="tag-filter-btn"         data-type="company_size" onclick="setPaletteFilter('company_size',this)">Company Size</button>
+      </div>
     </div>
-    <!-- injected by JS -->
+    <div class="tag-palette" id="tagPalette">
+      <div class="palette-loading"><i class="fa fa-spinner fa-spin"></i> Loading tags…</div>
+    </div>
+  </div>
+
+  <!-- Active filter badge -->
+  <div class="active-filter-bar" id="activeFilterBar" style="display:none;">
+    <span class="active-filter-label">Filtered by tag:</span>
+    <span class="active-filter-pill" id="activeFilterPill"></span>
+    <button class="active-filter-clear" onclick="clearTagFilter()"><i class="fa fa-times"></i> Clear filter</button>
   </div>
 
   <div class="section-heading">
     <h2 id="sectionTitle">All KPIs</h2>
     <span class="count-badge" id="sectionCount">0</span>
   </div>
-  <p class="section-sub">Key Performance Indicators with formulas, units and descriptions</p>
+  <p class="section-sub">Key Performance Indicators with formulas, units and tags</p>
 
   <div class="toolbar">
     <div class="search-box">
       <i class="fa fa-search"></i>
-      <input type="text" id="searchInput" placeholder="Search KPIs..." oninput="onSearch()" />
+      <input type="text" id="searchInput" placeholder="Search KPIs…" oninput="onSearch()" />
     </div>
     <div class="toolbar-right">
-      <button class="btn btn-primary" id="addBtn" style="display:none;" onclick="openAddModal()">
-        <i class="fa fa-plus"></i> Add KPI
+      <button class="btn btn-outline-select" id="selectAllVisibleBtn" style="display:none;" onclick="selectAllVisible()" title="Select all visible KPIs">
+        <i class="fa fa-check-square"></i> <span>Select All</span>
       </button>
+      <button class="btn btn-outline-select" id="deselectAllBtn" style="display:none;" onclick="deselectAll()" title="Clear all selections">
+        <i class="fa fa-square"></i> <span>Deselect All</span>
+      </button>
+      <!-- BULK TAG BUTTON — only shown to super_admin when KPIs are selected -->
+      <button class="btn btn-bulk-tag" id="bulkTagBtn" style="display:none;" onclick="openBulkTagModal()" title="Assign a tag to all selected KPIs">
+        <i class="fa fa-tags"></i>
+        <span class="dl-label">Bulk Assign Tag</span>
+        <span class="bulk-tag-count-badge" id="bulkTagCountBadge">0</span>
+      </button>
+      <button class="btn btn-download" id="downloadBtn" style="display:none;" onclick="downloadSelectedExcel()">
+        <i class="fa fa-file-excel"></i>
+        <span class="dl-label">Download Selected</span>
+        <span class="download-count-badge" id="downloadCountBadge">0</span>
+      </button>
+      <button class="btn btn-primary" id="addBtn" style="display:none;" onclick="addInlineRow()">
+        <i class="fa fa-plus"></i> <span>Add KPI</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- FLOATING SELECTION BAR -->
+  <div class="selection-float-bar" id="selectionFloatBar">
+    <div class="sfb-left">
+      <div class="sfb-icon"><i class="fa fa-check-double"></i></div>
+      <span class="sfb-text"><strong id="sfbCount">0</strong> KPI<span id="sfbPlural">s</span> selected</span>
+    </div>
+    <div class="sfb-actions">
+      <button class="sfb-btn sfb-deselect" onclick="deselectAll()"><i class="fa fa-times"></i> Clear</button>
+      <!-- Bulk tag in floating bar — super_admin only -->
+      <button class="sfb-btn sfb-bulk-tag" id="sfbBulkTagBtn" style="display:none;" onclick="openBulkTagModal()"><i class="fa fa-tags"></i> Bulk Tag</button>
+      <button class="sfb-btn sfb-download" onclick="downloadSelectedExcel()"><i class="fa fa-file-excel"></i> Download Excel</button>
     </div>
   </div>
 
   <div id="cardsArea"></div>
 </div>
 
-<!-- ═══════════════════════ ADD/EDIT KPI MODAL ════════════ -->
-<div class="modal-overlay" id="kpiOverlay">
-  <div class="modal">
+<!-- ══════════════════════════════════════════════════════════
+     BULK TAG ASSIGNMENT MODAL
+     ══════════════════════════════════════════════════════════ -->
+<div class="modal-overlay" id="bulkTagOverlay">
+  <div class="modal bulk-tag-modal">
     <div class="modal-header">
       <span class="modal-title">
-        <i class="fa fa-chart-line"></i>
-        <span id="kpiModalTitle">Add KPI</span>
+        <i class="fa fa-tags" style="color:#2d4cc8;"></i>
+        Bulk Assign Tag
       </span>
-      <button class="modal-close" onclick="closeModal('kpiOverlay')"><i class="fa fa-times"></i></button>
+      <button class="modal-close" onclick="closeBulkTagModal()"><i class="fa fa-times"></i></button>
     </div>
     <div class="modal-body">
-      <input type="hidden" id="kpiId" />
-
-      <div class="form-group">
-        <label class="form-label">Industry <span class="required">*</span></label>
-        <select class="form-control" id="kpiIndustryId">
-          <option value="">— Select Industry —</option>
-        </select>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">KPI Name <span class="required">*</span></label>
-        <input type="text" class="form-control" id="kpiName"
-               placeholder="e.g. Gross Profit Margin, OEE, Inventory Turnover" />
-      </div>
-
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Unit</label>
-          <input type="text" class="form-control" id="kpiUnit"
-                 placeholder="e.g. %, Days, Rs., Ratio" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Formula</label>
-          <input type="text" class="form-control" id="kpiFormula"
-                 placeholder="e.g. (Gross Profit / Revenue) × 100" />
+      <!-- Summary of selected KPIs -->
+      <div class="bulk-tag-summary">
+        <div class="bulk-tag-summary-icon"><i class="fa fa-layer-group"></i></div>
+        <div class="bulk-tag-summary-text">
+          <span class="bulk-tag-summary-count" id="btmKpiCount">0 KPIs selected</span>
+          <span class="bulk-tag-summary-sub">The chosen tag will be assigned to all selected KPIs</span>
         </div>
       </div>
-      <p class="formula-hint">
-        <i class="fa fa-info-circle"></i> Use plain text or mathematical notation for the formula.
-      </p>
 
+      <!-- Step 1: Choose tag type -->
       <div class="form-group">
-        <label class="form-label">Description</label>
-        <textarea class="form-control" id="kpiDescription"
-                  placeholder="Explain what this KPI measures and why it matters..."></textarea>
+        <label class="form-label">Step 1 — Choose Tag Type</label>
+        <div class="tag-type-tabs" id="tagTypeTabs">
+          <button class="tag-type-tab type-industry active" data-type="industry" onclick="selectBulkTagType('industry', this)">
+            <i class="fa fa-industry"></i>
+            <span>Industry</span>
+          </button>
+          <button class="tag-type-tab type-function" data-type="function" onclick="selectBulkTagType('function', this)">
+            <i class="fa fa-cogs"></i>
+            <span>Function</span>
+          </button>
+          <button class="tag-type-tab type-company_size" data-type="company_size" onclick="selectBulkTagType('company_size', this)">
+            <i class="fa fa-building"></i>
+            <span>Company Size</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Step 2: Choose tag label -->
+      <div class="form-group">
+        <label class="form-label">Step 2 — Choose Tag Label</label>
+        <div class="tag-label-search-wrap">
+          <i class="fa fa-search"></i>
+          <input type="text" class="tag-label-search" id="btmLabelSearch" placeholder="Search tags…" oninput="filterBulkTagLabels()" />
+        </div>
+        <div class="tag-label-list" id="btmLabelList"></div>
+      </div>
+
+      <!-- Selected tag preview -->
+      <div class="bulk-tag-preview" id="btmPreview">
+        <span class="bulk-tag-preview-label">Will assign:</span>
+        <span class="bulk-tag-preview-empty" id="btmPreviewEmpty">No tag selected yet</span>
+        <span class="bulk-tag-preview-pill" id="btmPreviewPill" style="display:none;"></span>
+      </div>
+
+      <!-- Result banner (shown after apply) -->
+      <div class="bulk-result-banner success" id="btmResultBanner" style="display:none;">
+        <i class="fa fa-check-circle"></i>
+        <span class="bulk-result-banner-text" id="btmResultText"></span>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('kpiOverlay')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveKpi()">
-        <i class="fa fa-save"></i> Save KPI
+      <button class="btn btn-secondary" onclick="closeBulkTagModal()">Cancel</button>
+      <button class="btn btn-primary btn-bulk-apply" id="btmApplyBtn" disabled onclick="applyBulkTag()">
+        <i class="fa fa-tags"></i> Assign Tag to Selected KPIs
       </button>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════ MANAGE USERS MODAL ════════════ -->
-<div class="modal-overlay" id="usersOverlay">
-  <div class="modal users-modal">
+<!-- APPROVAL QUEUE MODAL -->
+<div class="modal-overlay" id="approvalQueueOverlay">
+  <div class="modal aq-modal">
     <div class="modal-header">
-      <span class="modal-title"><i class="fa fa-users-cog"></i> Manage Users</span>
-      <button class="modal-close" onclick="closeModal('usersOverlay')"><i class="fa fa-times"></i></button>
+      <span class="modal-title">
+        <i class="fa fa-tasks" style="color:#f76707;"></i>
+        Approval Queue
+        <span class="aq-modal-badge" id="aqModalBadge" style="display:none;">0</span>
+      </span>
+      <button class="modal-close" onclick="closeModal('approvalQueueOverlay')"><i class="fa fa-times"></i></button>
     </div>
-    <div class="modal-body">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
-        <button class="btn btn-primary btn-sm" onclick="openAddUserModal()">
-          <i class="fa fa-plus"></i> Add User
-        </button>
-      </div>
-      <div id="usersList">
-        <div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading users…</div>
-      </div>
+    <div class="modal-body aq-modal-body">
+      <div id="approvalQueueList"></div>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════ ADD / EDIT USER MODAL ═════════ -->
-<div class="modal-overlay" id="userFormOverlay">
+<!-- REJECT REASON MODAL -->
+<div class="modal-overlay" id="rejectOverlay">
   <div class="modal" style="max-width:440px;">
     <div class="modal-header">
-      <span class="modal-title">
-        <i class="fa fa-user-plus"></i>
-        <span id="userFormTitle">Add User</span>
-      </span>
-      <button class="modal-close" onclick="closeModal('userFormOverlay')"><i class="fa fa-times"></i></button>
+      <span class="modal-title"><i class="fa fa-times-circle" style="color:#c92a2a;"></i> Reject Submission</span>
+      <button class="modal-close" onclick="closeModal('rejectOverlay')"><i class="fa fa-times"></i></button>
     </div>
     <div class="modal-body">
-      <input type="hidden" id="userFormId" />
-
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Rejecting: <strong id="rejectItemName"></strong></p>
       <div class="form-group">
-        <label class="form-label">Full Name <span class="required">*</span></label>
-        <input type="text" class="form-control" id="userFormName" placeholder="e.g. Prajwal Shendge" />
-      </div>
-
-      <div class="form-group" id="userEmailGroup">
-        <label class="form-label">Gmail Address <span class="required">*</span></label>
-        <input type="email" class="form-control" id="userFormEmail" placeholder="user@gmail.com" />
-        <small style="color:var(--text-muted);font-size:11px;margin-top:4px;display:block;font-family:'Sora',sans-serif;">Must match their Google account email exactly.</small>
-      </div>
-
-      <div class="form-group">
-        <label class="form-label">Role <span class="required">*</span></label>
-        <select class="form-control" id="userFormRole">
-          <option value="bi_developer">BI Developer — View &amp; Download only</option>
-          <option value="admin">Admin — Full Access</option>
-        </select>
-      </div>
-
-      <div class="form-group" id="userActiveGroup" style="display:none;">
-        <label class="form-check">
-          <input type="checkbox" id="userFormActive" checked /> Account Active
-        </label>
+        <label class="form-label">Reason (shown to contributor)</label>
+        <textarea class="form-control" id="rejectReason" placeholder="e.g. Duplicate entry, incorrect information..." style="min-height:80px;"></textarea>
       </div>
     </div>
     <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('userFormOverlay')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveUser()">
-        <i class="fa fa-save"></i> Save
-      </button>
+      <button class="btn btn-secondary" onclick="closeModal('rejectOverlay')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmReject()"><i class="fa fa-times"></i> Confirm Reject</button>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════ CONFIRM DELETE ════════════════ -->
+<!-- MY SUBMISSIONS MODAL -->
+<div class="modal-overlay" id="mySubmissionsOverlay">
+  <div class="modal aq-modal">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fa fa-paper-plane" style="color:#9c36b5;"></i> My Submissions</span>
+      <button class="modal-close" onclick="closeModal('mySubmissionsOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body aq-modal-body">
+      <div id="mySubmissionsList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- CONFIRM DELETE -->
 <div class="modal-overlay" id="confirmOverlay">
   <div class="modal confirm-dialog">
     <div class="confirm-body">
@@ -309,16 +467,14 @@
     </div>
     <div class="modal-footer">
       <button class="btn btn-secondary" onclick="closeModal('confirmOverlay')">Cancel</button>
-      <button class="btn btn-danger" onclick="confirmDeleteAction()">
-        <i class="fa fa-trash"></i> Delete
-      </button>
+      <button class="btn btn-danger" onclick="confirmDeleteAction()"><i class="fa fa-trash"></i> Delete</button>
     </div>
   </div>
 </div>
 
+<div class="drop-hint-toast" id="dropHintToast"></div>
 <div class="toast-container" id="toastContainer"></div>
 
-<!-- ═══════════════════════ JAVASCRIPT ════════════════════ -->
 <script>
 'use strict';
 
@@ -326,618 +482,1546 @@ var KPI_URL  = 'php/kpi_api.php';
 var AUTH_URL = 'php/api.php';
 
 var state = {
-  isAdmin:           false,
-  isLoggedIn:        false,
-  userRole:          '',
-  userName:          '',
-  industries:        [],
-  currentIndustryId: 0,
-  searchTimer:       null,
-  deleteCallback:    null,
-  kpiList:           []
+  isLoggedIn:    false,
+  isSuperAdmin:  false,
+  isContributor: false,
+  isBiDev:       false,
+  canAddContent: false,
+  userRole:      '',
+  userName:      '',
+  pendingCount:  0,
+  industries:   [],
+  functions:    [],
+  companySizes: [],
+  paletteFilter:   'all',
+  activeTagFilter: null,
+  allPaletteChips: [],
+  kpiList:        [],
+  selectedKpiIds: new Set(),
+  searchTimer:    null,
+  deleteCallback: null,
+  editingKpiId:   null,
+  addingRow:      false,
+  _rejectItemType: '',
+  _rejectItemId:   0,
+  // Bulk tag modal state
+  bulkTag: {
+    type:  'industry',
+    label: null
+  }
 };
 
-// ── Init ──────────────────────────────────────────────────
+var paletteDrag = { active: false, tagType: null, tagLabel: null, chipEl: null };
+
+/* ══ INIT ══════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function() {
-  Promise.all([
-    checkSession(),
-    loadIndustries()
-  ]).then(function() {
-    loadStats();
-    renderKpis();
+  checkSession().then(function() {
+    Promise.all([loadIndustries(), loadFunctions(), loadCompanySizes()])
+      .then(function() {
+        buildTagPalette();
+        loadStats();
+        renderKpis();
+      });
   });
   setupClickOutsideNav();
   setupClickOutsideDropdown();
 });
 
-// ── Click outside nav to close (mobile) ──────────────────
 function setupClickOutsideNav() {
   document.addEventListener('click', function(e) {
     var nav = document.getElementById('navbarNav');
     var btn = document.getElementById('hamburger');
-    if (nav && nav.classList.contains('open') &&
-        !nav.contains(e.target) && !btn.contains(e.target)) {
-      closeNav();
-    }
+    if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) closeNav();
   });
 }
-
-// ── Click outside profile dropdown to close ───────────────
 function setupClickOutsideDropdown() {
   document.addEventListener('click', function(e) {
     var wrap = document.getElementById('profileDropdownWrap');
-    if (wrap && !wrap.contains(e.target)) {
-      closeProfileDropdown();
-    }
+    if (wrap && !wrap.contains(e.target)) closeProfileDropdown();
   });
 }
 
-// ── Profile Dropdown ──────────────────────────────────────
+/* ══ PROFILE DROPDOWN ══════════════════════════════════ */
 function toggleProfileDropdown(e) {
   e.stopPropagation();
-  var dropdown = document.getElementById('profileDropdown');
-  var btn      = document.getElementById('profileBtn');
-  var chevron  = document.getElementById('profileChevron');
-  var isOpen   = dropdown.classList.contains('open');
-  if (isOpen) {
-    closeProfileDropdown();
-  } else {
-    dropdown.classList.add('open');
-    btn.setAttribute('aria-expanded', 'true');
-    chevron.style.transform = 'rotate(180deg)';
+  var dd = document.getElementById('profileDropdown');
+  var chev = document.getElementById('profileChevron');
+  if (dd.classList.contains('open')) { closeProfileDropdown(); }
+  else {
+    dd.classList.add('open');
+    document.getElementById('profileBtn').setAttribute('aria-expanded','true');
+    if (chev) chev.style.transform = 'rotate(180deg)';
   }
 }
-
 function closeProfileDropdown() {
-  var dropdown = document.getElementById('profileDropdown');
-  var btn      = document.getElementById('profileBtn');
-  var chevron  = document.getElementById('profileChevron');
-  if (dropdown) {
-    dropdown.classList.remove('open');
-    if (btn) btn.setAttribute('aria-expanded', 'false');
-    if (chevron) chevron.style.transform = '';
-  }
+  var dd   = document.getElementById('profileDropdown');
+  var btn  = document.getElementById('profileBtn');
+  var chev = document.getElementById('profileChevron');
+  if (dd)   dd.classList.remove('open');
+  if (btn)  btn.setAttribute('aria-expanded','false');
+  if (chev) chev.style.transform = '';
 }
 
-// ── Session ───────────────────────────────────────────────
+/* ══ SESSION ════════════════════════════════════════════ */
 function checkSession() {
   return fetch(AUTH_URL + '?action=session_check')
     .then(function(r) { return r.json(); })
-    .then(function(data) {
-      state.isLoggedIn = !!data.logged_in;
-      state.isAdmin    = !!data.is_admin;
-      state.userRole   = data.role  || '';
-      state.userName   = data.name  || '';
-      updateAuthUI(data);
+    .then(function(d) {
+      state.isLoggedIn    = !!d.logged_in;
+      state.isSuperAdmin  = !!d.is_super_admin;
+      state.isContributor = !!d.is_contributor;
+      state.isBiDev       = !!d.is_bi_developer;
+      state.canAddContent = !!d.can_add_content;
+      state.userRole      = d.role  || '';
+      state.userName      = d.name  || '';
+      state.pendingCount  = d.pending_count || 0;
+      updateAuthUI(d);
+      updatePendingBadge();
     })
     .catch(function() { updateAuthUI({}); });
 }
 
-function updateAuthUI(data) {
+function updateAuthUI(d) {
   var loggedIn = state.isLoggedIn;
-  document.getElementById('guestActions').style.display  = loggedIn ? 'none'         : 'block';
-  document.getElementById('adminActions').style.display  = loggedIn ? 'flex'          : 'none';
-  document.getElementById('addBtn').style.display        = state.isAdmin ? 'inline-flex' : 'none';
+  document.getElementById('guestActions').style.display = loggedIn ? 'none'  : 'block';
+  document.getElementById('adminActions').style.display = loggedIn ? 'flex'  : 'none';
+  document.getElementById('addBtn').style.display = state.canAddContent ? 'inline-flex' : 'none';
 
-  var manageUsersItem = document.getElementById('manageUsersItem');
-  if (manageUsersItem) manageUsersItem.style.display = state.isAdmin ? 'flex' : 'none';
+  var aqItem = document.getElementById('approvalQueueItem');
+  var msItem = document.getElementById('mySubmissionsItem');
+  if (aqItem) aqItem.style.display = state.isSuperAdmin  ? 'flex' : 'none';
+  if (msItem) msItem.style.display = state.isContributor ? 'flex' : 'none';
 
-  if (loggedIn) {
-    var firstName = state.userName ? state.userName.split(' ')[0] : 'User';
-    var initial   = state.userName ? state.userName.charAt(0).toUpperCase() : 'U';
+  var selAll   = document.getElementById('selectAllVisibleBtn');
+  var deselAll = document.getElementById('deselectAllBtn');
+  if (selAll)   selAll.style.display   = loggedIn ? 'inline-flex' : 'none';
+  if (deselAll) deselAll.style.display = loggedIn ? 'inline-flex' : 'none';
 
-    // Navbar profile button
-    document.getElementById('adminName').textContent = firstName;
+  var hint = document.getElementById('tagPaletteHint');
+  if (hint) hint.textContent = state.isSuperAdmin
+    ? '— drag a chip onto a KPI row to assign it, or click to filter'
+    : '— click a chip to filter KPIs';
 
-    // Role badge in navbar
-    var rb = document.getElementById('roleBadge');
-    if (state.isAdmin) {
-      rb.className = 'role-badge admin';
-      rb.innerHTML = '<i class="fa fa-shield-alt" style="font-size:9px;"></i> Admin';
-    } else {
-      rb.className = 'role-badge bi_developer';
-      rb.innerHTML = '<i class="fa fa-chart-bar" style="font-size:9px;"></i> BI Dev';
-    }
+  if (!loggedIn) return;
 
-    // Avatar in navbar
-    var wrap = document.getElementById('profileAvatarWrap');
-    if (data && data.picture) {
-      wrap.innerHTML = '<img src="' + data.picture + '" class="avatar-img" alt="Avatar" onerror="this.parentNode.innerHTML=\'<div class=avatar>' + esc(initial) + '</div>\'" />';
-    } else {
-      wrap.innerHTML = '<div class="avatar">' + esc(initial) + '</div>';
-    }
+  var firstName = state.userName ? state.userName.split(' ')[0] : 'User';
+  var initial   = state.userName ? state.userName.charAt(0).toUpperCase() : 'U';
+  document.getElementById('adminName').textContent = firstName;
 
-    // Dropdown header
-    document.getElementById('dropdownName').textContent = state.userName || 'User';
-    var dropdownRole = document.getElementById('dropdownRole');
-    if (state.isAdmin) {
-      dropdownRole.innerHTML = '<i class="fa fa-shield-alt"></i> Administrator';
-      dropdownRole.className = 'dropdown-role admin-role';
-    } else {
-      dropdownRole.innerHTML = '<i class="fa fa-chart-bar"></i> BI Developer';
-      dropdownRole.className = 'dropdown-role dev-role';
-    }
-
-    // Dropdown avatar
-    var dropWrap = document.getElementById('dropdownAvatarWrap');
-    if (data && data.picture) {
-      dropWrap.innerHTML = '<img src="' + data.picture + '" class="dropdown-avatar-img" alt="Avatar" onerror="this.parentNode.innerHTML=\'<div class=avatar-lg>' + esc(initial) + '</div>\'" />';
-    } else {
-      dropWrap.innerHTML = '<div class="avatar-lg">' + esc(initial) + '</div>';
-    }
+  var rb = document.getElementById('roleBadge');
+  if (state.isSuperAdmin) {
+    rb.className = 'role-badge super_admin';
+    rb.innerHTML = '<i class="fa fa-crown" style="font-size:9px;"></i> Super Admin';
+  } else if (state.isContributor) {
+    rb.className = 'role-badge contributor';
+    rb.innerHTML = '<i class="fa fa-pen" style="font-size:9px;"></i> Contributor';
+  } else {
+    rb.className = 'role-badge bi_developer';
+    rb.innerHTML = '<i class="fa fa-chart-bar" style="font-size:9px;"></i> BI Dev';
   }
+
+  var wrap = document.getElementById('profileAvatarWrap');
+  if (d && d.picture) {
+    wrap.innerHTML = '<img src="'+d.picture+'" class="avatar-img" alt="Avatar" onerror="this.parentNode.innerHTML=\'<div class=avatar>'+esc(initial)+'</div>\'" />';
+  } else {
+    wrap.innerHTML = '<div class="avatar">'+esc(initial)+'</div>';
+  }
+
+  document.getElementById('dropdownName').textContent = state.userName || 'User';
+  var dr = document.getElementById('dropdownRole');
+  if (state.isSuperAdmin) {
+    dr.innerHTML = '<i class="fa fa-crown"></i> Super Administrator';
+    dr.className = 'dropdown-role super-admin-role';
+  } else if (state.isContributor) {
+    dr.innerHTML = '<i class="fa fa-pen"></i> Contributor';
+    dr.className = 'dropdown-role contributor-role';
+  } else {
+    dr.innerHTML = '<i class="fa fa-chart-bar"></i> BI Developer';
+    dr.className = 'dropdown-role dev-role';
+  }
+  var dw = document.getElementById('dropdownAvatarWrap');
+  if (d && d.picture) {
+    dw.innerHTML = '<img src="'+d.picture+'" class="dropdown-avatar-img" alt="Avatar" onerror="this.parentNode.innerHTML=\'<div class=avatar-lg>'+esc(initial)+'</div>\'" />';
+  } else {
+    dw.innerHTML = '<div class="avatar-lg">'+esc(initial)+'</div>';
+  }
+}
+
+function updatePendingBadge() {
+  var badge = document.getElementById('pendingBadge');
+  if (!badge) return;
+  if (state.pendingCount > 0) { badge.textContent = state.pendingCount; badge.style.display = 'flex'; }
+  else badge.style.display = 'none';
 }
 
 function logout() {
   closeProfileDropdown();
-  fetch(AUTH_URL + '?action=logout', { method: 'POST' })
-    .then(function()  { sessionStorage.removeItem('dc_authed'); window.location.href = 'login.html'; })
-    .catch(function() { sessionStorage.removeItem('dc_authed'); window.location.href = 'login.html'; });
+  fetch(AUTH_URL + '?action=logout', { method:'POST' })
+    .finally(function() { sessionStorage.removeItem('dc_authed'); window.location.href = 'login.html'; });
 }
 
-// ── Generic API helper ────────────────────────────────────
-function api(method, action, body) {
-  var url  = AUTH_URL + '?action=' + action;
-  var opts = { method: method, headers: { 'Content-Type': 'application/json' } };
-  if (body) opts.body = JSON.stringify(body);
-  return fetch(url, opts)
-    .then(function(r) {
-      return r.json().then(function(data) {
-        if (!r.ok && !data.success) throw new Error(data.message || 'Request failed');
-        return data;
-      });
-    })
-    .catch(function(err) { showToast(err.message || 'Network error', 'error'); throw err; });
-}
-
-// ── KPI API helper ────────────────────────────────────────
+/* ══ API HELPERS ════════════════════════════════════════ */
 function kpiApi(method, action, body) {
   var url  = KPI_URL + '?action=' + action;
   var opts = { method: method, headers: { 'Content-Type': 'application/json' } };
   if (body) opts.body = JSON.stringify(body);
   return fetch(url, opts)
     .then(function(r) {
-      return r.json().then(function(data) {
-        if (!r.ok && !data.success) throw new Error(data.message || 'Request failed');
-        return data;
+      return r.json().then(function(d) {
+        if (!r.ok && !d.success) throw new Error(d.message || 'Request failed');
+        return d;
       });
     })
     .catch(function(err) { showToast(err.message || 'Network error', 'error'); throw err; });
 }
 
-// ── Load Industries ───────────────────────────────────────
+/* ══ REFERENCE DATA ═════════════════════════════════════ */
 function loadIndustries() {
   return fetch(KPI_URL + '?action=get_industries')
     .then(function(r) { return r.json(); })
-    .then(function(data) {
-      state.industries = data.data || [];
-      buildIndustryTabs();
-      buildIndustryDropdown();
-    })
+    .then(function(d) { state.industries = d.data || []; })
     .catch(function() { state.industries = []; });
 }
-
-function buildIndustryTabs() {
-  var tabs = document.getElementById('industryTabs');
-  tabs.querySelectorAll('[data-injected]').forEach(function(el) { el.remove(); });
-  state.industries.forEach(function(ind) {
-    var tab       = document.createElement('div');
-    tab.className = 'ind-tab';
-    tab.setAttribute('data-id', ind.id);
-    tab.setAttribute('data-injected', '1');
-    tab.innerHTML = '<i class="fa ' + esc(ind.icon || 'fa-industry') + '"></i> ' + esc(ind.name);
-    tab.onclick   = (function(id, el) {
-      return function() { filterByIndustry(id, el); };
-    })(ind.id, tab);
-    tabs.appendChild(tab);
-  });
-}
-
-function buildIndustryDropdown() {
-  var sel = document.getElementById('kpiIndustryId');
-  var currentVal = sel.value;
-  sel.innerHTML = '<option value="">— Select Industry —</option>';
-  state.industries.forEach(function(ind) {
-    var opt = document.createElement('option');
-    opt.value = ind.id;
-    opt.textContent = ind.name;
-    sel.appendChild(opt);
-  });
-  if (currentVal) sel.value = currentVal;
-}
-
-// ── Industry Filter ───────────────────────────────────────
-function filterByIndustry(id, el) {
-  state.currentIndustryId = id;
-  document.getElementById('searchInput').value = '';
-  document.querySelectorAll('#industryTabs .ind-tab').forEach(function(t) { t.classList.remove('active'); });
-  el.classList.add('active');
-  if (id === 0) {
-    document.getElementById('sectionTitle').textContent = 'All KPIs';
-  } else {
-    var ind = state.industries.find(function(i) { return i.id == id; });
-    document.getElementById('sectionTitle').textContent = (ind ? ind.name : '') + ' KPIs';
-  }
-  renderKpis();
-}
-
-// ── Stats ─────────────────────────────────────────────────
-function loadStats() {
-  fetch(KPI_URL + '?action=get_kpi_stats')
+function loadFunctions() {
+  return fetch(KPI_URL + '?action=get_functions')
     .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (data.success) {
-        document.getElementById('statTotal').textContent      = data.total;
-        document.getElementById('statIndustries').textContent = data.industries;
-        document.getElementById('statUnits').textContent      = data.units;
-      }
-    }).catch(function() {});
+    .then(function(d) { state.functions = d.data || []; })
+    .catch(function() { state.functions = []; });
+}
+function loadCompanySizes() {
+  return fetch(KPI_URL + '?action=get_company_sizes')
+    .then(function(r) { return r.json(); })
+    .then(function(d) { state.companySizes = d.data || []; })
+    .catch(function() { state.companySizes = []; });
 }
 
-// ── Search ────────────────────────────────────────────────
+/* ══ TAG PALETTE ════════════════════════════════════════ */
+function buildTagPalette() {
+  var chips = [];
+  state.industries.forEach(function(item)   { chips.push({ tag_type: 'industry',     tag_label: item.name }); });
+  state.functions.forEach(function(item)    { chips.push({ tag_type: 'function',      tag_label: item.name }); });
+  state.companySizes.forEach(function(item) { chips.push({ tag_type: 'company_size', tag_label: item.name }); });
+  chips.sort(function(a, b) {
+    var order = { industry: 0, function: 1, company_size: 2 };
+    if (a.tag_type !== b.tag_type) return (order[a.tag_type]||0) - (order[b.tag_type]||0);
+    return a.tag_label.localeCompare(b.tag_label);
+  });
+  state.allPaletteChips = chips;
+  renderPaletteChips();
+}
+
+function renderPaletteChips() {
+  var palette = document.getElementById('tagPalette');
+  if (!palette) return;
+  var filter = state.paletteFilter;
+  var chips  = state.allPaletteChips.filter(function(c) { return filter === 'all' || c.tag_type === filter; });
+  if (!chips.length) {
+    palette.innerHTML = '<span class="palette-empty"><i class="fa fa-tag"></i> No tags available yet</span>';
+    return;
+  }
+  var typeLabels = { industry: 'Industry', function: 'Function', company_size: 'Size' };
+  var html = '', lastType = null;
+  chips.forEach(function(chip) {
+    if (filter === 'all' && chip.tag_type !== lastType) {
+      lastType = chip.tag_type;
+      html += '<span class="palette-group-label">'+esc(typeLabels[chip.tag_type]||chip.tag_type)+'</span>';
+    }
+    var isActive = state.activeTagFilter &&
+                   state.activeTagFilter.tag_type  === chip.tag_type &&
+                   state.activeTagFilter.tag_label === chip.tag_label;
+    var draggableAttr = state.isSuperAdmin ? ' draggable="true"' : '';
+    var titleText     = state.isSuperAdmin ? 'Drag onto a KPI row to assign, or click to filter' : 'Click to filter';
+    html +=
+      '<div class="palette-chip type-'+esc(chip.tag_type)+(isActive?' active':'')+'"'+
+          draggableAttr+
+          ' data-type="'+esc(chip.tag_type)+'"'+
+          ' data-label="'+esc(chip.tag_label)+'"'+
+          ' title="'+titleText+'"'+
+          ' onclick="onChipClick(\''+esc(chip.tag_type)+'\',\''+esc(chip.tag_label.replace(/\\/g,'\\\\').replace(/'/g,"\\'"))+'\')"'+
+      '>'+
+        (state.isSuperAdmin ? '<i class="fa fa-grip-vertical chip-drag-handle"></i>' : '')+
+        '<span class="chip-label">'+esc(chip.tag_label)+'</span>'+
+        '<span class="chip-type-badge">'+esc(typeLabels[chip.tag_type]||chip.tag_type)+'</span>'+
+      '</div>';
+  });
+  palette.innerHTML = html;
+  if (state.isSuperAdmin) {
+    palette.querySelectorAll('.palette-chip[draggable="true"]').forEach(function(chip) {
+      chip.addEventListener('dragstart', onPaletteChipDragStart);
+      chip.addEventListener('dragend',   onPaletteChipDragEnd);
+    });
+  }
+}
+
+function setPaletteFilter(type, btn) {
+  state.paletteFilter = type;
+  document.querySelectorAll('.tag-filter-btn').forEach(function(b) { b.classList.remove('active'); });
+  btn.classList.add('active');
+  renderPaletteChips();
+}
+
+function onChipClick(tagType, tagLabel) {
+  if (state.activeTagFilter &&
+      state.activeTagFilter.tag_type  === tagType &&
+      state.activeTagFilter.tag_label === tagLabel) { clearTagFilter(); return; }
+  state.activeTagFilter = { tag_type: tagType, tag_label: tagLabel };
+  renderPaletteChips();
+  showActiveFilterBar(tagType, tagLabel);
+  applyTagFilterToTable();
+}
+
+function clearTagFilter() {
+  state.activeTagFilter = null;
+  renderPaletteChips();
+  document.getElementById('activeFilterBar').style.display = 'none';
+  applyTagFilterToTable();
+}
+
+function showActiveFilterBar(tagType, tagLabel) {
+  var typeLabels = { industry: 'Industry', function: 'Function', company_size: 'Size' };
+  document.getElementById('activeFilterPill').innerHTML =
+    '<span class="afp-type">'+esc(typeLabels[tagType]||tagType)+'</span>'+
+    '<span class="afp-label">'+esc(tagLabel)+'</span>';
+  document.getElementById('activeFilterBar').style.display = 'flex';
+}
+
+function applyTagFilterToTable() {
+  var rows = document.querySelectorAll('#cardsArea .kpi-row');
+  var count = 0;
+  if (!state.activeTagFilter) {
+    rows.forEach(function(r) { r.style.display = ''; count++; });
+  } else {
+    var ft = state.activeTagFilter.tag_type;
+    var fl = state.activeTagFilter.tag_label;
+    rows.forEach(function(r) {
+      var id  = parseInt(r.getAttribute('data-kpi-id'), 10);
+      var kpi = state.kpiList.find(function(k) { return k.id === id; });
+      var match = kpi && (kpi.tags || []).some(function(t) { return t.tag_type === ft && t.tag_label === fl; });
+      r.style.display = match ? '' : 'none';
+      if (match) count++;
+    });
+  }
+  document.getElementById('sectionCount').textContent = count;
+}
+
+/* ══ PALETTE DRAG (super_admin only) ═══════════════════ */
+function onPaletteChipDragStart(e) {
+  if (!state.isSuperAdmin) return;
+  var chip = e.currentTarget;
+  paletteDrag.active   = true;
+  paletteDrag.tagType  = chip.getAttribute('data-type');
+  paletteDrag.tagLabel = chip.getAttribute('data-label');
+  paletteDrag.chipEl   = chip;
+  chip.classList.add('chip-dragging');
+  e.dataTransfer.effectAllowed = 'copy';
+  e.dataTransfer.setData('text/plain', paletteDrag.tagType + '||' + paletteDrag.tagLabel);
+  document.querySelectorAll('#cardsArea .kpi-row').forEach(function(r) { r.classList.add('drop-target'); });
+}
+function onPaletteChipDragEnd(e) {
+  if (paletteDrag.chipEl) paletteDrag.chipEl.classList.remove('chip-dragging');
+  paletteDrag.active = false;
+  document.querySelectorAll('#cardsArea .kpi-row').forEach(function(r) {
+    r.classList.remove('drop-target','drop-over');
+  });
+}
+
+/* ══ ROW DROP TARGETS (super_admin only) ════════════════ */
+function attachRowDropListeners(row) {
+  if (!state.isSuperAdmin) return;
+  row.addEventListener('dragover', function(e) {
+    if (!paletteDrag.active) return;
+    e.preventDefault(); e.dataTransfer.dropEffect = 'copy';
+    row.classList.add('drop-over');
+  });
+  row.addEventListener('dragleave', function(e) {
+    if (!row.contains(e.relatedTarget)) row.classList.remove('drop-over');
+  });
+  row.addEventListener('drop', function(e) {
+    e.preventDefault();
+    row.classList.remove('drop-over','drop-target');
+    if (!paletteDrag.active) return;
+    var kpiId    = parseInt(row.getAttribute('data-kpi-id'), 10);
+    var tagType  = paletteDrag.tagType;
+    var tagLabel = paletteDrag.tagLabel;
+    var kpi = state.kpiList.find(function(k) { return k.id === kpiId; });
+    if (kpi && (kpi.tags||[]).some(function(t){ return t.tag_type===tagType && t.tag_label===tagLabel; })) {
+      showToast('Tag already assigned to this KPI','info'); return;
+    }
+    fetch(KPI_URL+'?action=add_tag',{
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({kpi_id:kpiId, tag_type:tagType, tag_label:tagLabel})
+    }).then(function(r){return r.json();})
+      .then(function(data){
+        if (data.success) {
+          if (kpi) {
+            if (!kpi.tags) kpi.tags=[];
+            kpi.tags.push({id:data.id, kpi_id:kpiId, tag_type:tagType, tag_label:tagLabel, sort_order:data.sort_order});
+          }
+          refreshTagCells(kpiId);
+          showDropHint('✓ "'+tagLabel+'" assigned');
+          showToast('Tag assigned','success');
+        } else showToast(data.message||'Error assigning tag','error');
+      }).catch(function(){ showToast('Error assigning tag','error'); });
+  });
+}
+
+function showDropHint(msg) {
+  var el = document.getElementById('dropHintToast');
+  el.textContent = msg; el.classList.add('visible');
+  setTimeout(function(){ el.classList.remove('visible'); }, 2000);
+}
+
+/* ══ STATS ══════════════════════════════════════════════ */
+function loadStats() {
+  fetch(KPI_URL+'?action=get_kpi_stats')
+    .then(function(r){return r.json();})
+    .then(function(d){
+      if (d.success) {
+        document.getElementById('statTotal').textContent      = d.total;
+        document.getElementById('statIndustries').textContent = d.industries;
+        document.getElementById('statUnits').textContent      = d.units;
+      }
+    }).catch(function(){});
+}
+
 function onSearch() {
   clearTimeout(state.searchTimer);
   state.searchTimer = setTimeout(renderKpis, 350);
 }
 
-// ── Skeleton ──────────────────────────────────────────────
-function showSkeleton() {
-  var h = '';
-  for (var i = 0; i < 6; i++) {
-    h += '<div class="skeleton-card">' +
-      '<div class="skel" style="width:70%;height:16px;margin-bottom:12px;"></div>' +
-      '<div class="skel" style="width:40%;height:12px;margin-bottom:18px;"></div>' +
-      '<div class="skel" style="width:100%;height:56px;margin-bottom:14px;border-radius:8px;"></div>' +
-      '<div class="skel" style="width:85%;height:11px;margin-bottom:6px;"></div>' +
-      '<div class="skel" style="width:60%;height:11px;"></div>' +
-    '</div>';
-  }
-  document.getElementById('cardsArea').innerHTML = '<div class="skeleton-grid">' + h + '</div>';
+/* ══ TABLE HEAD ═════════════════════════════════════════ */
+function buildTableHead() {
+  var adminHeader = state.isSuperAdmin ? '<th class="col-actions">Actions</th>' : '';
+  return '<tr>' +
+    '<th class="col-select"><label class="cb-wrap cb-header"><input type="checkbox" id="selectAllCb" onchange="onHeaderCheckboxChange(this)" /><span class="cb-box"></span></label></th>' +
+    '<th class="col-num">#</th>' +
+    '<th class="col-name">KPI Name</th>' +
+    '<th class="col-unit">Unit</th>' +
+    '<th class="col-formula">Formula</th>' +
+    '<th class="col-desc">Description</th>' +
+    '<th class="col-tag-ind"><i class="fa fa-industry" style="margin-right:5px;opacity:.7;"></i>Industry Tags</th>' +
+    '<th class="col-tag-fn"><i class="fa fa-cogs" style="margin-right:5px;opacity:.7;"></i>Function Tags</th>' +
+    '<th class="col-tag-sz"><i class="fa fa-building" style="margin-right:5px;opacity:.7;"></i>Size Tags</th>' +
+    adminHeader +
+  '</tr>';
 }
 
-// ── Render KPI Cards ──────────────────────────────────────
+function showSkeleton() {
+  var rows = '';
+  for (var i = 0; i < 7; i++) {
+    rows += '<tr class="skel-row">' +
+      '<td class="col-select"><div class="skel" style="width:18px;height:18px;border-radius:4px;"></div></td>' +
+      '<td class="col-num"><div class="skel" style="width:28px;height:28px;border-radius:7px;"></div></td>' +
+      '<td><div class="skel" style="width:'+(55+(i%4)*10)+'%;height:13px;"></div></td>' +
+      '<td><div class="skel" style="width:70%;height:20px;border-radius:999px;"></div></td>' +
+      '<td><div class="skel" style="width:60%;height:12px;"></div></td>' +
+      '<td><div class="skel" style="width:80%;height:12px;"></div></td>' +
+      '<td><div class="skel" style="width:65%;height:20px;border-radius:999px;"></div></td>' +
+      '<td><div class="skel" style="width:65%;height:20px;border-radius:999px;"></div></td>' +
+      '<td><div class="skel" style="width:65%;height:20px;border-radius:999px;"></div></td>' +
+      (state.isSuperAdmin ? '<td><div class="skel" style="width:60px;height:28px;border-radius:7px;"></div></td>' : '') +
+    '</tr>';
+  }
+  document.getElementById('cardsArea').innerHTML =
+    '<div class="table-wrap"><table class="kpi-table"><thead>'+buildTableHead()+'</thead><tbody>'+rows+'</tbody></table></div>';
+}
+
+/* ══ SELECTION ══════════════════════════════════════════ */
+function onRowCheckboxChange(cb, kpiId) {
+  if (cb.checked) state.selectedKpiIds.add(kpiId);
+  else            state.selectedKpiIds.delete(kpiId);
+  syncHeaderCheckbox();
+  updateSelectionUI();
+}
+function onHeaderCheckboxChange(cb) {
+  var rows = document.querySelectorAll('#cardsArea .kpi-row:not([style*="display: none"]):not([style*="display:none"])');
+  rows.forEach(function(row) {
+    var id = parseInt(row.getAttribute('data-kpi-id'), 10);
+    var rowCb = row.querySelector('.row-select-cb');
+    if (cb.checked) { state.selectedKpiIds.add(id); row.classList.add('row-selected'); if (rowCb) rowCb.checked = true; }
+    else            { state.selectedKpiIds.delete(id); row.classList.remove('row-selected'); if (rowCb) rowCb.checked = false; }
+  });
+  updateSelectionUI();
+}
+function syncHeaderCheckbox() {
+  var headerCb = document.getElementById('selectAllCb');
+  if (!headerCb) return;
+  var visibleRows = document.querySelectorAll('#cardsArea .kpi-row:not([style*="display: none"]):not([style*="display:none"])');
+  var total = visibleRows.length, selected = 0;
+  visibleRows.forEach(function(row){ if (state.selectedKpiIds.has(parseInt(row.getAttribute('data-kpi-id'),10))) selected++; });
+  if (selected===0)           { headerCb.checked=false; headerCb.indeterminate=false; }
+  else if (selected===total)  { headerCb.checked=true;  headerCb.indeterminate=false; }
+  else                        { headerCb.checked=false; headerCb.indeterminate=true; }
+}
+function updateSelectionUI() {
+  var count    = state.selectedKpiIds.size;
+  var floatBar = document.getElementById('selectionFloatBar');
+  var dlBtn    = document.getElementById('downloadBtn');
+  var btBtn    = document.getElementById('bulkTagBtn');
+  var sfbBtBtn = document.getElementById('sfbBulkTagBtn');
+  var sfbCount = document.getElementById('sfbCount');
+  var sfbPlur  = document.getElementById('sfbPlural');
+  var badge    = document.getElementById('downloadCountBadge');
+  var btBadge  = document.getElementById('bulkTagCountBadge');
+
+  if (count > 0) {
+    floatBar.classList.add('visible');
+    if (sfbCount) sfbCount.textContent = count;
+    if (sfbPlur)  sfbPlur.textContent  = count===1 ? '' : 's';
+  } else { floatBar.classList.remove('visible'); }
+
+  if (dlBtn) { dlBtn.style.display = count>0 ? 'inline-flex':'none'; if (badge) badge.textContent=count; }
+
+  // Bulk Tag button — only for super_admin
+  if (btBtn) {
+    btBtn.style.display = (count > 0 && state.isSuperAdmin) ? 'inline-flex' : 'none';
+    if (btBadge) btBadge.textContent = count;
+  }
+  if (sfbBtBtn) sfbBtBtn.style.display = (count > 0 && state.isSuperAdmin) ? 'inline-flex' : 'none';
+
+  document.querySelectorAll('#cardsArea .kpi-row').forEach(function(row){
+    var id = parseInt(row.getAttribute('data-kpi-id'),10);
+    if (state.selectedKpiIds.has(id)) row.classList.add('row-selected');
+    else row.classList.remove('row-selected');
+  });
+}
+function selectAllVisible() {
+  document.querySelectorAll('#cardsArea .kpi-row').forEach(function(row){
+    if (row.style.display==='none') return;
+    var id = parseInt(row.getAttribute('data-kpi-id'),10);
+    var cb = row.querySelector('.row-select-cb');
+    state.selectedKpiIds.add(id);
+    if (cb) cb.checked=true;
+  });
+  syncHeaderCheckbox(); updateSelectionUI();
+  showToast('All visible KPIs selected ('+state.selectedKpiIds.size+')','info');
+}
+function deselectAll() {
+  state.selectedKpiIds.clear();
+  document.querySelectorAll('.row-select-cb').forEach(function(cb){ cb.checked=false; });
+  var hcb = document.getElementById('selectAllCb');
+  if (hcb) { hcb.checked=false; hcb.indeterminate=false; }
+  updateSelectionUI();
+}
+
+/* ══ EXCEL DOWNLOAD ═════════════════════════════════════ */
+function downloadSelectedExcel() {
+  var count = state.selectedKpiIds.size;
+  if (!count) { showToast('No KPIs selected.','error'); return; }
+  var selectedKpis = state.kpiList.filter(function(k){ return state.selectedKpiIds.has(k.id); });
+  if (!selectedKpis.length) { showToast('Selected KPIs not found. Please refresh.','error'); return; }
+  try {
+    var wb = XLSX.utils.book_new();
+    var wsData = [['#','KPI Name','Unit','Formula','Description','Industry Tags','Function Tags','Size Tags']];
+    selectedKpis.forEach(function(k,idx){
+      var tags   = k.tags||[];
+      var indT   = tags.filter(function(t){return t.tag_type==='industry';}).map(function(t){return t.tag_label;}).join(', ');
+      var fnT    = tags.filter(function(t){return t.tag_type==='function';}).map(function(t){return t.tag_label;}).join(', ');
+      var szT    = tags.filter(function(t){return t.tag_type==='company_size';}).map(function(t){return t.tag_label;}).join(', ');
+      wsData.push([idx+1,k.kpi_name||'',k.unit||'',k.formula||'',k.description||'',indT,fnT,szT]);
+    });
+    var ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [{wch:5},{wch:36},{wch:14},{wch:42},{wch:52},{wch:28},{wch:28},{wch:22}];
+    XLSX.utils.book_append_sheet(wb,ws,'KPI Details');
+    var now=new Date();
+    var ds=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');
+    XLSX.writeFile(wb,'KPI_Export_'+selectedKpis.length+'_KPIs_'+ds+'.xlsx');
+    showToast(selectedKpis.length+' KPI'+(selectedKpis.length>1?'s':'')+' downloaded!','success');
+  } catch(err){ showToast('Export failed: '+(err.message||'Unknown error'),'error'); }
+}
+
+/* ══════════════════════════════════════════════════════
+   BULK TAG MODAL
+   ══════════════════════════════════════════════════════ */
+
+function openBulkTagModal() {
+  if (!state.isSuperAdmin) return;
+  var count = state.selectedKpiIds.size;
+  if (count === 0) { showToast('Select at least one KPI first.', 'info'); return; }
+
+  // Reset modal state
+  state.bulkTag.type  = 'industry';
+  state.bulkTag.label = null;
+
+  // Update KPI count label
+  document.getElementById('btmKpiCount').textContent = count + ' KPI' + (count === 1 ? '' : 's') + ' selected';
+
+  // Reset type tabs — 'industry' active by default
+  document.querySelectorAll('.tag-type-tab').forEach(function(t) { t.classList.remove('active'); });
+  var firstTab = document.querySelector('.tag-type-tab[data-type="industry"]');
+  if (firstTab) firstTab.classList.add('active');
+
+  // Clear search
+  var search = document.getElementById('btmLabelSearch');
+  if (search) search.value = '';
+
+  // Hide result banner
+  document.getElementById('btmResultBanner').style.display = 'none';
+
+  // Disable apply button
+  var applyBtn = document.getElementById('btmApplyBtn');
+  if (applyBtn) { applyBtn.disabled = true; applyBtn.innerHTML = '<i class="fa fa-tags"></i> Assign Tag to Selected KPIs'; }
+
+  // Reset preview
+  resetBulkTagPreview();
+
+  // Build label list for default type
+  buildBulkTagLabelList('industry', '');
+
+  openModal('bulkTagOverlay');
+}
+
+function closeBulkTagModal() {
+  closeModal('bulkTagOverlay');
+}
+
+function selectBulkTagType(type, btn) {
+  state.bulkTag.type  = type;
+  state.bulkTag.label = null;
+
+  // Update active tab
+  document.querySelectorAll('.tag-type-tab').forEach(function(t) { t.classList.remove('active'); });
+  btn.classList.add('active');
+
+  // Clear search
+  var search = document.getElementById('btmLabelSearch');
+  if (search) search.value = '';
+
+  // Hide result banner
+  document.getElementById('btmResultBanner').style.display = 'none';
+
+  // Rebuild label list
+  buildBulkTagLabelList(type, '');
+
+  // Reset preview + apply button
+  resetBulkTagPreview();
+  var applyBtn = document.getElementById('btmApplyBtn');
+  if (applyBtn) { applyBtn.disabled = true; applyBtn.innerHTML = '<i class="fa fa-tags"></i> Assign Tag to Selected KPIs'; }
+}
+
+function filterBulkTagLabels() {
+  var search = (document.getElementById('btmLabelSearch').value || '').toLowerCase();
+  buildBulkTagLabelList(state.bulkTag.type, search);
+}
+
+function buildBulkTagLabelList(type, searchStr) {
+  var list = document.getElementById('btmLabelList');
+  if (!list) return;
+
+  var items = [];
+  if (type === 'industry')     items = state.industries;
+  if (type === 'function')     items = state.functions;
+  if (type === 'company_size') items = state.companySizes;
+
+  // Filter by search
+  if (searchStr) {
+    items = items.filter(function(i) { return i.name.toLowerCase().indexOf(searchStr) !== -1; });
+  }
+
+  if (!items.length) {
+    list.innerHTML = '<div class="tag-label-none">' + (searchStr ? 'No matching tags found' : 'No tags available') + '</div>';
+    return;
+  }
+
+  var html = '';
+  items.forEach(function(item) {
+    var isSelected = state.bulkTag.label === item.name && state.bulkTag.type === type;
+    html +=
+      '<div class="tag-label-option' + (isSelected ? ' selected type-' + type : '') + '" ' +
+          'onclick="selectBulkTagLabel(\'' + esc(item.name.replace(/\\/g, '\\\\').replace(/'/g, "\\'")) + '\')">' +
+        '<span class="tag-label-option-dot"></span>' +
+        '<span class="tag-label-option-name">' + esc(item.name) + '</span>' +
+        '<i class="fa fa-check tag-label-option-check"></i>' +
+      '</div>';
+  });
+  list.innerHTML = html;
+}
+
+function selectBulkTagLabel(label) {
+  state.bulkTag.label = label;
+
+  // Rebuild list to update selection highlight
+  var searchStr = (document.getElementById('btmLabelSearch').value || '').toLowerCase();
+  buildBulkTagLabelList(state.bulkTag.type, searchStr);
+
+  // Update preview
+  var typeLabels = { industry: 'Industry', function: 'Function', company_size: 'Company Size' };
+  var typeIcons  = { industry: 'fa-industry', function: 'fa-cogs', company_size: 'fa-building' };
+  var t = state.bulkTag.type;
+
+  var previewDiv  = document.getElementById('btmPreview');
+  var previewPill = document.getElementById('btmPreviewPill');
+  var previewEmpty = document.getElementById('btmPreviewEmpty');
+
+  previewDiv.className  = 'bulk-tag-preview has-selection type-' + t;
+  previewEmpty.style.display = 'none';
+  previewPill.style.display  = 'inline-flex';
+  previewPill.className = 'bulk-tag-preview-pill type-' + t;
+  previewPill.innerHTML = '<i class="fa ' + typeIcons[t] + '" style="font-size:11px;"></i> ' + esc(label) +
+    ' <span style="font-size:9px;opacity:.65;margin-left:3px;">(' + esc(typeLabels[t]) + ')</span>';
+
+  // Enable apply button
+  var applyBtn = document.getElementById('btmApplyBtn');
+  if (applyBtn) {
+    applyBtn.disabled = false;
+    var c = state.selectedKpiIds.size;
+    applyBtn.innerHTML = '<i class="fa fa-tags"></i> Assign to ' + c + ' KPI' + (c === 1 ? '' : 's');
+  }
+
+  // Hide result banner on new selection
+  document.getElementById('btmResultBanner').style.display = 'none';
+}
+
+function resetBulkTagPreview() {
+  var previewDiv   = document.getElementById('btmPreview');
+  var previewPill  = document.getElementById('btmPreviewPill');
+  var previewEmpty = document.getElementById('btmPreviewEmpty');
+  if (previewDiv)   previewDiv.className  = 'bulk-tag-preview';
+  if (previewEmpty) previewEmpty.style.display = 'inline';
+  if (previewPill)  previewPill.style.display  = 'none';
+}
+
+function applyBulkTag() {
+  if (!state.isSuperAdmin) return;
+  if (!state.bulkTag.label) { showToast('Please select a tag label first.', 'info'); return; }
+  var selectedIds = Array.from(state.selectedKpiIds);
+  if (!selectedIds.length) { showToast('No KPIs selected.', 'info'); return; }
+
+  var applyBtn = document.getElementById('btmApplyBtn');
+  if (applyBtn) { applyBtn.disabled = true; applyBtn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Assigning…'; }
+
+  fetch(KPI_URL + '?action=bulk_add_tags', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify({
+      kpi_ids:   selectedIds,
+      tag_type:  state.bulkTag.type,
+      tag_label: state.bulkTag.label
+    })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      // ── Update in-memory kpiList so tag cells refresh without a full reload ──
+      var tagType  = state.bulkTag.type;
+      var tagLabel = state.bulkTag.label;
+
+      selectedIds.forEach(function(kpiId) {
+        var kpi = state.kpiList.find(function(k) { return k.id === kpiId; });
+        if (!kpi) return;
+        if (!kpi.tags) kpi.tags = [];
+        var alreadyHas = kpi.tags.some(function(t) { return t.tag_type === tagType && t.tag_label === tagLabel; });
+        if (!alreadyHas) {
+          // Add optimistically — sort_order can be 0; it'll be correct on next full load
+          var maxOrder = kpi.tags.reduce(function(mx, t) { return Math.max(mx, t.sort_order || 0); }, -1);
+          kpi.tags.push({
+            id:         Date.now() + kpiId, // temp id for DOM key; real id assigned by DB
+            kpi_id:     kpiId,
+            tag_type:   tagType,
+            tag_label:  tagLabel,
+            sort_order: maxOrder + 1
+          });
+        }
+      });
+
+      // Refresh tag cells for all selected KPIs in the table (no full re-render)
+      selectedIds.forEach(function(kpiId) { refreshTagCells(kpiId); });
+
+      // Show result banner inside modal
+      var banner = document.getElementById('btmResultBanner');
+      var bannerText = document.getElementById('btmResultText');
+      if (banner && bannerText) {
+        bannerText.textContent = data.message || 'Tags assigned successfully.';
+        banner.style.display = 'flex';
+      }
+
+      showToast(data.message || 'Tags assigned!', 'success');
+
+      // Re-enable button with updated label
+      if (applyBtn) {
+        var c = selectedIds.length;
+        applyBtn.disabled = false;
+        applyBtn.innerHTML = '<i class="fa fa-check"></i> Done — Assign Again?';
+      }
+    } else {
+      showToast(data.message || 'Error assigning tags.', 'error');
+      if (applyBtn) {
+        var c2 = selectedIds.length;
+        applyBtn.disabled = false;
+        applyBtn.innerHTML = '<i class="fa fa-tags"></i> Assign to ' + c2 + ' KPI' + (c2 === 1 ? '' : 's');
+      }
+    }
+  })
+  .catch(function(err) {
+    showToast((err && err.message) ? err.message : 'Network error.', 'error');
+    if (applyBtn) {
+      applyBtn.disabled = false;
+      applyBtn.innerHTML = '<i class="fa fa-tags"></i> Assign Tag to Selected KPIs';
+    }
+  });
+}
+
+/* ══ RENDER KPI TABLE ═══════════════════════════════════ */
 function renderKpis() {
+  state.editingKpiId = null;
+  state.addingRow    = false;
+  var addBtn = document.getElementById('addBtn');
+  if (addBtn) { addBtn.disabled=false; addBtn.classList.remove('btn-disabled'); }
   showSkeleton();
   var search = document.getElementById('searchInput').value.trim();
-  var url    = KPI_URL + '?action=get_kpis&search=' + encodeURIComponent(search);
-  if (state.currentIndustryId) url += '&industry_id=' + state.currentIndustryId;
-
-  fetch(url)
-    .then(function(r) {
-      if (!r.ok) throw new Error('Server returned ' + r.status);
-      return r.json();
-    })
-    .then(function(data) {
-      if (!data.success) throw new Error(data.message || 'Failed to load');
-      var list = data.data || [];
+  fetch(KPI_URL+'?action=get_kpis&search='+encodeURIComponent(search))
+    .then(function(r){ if (!r.ok) throw new Error('Server returned '+r.status); return r.json(); })
+    .then(function(data){
+      if (!data.success) throw new Error(data.message||'Failed to load');
+      var list = data.data||[];
       state.kpiList = list;
       document.getElementById('sectionCount').textContent = list.length;
-
+      document.getElementById('sectionTitle').textContent = 'All KPIs';
       if (!list.length) {
         document.getElementById('cardsArea').innerHTML = emptyState(
           search ? 'No KPIs found' : 'No KPIs yet',
-          search ? 'No results for "' + esc(search) + '"'
-                 : (state.isAdmin ? 'Click "Add KPI" to get started.' : 'No KPIs have been added yet.')
+          search ? 'No results for "'+esc(search)+'"'
+                 : (state.canAddContent ? 'Click "Add KPI" to get started.' : 'No KPIs have been added yet.')
         );
         return;
       }
-
-      var cards = list.map(function(k, idx) {
-        var adminBtns = '';
-        if (state.isAdmin) {
-          adminBtns =
-            '<button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="editKpi(' + idx + ')">' +
-              '<i class="fa fa-pen"></i></button>' +
-            '<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="deleteKpi(' + k.id + ',\'' + esc(k.kpi_name) + '\')">' +
-              '<i class="fa fa-trash"></i></button>';
-        }
-
-        var formulaHtml = (k.formula && k.formula.trim())
-          ? esc(k.formula)
-          : '<span class="kpi-formula-empty">No formula defined</span>';
-
-        var unitHtml = (k.unit && k.unit.trim())
-          ? '<span class="kpi-unit-pill"><i class="fa fa-ruler"></i> ' + esc(k.unit) + '</span>'
-          : '<span class="kpi-unit-pill kpi-unit-empty"><i class="fa fa-minus"></i> No unit</span>';
-
-        return '<div class="kpi-card">' +
-          '<div class="kpi-strip"></div>' +
-          '<div class="kpi-card-body">' +
-            '<div class="kpi-card-header-row">' +
-              '<div class="kpi-name-wrap">' +
-                '<div class="kpi-name">' + esc(k.kpi_name) + '</div>' +
-                '<span class="kpi-industry-tag">' +
-                  '<i class="fa ' + esc(k.industry_icon || 'fa-industry') + '"></i>' +
-                  esc(k.industry_name || 'Unknown') +
-                '</span>' +
-              '</div>' +
-              '<div class="kpi-card-actions">' + adminBtns + '</div>' +
-            '</div>' +
-            '<div class="kpi-formula-box">' + formulaHtml + '</div>' +
-            '<div class="kpi-desc">' + esc(k.description || 'No description provided.') + '</div>' +
-          '</div>' +
-          '<div class="kpi-card-footer">' +
-            unitHtml +
-            '<span class="kpi-date"><i class="fa fa-calendar-alt"></i>' + formatDate(k.created_at) + '</span>' +
-          '</div>' +
-        '</div>';
-      }).join('');
-
-      document.getElementById('cardsArea').innerHTML = '<div class="kpi-grid">' + cards + '</div>';
+      buildTableHTML(list);
     })
-    .catch(function(err) {
-      document.getElementById('cardsArea').innerHTML = errorState(
-        'Could not load KPIs', err.message || 'Check your server and database connection.'
-      );
+    .catch(function(err){
+      document.getElementById('cardsArea').innerHTML = errorState('Could not load KPIs', err.message||'Check your server and database connection.');
     });
 }
 
-// ── Add KPI Modal ─────────────────────────────────────────
-function openAddModal() {
-  buildIndustryDropdown();
-  document.getElementById('kpiId').value          = '';
-  document.getElementById('kpiIndustryId').value  = state.currentIndustryId || '';
-  document.getElementById('kpiName').value        = '';
-  document.getElementById('kpiUnit').value        = '';
-  document.getElementById('kpiFormula').value     = '';
-  document.getElementById('kpiDescription').value = '';
-  document.getElementById('kpiModalTitle').textContent = 'Add KPI';
-  openModal('kpiOverlay');
+function buildTableHTML(list) {
+  var colours = ['#2d4cc8','#0c7c59','#9c36b5','#c9280a','#d97706','#0369a1'];
+  var rows = list.map(function(k,idx){ return buildViewRow(k,idx,colours[idx%colours.length]); }).join('');
+  document.getElementById('cardsArea').innerHTML =
+    '<div class="table-wrap">'+
+      '<table class="kpi-table" id="kpiTable">'+
+        '<thead>'+buildTableHead()+'</thead>'+
+        '<tbody id="kpiTbody">'+rows+'</tbody>'+
+      '</table>'+
+    '</div>';
+  syncHeaderCheckbox();
+  if (state.isSuperAdmin) {
+    document.querySelectorAll('#cardsArea .kpi-row').forEach(function(row){ attachRowDropListeners(row); });
+    document.querySelectorAll('.tag-list[data-kpi-id]').forEach(function(tl){ attachTagListDnd(tl); });
+  }
+  if (state.activeTagFilter) {
+    applyTagFilterToTable();
+    showActiveFilterBar(state.activeTagFilter.tag_type, state.activeTagFilter.tag_label);
+  }
+  updateSelectionUI();
+  requestAnimationFrame(recalcTableHeight);
 }
 
-// ── Edit KPI ──────────────────────────────────────────────
-function editKpi(idx) {
-  var k = state.kpiList[idx];
-  if (!k) return;
-  buildIndustryDropdown();
-  document.getElementById('kpiId').value          = k.id;
-  document.getElementById('kpiIndustryId').value  = k.industry_id;
-  document.getElementById('kpiName').value        = k.kpi_name;
-  document.getElementById('kpiUnit').value        = k.unit        || '';
-  document.getElementById('kpiFormula').value     = k.formula     || '';
-  document.getElementById('kpiDescription').value = k.description || '';
-  document.getElementById('kpiModalTitle').textContent = 'Edit KPI';
-  openModal('kpiOverlay');
+function buildViewRow(k, idx, colour) {
+  var isChecked = state.selectedKpiIds.has(k.id);
+  var colours   = ['#2d4cc8','#0c7c59','#9c36b5','#c9280a','#d97706','#0369a1'];
+  if (!colour) colour = colours[idx%colours.length];
+
+  var adminBtns = '';
+  if (state.isSuperAdmin) {
+    adminBtns =
+      '<td class="col-actions"><div class="row-actions">'+
+        '<button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="startInlineEdit('+k.id+')"><i class="fa fa-pen"></i></button>'+
+        '<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="deleteKpi('+k.id+',\''+esc(k.kpi_name)+'\')"><i class="fa fa-trash"></i></button>'+
+      '</div></td>';
+  }
+
+  var descRaw = k.description ? k.description.trim() : '';
+  var descHtml;
+  if (descRaw.length > 100) {
+    descHtml =
+      '<div class="desc-cell">'+
+        '<span class="desc-short" id="short_'+k.id+'">'+esc(descRaw.substring(0,90))+'<span class="desc-ellipsis">…</span></span>'+
+        '<span class="desc-full" id="full_'+k.id+'" style="display:none;">'+esc(descRaw)+'</span>'+
+        '<button class="desc-toggle" onclick="toggleDesc('+k.id+')" id="togbtn_'+k.id+'">More</button>'+
+      '</div>';
+  } else {
+    descHtml = '<span class="desc-plain">'+(descRaw ? esc(descRaw) : '<span class="cell-empty">—</span>')+'</span>';
+  }
+
+  var allTags = k.tags||[];
+  var indTags = allTags.filter(function(t){ return t.tag_type==='industry'; });
+  var fnTags  = allTags.filter(function(t){ return t.tag_type==='function'; });
+  var szTags  = allTags.filter(function(t){ return t.tag_type==='company_size'; });
+  var unitText    = (k.unit    && k.unit.trim())    ? esc(k.unit)    : '—';
+  var formulaText = (k.formula && k.formula.trim()) ? esc(k.formula) : '—';
+
+  return '<tr class="kpi-row'+(isChecked?' row-selected':'')+'" '+
+      'style="--row-accent:'+colour+';" '+
+      'id="kpi-row-'+k.id+'" data-kpi-id="'+k.id+'" data-kpi-idx="'+idx+'">'+
+    '<td class="col-select" onclick="event.stopPropagation()">'+
+      '<label class="cb-wrap"><input type="checkbox" class="row-select-cb" data-kpi-id="'+k.id+'"'+(isChecked?' checked':'')+' onchange="onRowCheckboxChange(this,'+k.id+')" /><span class="cb-box"></span></label>'+
+    '</td>'+
+    '<td class="col-num"><span class="row-num">'+(idx+1)+'</span></td>'+
+    '<td class="col-name"><div class="kpi-name-cell"><span class="kpi-name-text">'+esc(k.kpi_name)+'</span></div></td>'+
+    '<td class="col-unit">'+(unitText!=='—'?'<span class="unit-pill">'+unitText+'</span>':'<span class="cell-empty">—</span>')+'</td>'+
+    '<td class="col-formula">'+(formulaText!=='—'?'<code class="formula-cell">'+formulaText+'</code>':'<span class="cell-empty">—</span>')+'</td>'+
+    '<td class="col-desc">'+descHtml+'</td>'+
+    '<td class="col-tag-ind">'+buildTagGroup(k.id,indTags,'industry')+'</td>'+
+    '<td class="col-tag-fn">'+buildTagGroup(k.id,fnTags,'function')+'</td>'+
+    '<td class="col-tag-sz">'+buildTagGroup(k.id,szTags,'company_size')+'</td>'+
+    (state.isSuperAdmin ? adminBtns : '')+
+  '</tr>';
 }
 
-// ── Save KPI ──────────────────────────────────────────────
-function saveKpi() {
-  var id          = document.getElementById('kpiId').value;
-  var industry_id = parseInt(document.getElementById('kpiIndustryId').value);
-  var kpi_name    = document.getElementById('kpiName').value.trim();
-  var unit        = document.getElementById('kpiUnit').value.trim();
-  var formula     = document.getElementById('kpiFormula').value.trim();
-  var description = document.getElementById('kpiDescription').value.trim();
+/* ══ ENSURE TABLE EXISTS ════════════════════════════════ */
+function ensureTableExists() {
+  var tbody = document.getElementById('kpiTbody');
+  if (tbody) return tbody;
+  document.getElementById('cardsArea').innerHTML =
+    '<div class="table-wrap">'+
+      '<table class="kpi-table" id="kpiTable">'+
+        '<thead>'+buildTableHead()+'</thead>'+
+        '<tbody id="kpiTbody"></tbody>'+
+      '</table>'+
+    '</div>';
+  return document.getElementById('kpiTbody');
+}
 
-  if (!industry_id) { showToast('Please select an industry.', 'error'); return; }
-  if (!kpi_name)    { showToast('KPI Name is required.', 'error'); return; }
+/* ══ INLINE ADD ROW ══════════════════════════════════════ */
+function addInlineRow() {
+  if (state.addingRow) {
+    var existing = document.getElementById('inline-add-row');
+    if (existing) existing.scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
 
-  var body = { industry_id: industry_id, kpi_name: kpi_name, unit: unit, formula: formula, description: description };
-  if (id) body.id = parseInt(id);
-  var isEdit = !!id;
+  if (state.editingKpiId !== null) cancelInlineEdit();
 
-  kpiApi(isEdit ? 'PUT' : 'POST', isEdit ? 'update_kpi' : 'create_kpi', body)
-    .then(function(data) {
+  state.addingRow = true;
+
+  var addBtn = document.getElementById('addBtn');
+  if (addBtn) { addBtn.disabled=true; addBtn.classList.add('btn-disabled'); }
+
+  var tbody = ensureTableExists();
+
+  var actionsTd = state.isSuperAdmin
+    ? '<td class="col-actions">'+
+        '<div class="row-actions" style="gap:4px;">'+
+          '<button class="btn btn-success btn-icon btn-sm ie-save-btn" title="Save (Enter)" onclick="saveInlineAdd()"><i class="fa fa-check"></i></button>'+
+          '<button class="btn btn-secondary btn-icon btn-sm" title="Cancel (Esc)" onclick="cancelInlineAdd()"><i class="fa fa-times"></i></button>'+
+        '</div>'+
+      '</td>'
+    : '';
+
+  var newRow = document.createElement('tr');
+  newRow.id        = 'inline-add-row';
+  newRow.className = 'kpi-row kpi-inline-edit-row kpi-inline-add';
+  newRow.style.cssText = '--row-accent:#2f9e44;';
+
+  newRow.innerHTML =
+    '<td class="col-select"></td>'+
+    '<td class="col-num"><span class="row-num new-row-badge"><i class="fa fa-plus"></i></span></td>'+
+    '<td class="col-name ie-cell">'+
+      '<input class="inline-input" id="ie-name" placeholder="KPI Name *" autocomplete="off" />'+
+    '</td>'+
+    '<td class="col-unit ie-cell">'+
+      '<input class="inline-input" id="ie-unit" placeholder="Unit" autocomplete="off" />'+
+    '</td>'+
+    '<td class="col-formula ie-cell">'+
+      '<input class="inline-input" id="ie-formula" placeholder="Formula" autocomplete="off" />'+
+    '</td>'+
+    '<td class="col-desc ie-cell">'+
+      '<input class="inline-input" id="ie-description" placeholder="Description" autocomplete="off" />'+
+    '</td>'+
+    '<td class="col-tag-ind">'+
+      '<div class="tag-list type-industry ie-empty-tag-cell"><span class="tags-empty">Assign after save</span></div>'+
+    '</td>'+
+    '<td class="col-tag-fn">'+
+      '<div class="tag-list type-function ie-empty-tag-cell"><span class="tags-empty">Assign after save</span></div>'+
+    '</td>'+
+    '<td class="col-tag-sz">'+
+      (!state.isSuperAdmin
+        ? '<div class="row-actions" style="gap:4px;justify-content:flex-start;">'+
+            '<button class="btn btn-success btn-icon btn-sm ie-save-btn" title="Save (Enter)" onclick="saveInlineAdd()"><i class="fa fa-check"></i></button>'+
+            '<button class="btn btn-secondary btn-icon btn-sm" title="Cancel (Esc)" onclick="cancelInlineAdd()"><i class="fa fa-times"></i></button>'+
+          '</div>'
+        : '<div class="tag-list type-company_size ie-empty-tag-cell"><span class="tags-empty">Assign after save</span></div>')+
+    '</td>'+
+    actionsTd;
+
+  tbody.appendChild(newRow);
+
+  setTimeout(function() {
+    var nameEl = document.getElementById('ie-name');
+    if (nameEl) {
+      nameEl.focus();
+      newRow.scrollIntoView({ behavior:'smooth', block:'center' });
+    }
+  }, 60);
+
+  newRow.addEventListener('keydown', function(e) {
+    if (e.key==='Enter') { e.preventDefault(); saveInlineAdd(); }
+    if (e.key==='Escape'){ e.preventDefault(); cancelInlineAdd(); }
+  });
+}
+
+function saveInlineAdd() {
+  var nameEl = document.getElementById('ie-name');
+  if (!nameEl) { showToast('Form not found. Please try again.','error'); return; }
+
+  var kpi_name    = (nameEl.value || '').trim();
+  var unitEl      = document.getElementById('ie-unit');
+  var formulaEl   = document.getElementById('ie-formula');
+  var descEl      = document.getElementById('ie-description');
+
+  var unit        = unitEl      ? unitEl.value.trim()      : '';
+  var formula     = formulaEl   ? formulaEl.value.trim()   : '';
+  var description = descEl      ? descEl.value.trim()      : '';
+
+  if (!kpi_name) {
+    highlightInlineError('ie-name', 'KPI Name is required.');
+    return;
+  }
+
+  var saveBtn = document.querySelector('#inline-add-row .ie-save-btn');
+  if (saveBtn) { saveBtn.disabled=true; saveBtn.innerHTML='<i class="fa fa-spinner fa-spin"></i>'; }
+
+  var payload = {
+    kpi_name:    kpi_name,
+    unit:        unit        || '',
+    formula:     formula     || '',
+    description: description || ''
+  };
+
+  fetch(KPI_URL + '?action=create_kpi', {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body:    JSON.stringify(payload)
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.success) {
+      var isPending = data.status === 'pending';
+      var msg = isPending
+        ? 'KPI submitted for approval! After approval, drag tags from the palette above to assign them.'
+        : 'KPI saved! Now drag chips from the Tags palette above onto the new row to assign tags.';
+      showToast(msg, 'success');
+      cancelInlineAdd();
+      loadStats();
+      renderKpis();
+    } else {
+      if (saveBtn) { saveBtn.disabled=false; saveBtn.innerHTML='<i class="fa fa-check"></i>'; }
+      showToast(data.message || 'Error saving KPI', 'error');
+    }
+  })
+  .catch(function(err) {
+    if (saveBtn) { saveBtn.disabled=false; saveBtn.innerHTML='<i class="fa fa-check"></i>'; }
+    showToast((err && err.message) ? err.message : 'Network error saving KPI', 'error');
+  });
+}
+
+function cancelInlineAdd() {
+  state.addingRow = false;
+  var row = document.getElementById('inline-add-row');
+  if (row) {
+    row.classList.add('row-removing');
+    setTimeout(function(){ if (row.parentNode) row.parentNode.removeChild(row); }, 220);
+  }
+  var addBtn = document.getElementById('addBtn');
+  if (addBtn) { addBtn.disabled=false; addBtn.classList.remove('btn-disabled'); }
+}
+
+/* ══ INLINE EDIT (super_admin only) ════════════════════ */
+function startInlineEdit(kpiId) {
+  if (!state.isSuperAdmin) return;
+  if (state.addingRow) cancelInlineAdd();
+  if (state.editingKpiId===kpiId) { cancelInlineEdit(); return; }
+  if (state.editingKpiId!==null)  cancelInlineEdit();
+
+  var kpi = state.kpiList.find(function(k){ return k.id===kpiId; });
+  if (!kpi) return;
+  state.editingKpiId = kpiId;
+
+  var viewRow = document.getElementById('kpi-row-'+kpiId);
+  if (!viewRow) return;
+  viewRow.setAttribute('data-original-html', viewRow.outerHTML);
+
+  var allTags = kpi.tags||[];
+  var indTags = allTags.filter(function(t){ return t.tag_type==='industry'; });
+  var fnTags  = allTags.filter(function(t){ return t.tag_type==='function'; });
+  var szTags  = allTags.filter(function(t){ return t.tag_type==='company_size'; });
+
+  viewRow.className = 'kpi-row kpi-inline-edit-row';
+  viewRow.innerHTML =
+    '<td class="col-select"></td>'+
+    '<td class="col-num"><span class="row-num edit-row-badge"><i class="fa fa-pen"></i></span></td>'+
+    '<td class="col-name ie-cell"><input class="inline-input" id="ie-edit-name" value="'+esc(kpi.kpi_name||'')+'" autocomplete="off" /></td>'+
+    '<td class="col-unit ie-cell"><input class="inline-input" id="ie-edit-unit" value="'+esc(kpi.unit||'')+'" placeholder="Unit" autocomplete="off" /></td>'+
+    '<td class="col-formula ie-cell"><input class="inline-input" id="ie-edit-formula" value="'+esc(kpi.formula||'')+'" placeholder="Formula" autocomplete="off" /></td>'+
+    '<td class="col-desc ie-cell"><input class="inline-input" id="ie-edit-description" value="'+esc(kpi.description||'')+'" placeholder="Description" autocomplete="off" /></td>'+
+    '<td class="col-tag-ind">'+buildTagGroup(kpi.id,indTags,'industry')+'</td>'+
+    '<td class="col-tag-fn">'+buildTagGroup(kpi.id,fnTags,'function')+'</td>'+
+    '<td class="col-tag-sz">'+buildTagGroup(kpi.id,szTags,'company_size')+'</td>'+
+    '<td class="col-actions">'+
+      '<div class="row-actions" style="gap:4px;">'+
+        '<button class="btn btn-success btn-icon btn-sm ie-save-btn" title="Save (Enter)" onclick="saveInlineEdit('+kpiId+')"><i class="fa fa-check"></i></button>'+
+        '<button class="btn btn-secondary btn-icon btn-sm" title="Cancel (Esc)" onclick="cancelInlineEdit()"><i class="fa fa-times"></i></button>'+
+      '</div>'+
+    '</td>';
+
+  setTimeout(function(){
+    var nameEl = document.getElementById('ie-edit-name');
+    if (nameEl) nameEl.focus();
+  }, 50);
+
+  viewRow.addEventListener('keydown', function(e){
+    if (e.key==='Enter') { e.preventDefault(); saveInlineEdit(kpiId); }
+    if (e.key==='Escape'){ e.preventDefault(); cancelInlineEdit(); }
+  });
+
+  if (state.isSuperAdmin) {
+    viewRow.querySelectorAll('.tag-list[data-kpi-id]').forEach(function(tl){ attachTagListDnd(tl); });
+  }
+  viewRow.scrollIntoView({ behavior:'smooth', block:'nearest' });
+}
+
+function saveInlineEdit(kpiId) {
+  if (!state.isSuperAdmin) return;
+  var kpi_name    = (document.getElementById('ie-edit-name').value        || '').trim();
+  var unit        = (document.getElementById('ie-edit-unit').value        || '').trim();
+  var formula     = (document.getElementById('ie-edit-formula').value     || '').trim();
+  var description = (document.getElementById('ie-edit-description').value || '').trim();
+
+  if (!kpi_name) { highlightInlineError('ie-edit-name','KPI Name is required.'); return; }
+
+  var row = document.getElementById('kpi-row-'+kpiId);
+  var saveBtn = row ? row.querySelector('.ie-save-btn') : null;
+  if (saveBtn) { saveBtn.disabled=true; saveBtn.innerHTML='<i class="fa fa-spinner fa-spin"></i>'; }
+
+  var kpi = state.kpiList.find(function(k){ return k.id===kpiId; });
+  var industry_id = kpi ? (kpi.industry_id || null) : null;
+
+  kpiApi('PUT','update_kpi',{
+    id:          kpiId,
+    industry_id: industry_id,
+    kpi_name:    kpi_name,
+    unit:        unit,
+    formula:     formula,
+    description: description
+  })
+    .then(function(data){
       if (data.success) {
-        showToast(isEdit ? 'KPI updated successfully' : 'KPI added successfully', 'success');
-        closeModal('kpiOverlay'); loadStats(); renderKpis();
-      } else { showToast(data.message || 'Error saving KPI', 'error'); }
-    }).catch(function() {});
+        showToast('KPI updated','success');
+        if (kpi) { kpi.kpi_name=kpi_name; kpi.unit=unit; kpi.formula=formula; kpi.description=description; }
+        state.editingKpiId = null;
+        var idx    = parseInt(row.getAttribute('data-kpi-idx'),10);
+        var colour = row.style.getPropertyValue('--row-accent')||'#2d4cc8';
+        var updatedKpi = state.kpiList.find(function(k){ return k.id===kpiId; });
+        if (updatedKpi) {
+          var tempDiv = document.createElement('tbody');
+          tempDiv.innerHTML = buildViewRow(updatedKpi,idx,colour);
+          var newRow = tempDiv.firstChild;
+          row.parentNode.replaceChild(newRow,row);
+          if (state.isSuperAdmin) {
+            attachRowDropListeners(newRow);
+            newRow.querySelectorAll('.tag-list[data-kpi-id]').forEach(function(tl){ attachTagListDnd(tl); });
+          }
+          updateSelectionUI();
+        }
+        loadStats();
+      } else {
+        if (saveBtn) { saveBtn.disabled=false; saveBtn.innerHTML='<i class="fa fa-check"></i>'; }
+        showToast(data.message||'Error updating KPI','error');
+      }
+    })
+    .catch(function(){
+      if (saveBtn) { saveBtn.disabled=false; saveBtn.innerHTML='<i class="fa fa-check"></i>'; }
+    });
 }
 
-// ── Delete KPI ────────────────────────────────────────────
-function deleteKpi(id, name) {
-  document.getElementById('confirmTitle').textContent = 'Delete KPI?';
-  document.getElementById('confirmMsg').textContent   = 'Delete "' + name + '"? This action cannot be undone.';
-  state.deleteCallback = function() {
-    kpiApi('DELETE', 'delete_kpi', { id: parseInt(id) })
-      .then(function(data) {
+function cancelInlineEdit() {
+  if (state.editingKpiId===null) return;
+  var kpiId = state.editingKpiId;
+  state.editingKpiId = null;
+  var row = document.getElementById('kpi-row-'+kpiId);
+  if (!row) return;
+  var originalHTML = row.getAttribute('data-original-html');
+  if (originalHTML) {
+    var tempDiv = document.createElement('tbody');
+    tempDiv.innerHTML = originalHTML;
+    var restoredRow = tempDiv.firstChild;
+    row.parentNode.replaceChild(restoredRow,row);
+    if (state.isSuperAdmin) {
+      attachRowDropListeners(restoredRow);
+      restoredRow.querySelectorAll('.tag-list[data-kpi-id]').forEach(function(tl){ attachTagListDnd(tl); });
+    }
+    updateSelectionUI();
+  }
+}
+
+function highlightInlineError(fieldId, msg) {
+  var el = document.getElementById(fieldId);
+  if (el) {
+    el.classList.add('inline-input-error');
+    el.focus();
+    setTimeout(function(){ el.classList.remove('inline-input-error'); }, 1800);
+  }
+  showToast(msg,'error');
+}
+
+/* ══ TAG GROUP ══════════════════════════════════════════ */
+function buildTagGroup(kpiId, tags, tagType) {
+  var tagPills = '';
+  if (tags && tags.length) {
+    tags.forEach(function(tag){
+      var delBtn = state.isSuperAdmin
+        ? '<button class="tag-del-btn" title="Remove tag" onclick="removeTag(event,'+tag.id+','+kpiId+')" aria-label="Remove '+esc(tag.tag_label)+'"><i class="fa fa-times"></i></button>'
+        : '';
+      tagPills +=
+        '<div class="tag-pill type-'+esc(tag.tag_type)+'" data-type="'+esc(tag.tag_type)+'" data-tag-id="'+tag.id+'" data-kpi-id="'+kpiId+'"'+(state.isSuperAdmin?' draggable="true"':'')+' data-tag-type="'+esc(tagType)+'">'+
+          (state.isSuperAdmin ? '<i class="fa fa-grip-vertical tag-drag-handle"></i>' : '')+
+          '<span class="tag-label-text" title="'+esc(tag.tag_label)+'">'+esc(tag.tag_label)+'</span>'+
+          delBtn+
+        '</div>';
+    });
+  }
+  var emptyMsg = state.isSuperAdmin ? 'Drop here' : '—';
+  return '<div class="tag-list type-'+esc(tagType)+'" id="taglist_'+kpiId+'_'+esc(tagType)+'" data-kpi-id="'+kpiId+'" data-tag-type="'+esc(tagType)+'">'+
+    (tagPills || '<span class="tags-empty">'+emptyMsg+'</span>')+
+  '</div>';
+}
+
+/* ══ REMOVE TAG (super_admin only) ═════════════════════ */
+function removeTag(e, tagId, kpiId) {
+  if (!state.isSuperAdmin) return;
+  e.stopPropagation(); e.preventDefault();
+  document.getElementById('confirmTitle').textContent = 'Remove Tag?';
+  document.getElementById('confirmMsg').textContent   = 'Remove this tag from the KPI?';
+  state.deleteCallback = function(){
+    fetch(KPI_URL+'?action=delete_tag',{method:'DELETE',headers:{'Content-Type':'application/json'},body:JSON.stringify({id:tagId})})
+      .then(function(r){return r.json();})
+      .then(function(data){
         if (data.success) {
-          showToast('KPI deleted successfully', 'success');
-          closeModal('confirmOverlay'); loadStats(); renderKpis();
-        } else { showToast(data.message || 'Error deleting', 'error'); }
-      }).catch(function() {});
+          var kpi = state.kpiList.find(function(k){ return k.id==kpiId; });
+          if (kpi && kpi.tags) kpi.tags = kpi.tags.filter(function(t){ return t.id!=tagId; });
+          refreshTagCells(kpiId);
+          closeModal('confirmOverlay');
+          showToast('Tag removed','success');
+        } else showToast(data.message||'Error removing tag','error');
+      }).catch(function(){ showToast('Error removing tag','error'); });
   };
   openModal('confirmOverlay');
 }
 
-// ══════════════════════════════════════════════════════════
-//  USER MANAGEMENT
-// ══════════════════════════════════════════════════════════
-function openUsersModal() {
-  openModal('usersOverlay');
-  loadUsers();
+function refreshTagCells(kpiId) {
+  var kpi = state.kpiList.find(function(k){ return k.id==kpiId; });
+  if (!kpi) return;
+  var allTags = kpi.tags||[];
+  ['industry','function','company_size'].forEach(function(tagType){
+    var listEl = document.getElementById('taglist_'+kpiId+'_'+tagType);
+    if (!listEl) return;
+    var filtered = allTags.filter(function(t){ return t.tag_type===tagType; });
+    var wrapper = document.createElement('div');
+    wrapper.innerHTML = buildTagGroup(kpiId,filtered,tagType);
+    var newList = wrapper.firstChild;
+    listEl.replaceWith(newList);
+    if (state.isSuperAdmin) attachTagListDnd(newList);
+  });
 }
 
-function loadUsers() {
-  var el = document.getElementById('usersList');
-  el.innerHTML = '<div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading users…</div>';
-  api('GET', 'get_users')
-    .then(function(data) {
-      var users = data.data || [];
-      if (!users.length) {
-        el.innerHTML = '<div class="pbix-empty">No users found.</div>';
+/* ══ TAG REORDER DND (super_admin only) ════════════════ */
+var rowDrag = { el:null, kpiId:null, tagId:null, fromList:null };
+
+function attachTagListDnd(list) {
+  if (!state.isSuperAdmin) return;
+  list.addEventListener('dragstart', function(e){
+    var pill = e.target.closest('.tag-pill');
+    if (!pill || paletteDrag.active) return;
+    rowDrag.el=pill; rowDrag.kpiId=parseInt(list.getAttribute('data-kpi-id'),10);
+    rowDrag.tagId=parseInt(pill.getAttribute('data-tag-id'),10); rowDrag.fromList=list;
+    setTimeout(function(){ pill.classList.add('dragging'); }, 0);
+    e.dataTransfer.effectAllowed='move'; e.dataTransfer.setData('text/plain','row-reorder');
+  });
+  list.addEventListener('dragend', function(){
+    if (rowDrag.el) rowDrag.el.classList.remove('dragging');
+    list.classList.remove('drag-over'); rowDrag.el=null;
+  });
+  list.addEventListener('dragover', function(e){
+    if (!rowDrag.el || rowDrag.fromList!==list) return;
+    e.preventDefault(); e.dataTransfer.dropEffect='move'; list.classList.add('drag-over');
+    var over = e.target.closest('.tag-pill');
+    if (!over || over===rowDrag.el) return;
+    var rect = over.getBoundingClientRect();
+    if (e.clientX < rect.left+rect.width/2) list.insertBefore(rowDrag.el,over);
+    else list.insertBefore(rowDrag.el,over.nextSibling);
+  });
+  list.addEventListener('dragleave', function(e){ if (!list.contains(e.relatedTarget)) list.classList.remove('drag-over'); });
+  list.addEventListener('drop', function(e){
+    e.preventDefault(); list.classList.remove('drag-over');
+    if (!rowDrag.el || rowDrag.fromList!==list) return;
+    var pills = list.querySelectorAll('.tag-pill');
+    var order = []; pills.forEach(function(p){ order.push(parseInt(p.getAttribute('data-tag-id'),10)); });
+    var kpi = state.kpiList.find(function(k){ return k.id==rowDrag.kpiId; });
+    if (kpi && kpi.tags) {
+      var tm={}; kpi.tags.forEach(function(t){ tm[t.id]=t; });
+      kpi.tags = order.map(function(id){ return tm[id]; }).filter(Boolean);
+    }
+    fetch(KPI_URL+'?action=reorder_tags',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({kpi_id:rowDrag.kpiId,order:order})})
+      .catch(function(){ showToast('Could not save tag order','error'); });
+    rowDrag.el=null;
+  });
+}
+
+/* ══ DESCRIPTION TOGGLE ═════════════════════════════════ */
+function toggleDesc(id) {
+  var s=document.getElementById('short_'+id);
+  var f=document.getElementById('full_'+id);
+  var b=document.getElementById('togbtn_'+id);
+  if (!s||!f||!b) return;
+  var exp = f.style.display!=='none';
+  if (exp) { f.style.display='none'; s.style.display=''; b.textContent='More'; }
+  else     { s.style.display='none'; f.style.display=''; b.textContent='Less'; }
+}
+
+/* ══ KPI DELETE (super_admin only) ═════════════════════ */
+function deleteKpi(id, name) {
+  if (!state.isSuperAdmin) return;
+  document.getElementById('confirmTitle').textContent = 'Delete KPI?';
+  document.getElementById('confirmMsg').textContent   = 'Delete "'+name+'"? This cannot be undone.';
+  state.deleteCallback = function(){
+    kpiApi('DELETE','delete_kpi',{id:parseInt(id)})
+      .then(function(data){
+        if (data.success) {
+          state.selectedKpiIds.delete(parseInt(id));
+          updateSelectionUI();
+          showToast('KPI deleted','success');
+          closeModal('confirmOverlay'); loadStats(); renderKpis();
+        } else showToast(data.message||'Error deleting','error');
+      }).catch(function(){});
+  };
+  openModal('confirmOverlay');
+}
+
+/* ══ APPROVAL QUEUE (super_admin only) ═════════════════ */
+function openApprovalQueueModal() {
+  closeProfileDropdown();
+  openModal('approvalQueueOverlay');
+  loadApprovalQueue();
+}
+function loadApprovalQueue() {
+  var listEl = document.getElementById('approvalQueueList');
+  listEl.innerHTML = '<div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading submissions…</div>';
+  fetch(AUTH_URL+'?action=get_pending_items')
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var items = data.data||[];
+      var badge = document.getElementById('aqModalBadge');
+      if (badge){ badge.textContent=items.length; badge.style.display=items.length>0?'inline-flex':'none'; }
+      if (!items.length){
+        listEl.innerHTML='<div class="aq-empty"><i class="fa fa-check-circle"></i><div class="aq-empty-title">All clear!</div><div class="aq-empty-sub">No pending submissions at this time.</div></div>';
         return;
       }
-      var html = '';
-      users.forEach(function(u) {
-        var roleLabel = u.role === 'admin' ? 'Admin' : 'BI Developer';
-        var initial   = esc((u.name || '?').charAt(0).toUpperCase());
-        html += '<div class="user-row">' +
-          '<div class="user-avatar-sm">' + initial + '</div>' +
-          '<div class="user-info">' +
-            '<div class="user-name">'  + esc(u.name)  + '</div>' +
-            '<div class="user-email">' + esc(u.email) + '</div>' +
-          '</div>' +
-          '<div class="user-actions">' +
-            '<span class="badge-role ' + esc(u.role) + '">' + roleLabel + '</span>' +
-            '<span class="' + (u.is_active ? 'badge-active' : 'badge-inactive') + '">' +
-              (u.is_active ? 'Active' : 'Inactive') +
-            '</span>' +
-            '<button class="btn btn-secondary btn-icon btn-sm" title="Edit" ' +
-              'onclick="editUser(' + u.id + ',\'' + esc(u.name) + '\',\'' + esc(u.role) + '\',' + u.is_active + ')">' +
-              '<i class="fa fa-pen"></i></button>' +
-            '<button class="btn btn-danger btn-icon btn-sm" title="Delete" ' +
-              'onclick="deleteUser(' + u.id + ',\'' + esc(u.name) + '\')">' +
-              '<i class="fa fa-trash"></i></button>' +
-          '</div>' +
+      var typeColors={industry:'#2d4cc8',function:'#0c7c59',company_size:'#9c36b5',dashboard:'#e67700',kpi:'#d97706'};
+      var typeBg={industry:'#eef1fd',function:'#e6f5ef',company_size:'#f5eaf9',dashboard:'#fff4ed',kpi:'#fef5e7'};
+      var typeIcons={industry:'fa-industry',function:'fa-sitemap',company_size:'fa-building',dashboard:'fa-chart-bar',kpi:'fa-chart-line'};
+      var html='<div class="aq-cards-grid">';
+      items.forEach(function(item,idx){
+        var clr=typeColors[item.item_type]||'#2d4cc8';
+        var bg=typeBg[item.item_type]||'#eef1fd';
+        var icon=typeIcons[item.item_type]||'fa-tag';
+        var si=(item.submitted_by_name||'?').charAt(0).toUpperCase();
+        var descHtml=item.description
+          ?'<div class="aq-card-desc">'+esc(item.description)+'</div>'
+          :'<div class="aq-card-desc aq-no-desc-text">No description provided</div>';
+        html+='<div class="aq-card" id="aqrow-'+item.item_type+'-'+item.id+'">'+
+          '<div class="aq-card-strip" style="background:linear-gradient(90deg,'+clr+','+clr+'99);"></div>'+
+          '<div class="aq-card-body">'+
+            '<div class="aq-card-row aq-card-meta-row">'+
+              '<span class="aq-type-badge" style="background:'+bg+';color:'+clr+';border-color:'+clr+'33;">'+
+                '<i class="fa '+icon+'"></i> '+esc(item.item_label||item.item_type)+
+              '</span>'+
+              '<span class="aq-card-num">#'+(idx+1)+'</span>'+
+            '</div>'+
+            '<div class="aq-card-name">'+esc(item.name)+'</div>'+
+            descHtml+
+            '<div class="aq-card-submitter">'+
+              '<div class="aq-avatar">'+esc(si)+'</div>'+
+              '<div class="aq-submitter-info">'+
+                '<span class="aq-submitter-name">'+esc(item.submitted_by_name||'Unknown')+'</span>'+
+                '<span class="aq-submitter-email">'+esc(item.submitted_by_email||'')+'</span>'+
+              '</div>'+
+              '<span class="aq-card-date"><i class="fa fa-clock"></i> '+formatDate(item.created_at)+'</span>'+
+            '</div>'+
+          '</div>'+
+          '<div class="aq-card-footer">'+
+            '<button class="btn-aq-reject" onclick="openRejectModal(\''+item.item_type+'\','+item.id+',\''+esc(item.name)+'\')"><i class="fa fa-times"></i> Reject</button>'+
+            '<button class="btn-aq-approve" onclick="reviewItem(\'approve\',\''+item.item_type+'\','+item.id+')"><i class="fa fa-check"></i> Approve</button>'+
+          '</div>'+
         '</div>';
       });
-      el.innerHTML = html;
-    }).catch(function() {
-      el.innerHTML = '<div class="pbix-empty">Error loading users.</div>';
+      html+='</div>';
+      listEl.innerHTML=html;
+    }).catch(function(){
+      listEl.innerHTML='<div class="aq-empty"><i class="fa fa-triangle-exclamation" style="color:#e67700;"></i><div class="aq-empty-title">Error loading submissions</div></div>';
+    });
+}
+function reviewItem(action, itemType, id) {
+  fetch(AUTH_URL+'?action='+action+'_item',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({item_type:itemType,id:id})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if (d.success){
+      showToast(action==='approve'?'Approved and published!':'Submission rejected','success');
+      var row=document.getElementById('aqrow-'+itemType+'-'+id);
+      if (row){ row.style.transition='opacity .3s,transform .3s'; row.style.opacity='0'; row.style.transform='translateY(-8px) scale(.97)';
+        setTimeout(function(){ if(row.parentNode)row.parentNode.removeChild(row); checkEmptyQueue(); },300); }
+      state.pendingCount=Math.max(0,state.pendingCount-1);
+      updatePendingBadge();
+      if (action==='approve') renderKpis();
+    } else showToast(d.message||'Error','error');
+  }).catch(function(){ showToast('Network error.','error'); });
+}
+function checkEmptyQueue() {
+  var grid=document.querySelector('.aq-cards-grid');
+  if (grid && grid.children.length===0){
+    document.getElementById('approvalQueueList').innerHTML='<div class="aq-empty"><i class="fa fa-check-circle"></i><div class="aq-empty-title">All clear!</div><div class="aq-empty-sub">No pending submissions at this time.</div></div>';
+    var badge=document.getElementById('aqModalBadge'); if(badge)badge.style.display='none';
+  } else if (grid){ var badge=document.getElementById('aqModalBadge'); if(badge)badge.textContent=grid.children.length; }
+}
+function openRejectModal(itemType,id,name){
+  state._rejectItemType=itemType; state._rejectItemId=id;
+  document.getElementById('rejectItemName').textContent=name;
+  document.getElementById('rejectReason').value='';
+  openModal('rejectOverlay');
+}
+function confirmReject(){
+  var reason=document.getElementById('rejectReason').value.trim();
+  fetch(AUTH_URL+'?action=reject_item',{
+    method:'POST',headers:{'Content-Type':'application/json'},
+    body:JSON.stringify({item_type:state._rejectItemType,id:state._rejectItemId,reason:reason})
+  }).then(function(r){return r.json();})
+  .then(function(d){
+    if (d.success){
+      showToast('Submission rejected','success'); closeModal('rejectOverlay');
+      var row=document.getElementById('aqrow-'+state._rejectItemType+'-'+state._rejectItemId);
+      if(row){ row.style.transition='opacity .3s'; row.style.opacity='0';
+        setTimeout(function(){ if(row.parentNode)row.parentNode.removeChild(row); checkEmptyQueue(); },300); }
+      state.pendingCount=Math.max(0,state.pendingCount-1); updatePendingBadge();
+    } else showToast(d.message||'Error','error');
+  }).catch(function(){ showToast('Network error.','error'); });
+}
+
+/* ══ MY SUBMISSIONS (contributor only) ═════════════════ */
+function openMySubmissionsModal(){
+  closeProfileDropdown(); openModal('mySubmissionsOverlay'); loadMySubmissions();
+}
+function loadMySubmissions(){
+  var listEl=document.getElementById('mySubmissionsList');
+  listEl.innerHTML='<div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading…</div>';
+  fetch(AUTH_URL+'?action=get_my_submissions')
+    .then(function(r){return r.json();})
+    .then(function(data){
+      var items=data.data||[];
+      var sBadge=document.getElementById('submissionsBadge');
+      var pendingCount=items.filter(function(i){return i.approval_status==='pending';}).length;
+      if(sBadge){ if(pendingCount>0){sBadge.textContent=pendingCount;sBadge.style.display='flex';}else sBadge.style.display='none'; }
+      if(!items.length){
+        listEl.innerHTML='<div class="aq-empty"><i class="fa fa-inbox"></i><div class="aq-empty-title">No submissions yet</div><div class="aq-empty-sub">Your pending or rejected submissions will appear here.</div></div>';
+        return;
+      }
+      var typeLabels={industry:'Industry',function:'Function',company_size:'Company Size',dashboard:'Dashboard',kpi:'KPI'};
+      var html='<div class="aq-table-wrap"><table class="aq-table"><thead><tr><th>#</th><th>Type</th><th>Name</th><th>Status</th><th>Submitted On</th><th>Rejection Reason</th></tr></thead><tbody>';
+      items.forEach(function(item,idx){
+        var isPending=item.approval_status==='pending';
+        var statusBadge=isPending
+          ?'<span class="aq-status-badge pending"><i class="fa fa-clock"></i> Pending</span>'
+          :'<span class="aq-status-badge rejected"><i class="fa fa-times-circle"></i> Rejected</span>';
+        html+='<tr>'+
+          '<td class="aq-num">'+(idx+1)+'</td>'+
+          '<td><span class="aq-type-label">'+esc(typeLabels[item.item_type]||item.item_type)+'</span></td>'+
+          '<td><span class="aq-item-name">'+esc(item.name)+'</span>'+(item.description?'<br><span class="aq-desc">'+esc(item.description)+'</span>':'')+'</td>'+
+          '<td>'+statusBadge+'</td>'+
+          '<td class="aq-date">'+formatDate(item.created_at)+'</td>'+
+          '<td>'+(item.rejection_reason?'<span class="aq-reject-reason">'+esc(item.rejection_reason)+'</span>':'<span class="aq-no-desc">—</span>')+'</td>'+
+        '</tr>';
+      });
+      html+='</tbody></table></div>';
+      listEl.innerHTML=html;
+    }).catch(function(){
+      listEl.innerHTML='<div class="aq-empty"><i class="fa fa-triangle-exclamation" style="color:#e67700;"></i><div class="aq-empty-title">Error loading submissions</div></div>';
     });
 }
 
-function openAddUserModal() {
-  document.getElementById('userFormId').value    = '';
-  document.getElementById('userFormName').value  = '';
-  document.getElementById('userFormEmail').value = '';
-  document.getElementById('userFormRole').value  = 'bi_developer';
-  document.getElementById('userFormTitle').textContent     = 'Add User';
-  document.getElementById('userEmailGroup').style.display  = 'block';
-  document.getElementById('userActiveGroup').style.display = 'none';
-  openModal('userFormOverlay');
+/* ══ TABLE HEIGHT ═══════════════════════════════════════ */
+function recalcTableHeight(){
+  var ca=document.getElementById('cardsArea');
+  if(!ca)return;
+  var rect=ca.getBoundingClientRect();
+  var maxH=window.innerHeight-rect.top-24;
+  if(maxH<200)maxH=200;
+  document.documentElement.style.setProperty('--table-max-h',maxH+'px');
 }
+window.addEventListener('resize', recalcTableHeight);
+window.addEventListener('scroll', recalcTableHeight,{passive:true});
+setTimeout(recalcTableHeight,300);
 
-function editUser(id, name, role, isActive) {
-  document.getElementById('userFormId').value         = id;
-  document.getElementById('userFormName').value       = name;
-  document.getElementById('userFormRole').value       = role;
-  document.getElementById('userFormActive').checked   = !!isActive;
-  document.getElementById('userFormTitle').textContent     = 'Edit User';
-  document.getElementById('userEmailGroup').style.display  = 'none';
-  document.getElementById('userActiveGroup').style.display = 'block';
-  openModal('userFormOverlay');
-}
+/* ══ MODALS ═════════════════════════════════════════════ */
+function openModal(id)  { document.getElementById(id).classList.add('open');    document.body.style.overflow='hidden'; }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow=''; }
+function confirmDeleteAction(){ if(state.deleteCallback)state.deleteCallback(); }
 
-function saveUser() {
-  var id     = document.getElementById('userFormId').value;
-  var name   = document.getElementById('userFormName').value.trim();
-  var email  = document.getElementById('userFormEmail').value.trim();
-  var role   = document.getElementById('userFormRole').value;
-  var active = document.getElementById('userFormActive').checked ? 1 : 0;
-
-  if (!name) { showToast('Name is required', 'error'); return; }
-  if (!id && !email) { showToast('Email is required', 'error'); return; }
-
-  var body = { name: name, role: role };
-  if (id) { body.id = parseInt(id); body.is_active = active; }
-  else    { body.email = email.toLowerCase(); }
-
-  api(id ? 'PUT' : 'POST', id ? 'update_user' : 'create_user', body)
-    .then(function(data) {
-      if (data.success) {
-        showToast(id ? 'User updated' : 'User added', 'success');
-        closeModal('userFormOverlay');
-        loadUsers();
-      } else { showToast(data.message || 'Error saving', 'error'); }
-    }).catch(function() {});
-}
-
-function deleteUser(id, name) {
-  document.getElementById('confirmTitle').textContent = 'Delete User?';
-  document.getElementById('confirmMsg').textContent   = 'Remove "' + name + '" from the system? They will no longer be able to login.';
-  state.deleteCallback = function() {
-    api('DELETE', 'delete_user', { id: parseInt(id) })
-      .then(function(data) {
-        if (data.success) {
-          showToast('User removed', 'success');
-          closeModal('confirmOverlay');
-          loadUsers();
-        } else { showToast(data.message || 'Error deleting', 'error'); }
-      }).catch(function() {});
-  };
-  openModal('confirmOverlay');
-}
-
-// ── Modals ────────────────────────────────────────────────
-function openModal(id) {
-  document.getElementById(id).classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeModal(id) {
-  document.getElementById(id).classList.remove('open');
-  document.body.style.overflow = '';
-}
-function confirmDeleteAction() { if (state.deleteCallback) state.deleteCallback(); }
-
-document.querySelectorAll('.modal-overlay').forEach(function(o) {
-  o.addEventListener('click', function(e) {
-    if (e.target === this) closeModal(this.id);
-  });
+document.querySelectorAll('.modal-overlay').forEach(function(o){
+  o.addEventListener('click',function(e){ if(e.target===this)closeModal(this.id); });
 });
-
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
+document.addEventListener('keydown',function(e){
+  if(e.key==='Escape'){
     closeProfileDropdown();
-    document.querySelectorAll('.modal-overlay.open').forEach(function(m) { closeModal(m.id); });
+    if(state.addingRow)             cancelInlineAdd();
+    if(state.editingKpiId!==null)   cancelInlineEdit();
+    document.querySelectorAll('.modal-overlay.open').forEach(function(m){ closeModal(m.id); });
   }
 });
 
-// ── Hamburger ─────────────────────────────────────────────
-function toggleNav() {
-  var nav   = document.getElementById('navbarNav');
-  var btn   = document.getElementById('hamburger');
-  var isOpen = nav.classList.toggle('open');
-  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-  var spans = btn.querySelectorAll('span');
-  if (isOpen) {
-    spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
-    spans[1].style.opacity   = '0';
-    spans[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
-  } else {
-    spans[0].style.transform = '';
-    spans[1].style.opacity   = '';
-    spans[2].style.transform = '';
-  }
+/* ══ NAV ════════════════════════════════════════════════ */
+function toggleNav(){
+  var nav=document.getElementById('navbarNav');
+  var btn=document.getElementById('hamburger');
+  var isOpen=nav.classList.toggle('open');
+  btn.setAttribute('aria-expanded',isOpen?'true':'false');
+  var spans=btn.querySelectorAll('span');
+  if(isOpen){spans[0].style.transform='rotate(45deg) translate(5px,5px)';spans[1].style.opacity='0';spans[2].style.transform='rotate(-45deg) translate(5px,-5px)';}
+  else{spans[0].style.transform='';spans[1].style.opacity='';spans[2].style.transform='';}
+}
+function closeNav(){
+  var nav=document.getElementById('navbarNav');
+  var btn=document.getElementById('hamburger');
+  nav.classList.remove('open'); btn.setAttribute('aria-expanded','false');
+  var spans=btn.querySelectorAll('span');
+  spans[0].style.transform=''; spans[1].style.opacity=''; spans[2].style.transform='';
 }
 
-function closeNav() {
-  var nav   = document.getElementById('navbarNav');
-  var btn   = document.getElementById('hamburger');
-  nav.classList.remove('open');
-  btn.setAttribute('aria-expanded', 'false');
-  var spans = btn.querySelectorAll('span');
-  spans[0].style.transform = '';
-  spans[1].style.opacity   = '';
-  spans[2].style.transform = '';
-}
-
-// ── Toast ─────────────────────────────────────────────────
-function showToast(msg, type) {
-  var icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info' };
-  var t = document.createElement('div');
-  t.className = 'toast ' + (type || 'info');
-  t.innerHTML = '<i class="fa ' + (icons[type] || icons.info) + '"></i> <span>' + msg + '</span>';
+/* ══ TOAST ══════════════════════════════════════════════ */
+function showToast(msg,type){
+  var icons={success:'fa-circle-check',error:'fa-circle-xmark',info:'fa-circle-info'};
+  var t=document.createElement('div');
+  t.className='toast '+(type||'info');
+  t.innerHTML='<i class="fa '+(icons[type]||icons.info)+'"></i> <span>'+msg+'</span>';
   document.getElementById('toastContainer').appendChild(t);
-  setTimeout(function() {
-    t.style.opacity = '0'; t.style.transition = 'opacity .3s';
-    setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 300);
-  }, 4000);
+  setTimeout(function(){
+    t.style.opacity='0'; t.style.transition='opacity .3s';
+    setTimeout(function(){ if(t.parentNode)t.parentNode.removeChild(t); },300);
+  },4000);
 }
 
-// ── Helpers ───────────────────────────────────────────────
-function formatDate(str) {
-  if (!str) return '';
-  var d = new Date(str);
-  return isNaN(d) ? str : d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+/* ══ UTILITIES ══════════════════════════════════════════ */
+function esc(s){
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
 }
-
-function esc(s) {
-  return String(s || '')
-    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+function formatDate(s){
+  if(!s)return '—';
+  var d=new Date(s);
+  return isNaN(d)?s:d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});
 }
-
-function emptyState(t, s) {
-  return '<div class="state-box"><div class="state-icon empty"><i class="fa fa-folder-open"></i></div>' +
-    '<div class="state-title">' + t + '</div><div class="state-sub">' + s + '</div></div>';
+function emptyState(t,s){
+  return '<div class="state-box"><div class="state-icon empty"><i class="fa fa-folder-open"></i></div><div class="state-title">'+t+'</div><div class="state-sub">'+s+'</div></div>';
 }
-
-function errorState(t, s) {
-  return '<div class="state-box"><div class="state-icon warn"><i class="fa fa-triangle-exclamation"></i></div>' +
-    '<div class="state-title">' + t + '</div><div class="state-sub">' + s + '</div></div>';
+function errorState(t,s){
+  return '<div class="state-box"><div class="state-icon warn"><i class="fa fa-triangle-exclamation"></i></div><div class="state-title">'+t+'</div><div class="state-sub">'+s+'</div></div>';
 }
 </script>
 </body>

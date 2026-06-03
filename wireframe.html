@@ -1,0 +1,2177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <!-- ═══ AUTH GUARD ═══ -->
+  <script>
+  (function() {
+    var params = new URLSearchParams(window.location.search);
+    if (params.get('auth') === '1') {
+      sessionStorage.setItem('dc_authed', '1');
+      window.history.replaceState({}, '', window.location.pathname);
+      return;
+    }
+    if (!sessionStorage.getItem('dc_authed')) {
+      window.location.replace('login.html');
+    }
+  })();
+  </script>
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Wireframes — DataChamps</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+  <link rel="icon" type="image/png" href="logo/favicon.png" />
+  <link rel="stylesheet" href="css/wireframe.css" />
+
+  <!-- JSZip for offline PPTX rendering -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+</head>
+<body>
+
+<!-- ═══════════════════════ NAVBAR ═══════════════════════ -->
+<nav class="navbar">
+  <a class="navbar-brand" href="index.html">
+    <img src="logo/favicon.png" alt="DataChamps Logo" class="brand-logo" onerror="this.style.display='none'" />
+    <span class="brand-name">DataChamps</span>
+  </a>
+
+  <ul class="navbar-nav" id="navbarNav">
+    <li><a class="nav-link" href="index.html"><i class="fa fa-th-large"></i> Dashboards</a></li>
+    <li><a class="nav-link" href="kpi.html"><i class="fa fa-chart-line"></i> KPI Details</a></li>
+    <li><a class="nav-link" href="visual.html"><i class="fa fa-eye"></i> Visual Details</a></li>
+    <li><a class="nav-link active" href="wireframe.html"><i class="fa fa-drafting-compass"></i> Wireframe</a></li>
+  </ul>
+
+  <div class="navbar-actions">
+    <div id="guestActions">
+      <button class="btn-login" onclick="openLoginModal()">
+        <i class="fa fa-lock"></i>
+        <span class="btn-text">Login</span>
+      </button>
+    </div>
+
+    <div id="adminActions" style="display:none; align-items:center; gap:10px;" class="profile-wrapper">
+
+      <!-- Notification bell — visible to contributors AND super admins -->
+      
+
+      <div class="profile-dropdown-wrap" id="profileDropdownWrap">
+        <button class="btn-profile" id="profileBtn" onclick="toggleProfileDropdown(event)" aria-haspopup="true" aria-expanded="false">
+          <div id="profileAvatarWrap"><div class="avatar" id="adminAvatar">A</div></div>
+          <div class="profile-info">
+            <span class="admin-name" id="adminName">User</span>
+            <span class="role-badge" id="roleBadge">—</span>
+          </div>
+          <i class="fa fa-chevron-down profile-chevron" id="profileChevron"></i>
+        </button>
+
+        <div class="profile-dropdown" id="profileDropdown" role="menu">
+          <div class="dropdown-header">
+            <div class="dropdown-avatar" id="dropdownAvatarWrap"><div class="avatar-lg" id="dropdownAvatar">A</div></div>
+            <div class="dropdown-user-info">
+              <div class="dropdown-name" id="dropdownName">User</div>
+              <div class="dropdown-role" id="dropdownRole">—</div>
+            </div>
+          </div>
+          <div class="dropdown-divider"></div>
+          <a class="dropdown-item" href="profile.html" role="menuitem">
+            <span class="dropdown-item-icon"><i class="fa fa-user-circle"></i></span>
+            <span class="dropdown-item-text">My Profile</span>
+          </a>
+          <button class="dropdown-item" id="approvalQueueItem" style="display:none;" onclick="openApprovalQueueModal();" role="menuitem">
+            <span class="dropdown-item-icon admin-icon"><i class="fa fa-tasks"></i></span>
+            <span class="dropdown-item-text">Approval Queue</span>
+            <span class="pending-badge-nav" id="pendingBadge" style="display:none;">0</span>
+          </button>
+          <button class="dropdown-item" id="mySubmissionsItem" style="display:none;" onclick="openMySubmissionsModal();" role="menuitem">
+            <span class="dropdown-item-icon" style="background:#f5eaf9;color:#9c36b5;"><i class="fa fa-paper-plane"></i></span>
+            <span class="dropdown-item-text">My Submissions</span>
+            <span class="submissions-badge-nav" id="submissionsBadge" style="display:none;">0</span>
+          </button>
+          <div class="dropdown-divider"></div>
+          <button class="dropdown-item danger" onclick="logout()" role="menuitem">
+            <span class="dropdown-item-icon"><i class="fa fa-sign-out-alt"></i></span>
+            <span class="dropdown-item-text">Logout</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu" aria-expanded="false">
+    <span></span><span></span><span></span>
+  </button>
+</nav>
+
+<!-- ═══════════════════════ HERO ═════════════════════════ -->
+<div class="hero">
+  <div class="hero-inner">
+    <h1>Dashboard Wireframes</h1>
+    <p>Upload and manage wireframe files for Power BI dashboards — Excel, PowerPoint, PDF, Figma and more</p>
+  </div>
+</div>
+
+<!-- ═══════════════════════ STAT BAR ═════════════════════ -->
+<div class="stat-bar">
+  <div class="stat-item">
+    <div class="stat-icon blue"><i class="fa fa-drafting-compass"></i></div>
+    <div class="stat-info">
+      <span class="stat-num" id="statTotal">—</span>
+      <span class="stat-lbl">Total Wireframes</span>
+    </div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-icon green"><i class="fa fa-check-circle"></i></div>
+    <div class="stat-info">
+      <span class="stat-num" id="statApproved">—</span>
+      <span class="stat-lbl">Approved</span>
+    </div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-icon amber"><i class="fa fa-clock"></i></div>
+    <div class="stat-info">
+      <span class="stat-num" id="statPending">—</span>
+      <span class="stat-lbl">Pending Review</span>
+    </div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-icon purple"><i class="fa fa-industry"></i></div>
+    <div class="stat-info">
+      <span class="stat-num" id="statIndustries">—</span>
+      <span class="stat-lbl">Industries</span>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════ MAIN ═════════════════════════ -->
+<div class="main-container">
+
+  <!-- ── Toolbar ── -->
+  <div class="toolbar">
+    <div class="search-box">
+      <i class="fa fa-search"></i>
+      <input type="text" id="searchInput"
+        placeholder="Search by name, industry, function, tags…"
+        oninput="onSearch()" />
+      <button class="search-clear" id="searchClearBtn" onclick="clearSearch()" title="Clear search" style="display:none;">
+        <i class="fa fa-times"></i>
+      </button>
+    </div>
+    <div class="toolbar-right">
+      <div class="filter-group">
+        <div class="filter-select-wrap">
+          <i class="fa fa-filter filter-icon"></i>
+          <select class="filter-select" id="filterStatus" onchange="renderTable()">
+            <option value="">All Status</option>
+            <option value="pending">Pending</option>
+            <option value="in_review">In Review</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+        <div class="filter-select-wrap">
+          <i class="fa fa-file filter-icon"></i>
+          <select class="filter-select" id="filterType" onchange="renderTable()">
+            <option value="">All Types</option>
+            <option value="xlsx">Excel</option>
+            <option value="pptx">PowerPoint</option>
+            <option value="pdf">PDF</option>
+            <option value="fig">Figma</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <button class="btn-reset-filters" id="resetFiltersBtn" onclick="resetFilters()" title="Reset all filters" style="display:none;">
+          <i class="fa fa-rotate-left"></i>
+          <span>Reset</span>
+        </button>
+      </div>
+      <!-- ══ ADD WIREFRAME BUTTON ══ -->
+      <button class="btn btn-primary" id="addBtn" onclick="openAddModal()">
+        <i class="fa fa-plus"></i>
+        <span>Add Wireframe</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ── Table Header Row ── -->
+  <div class="table-header-row">
+    <div class="table-header-left">
+      <h2 class="table-heading">Wireframes</h2>
+      <span class="count-badge" id="sectionCount">0</span>
+    </div>
+    <div class="table-header-right">
+      <div class="col-toggle-wrap" id="colToggleWrap">
+        <button class="btn-col-toggle" onclick="toggleColMenu()" title="Columns">
+          <i class="fa fa-table-columns"></i>
+          <span>Columns</span>
+        </button>
+        <div class="col-dropdown" id="colDropdown">
+          <div class="col-dropdown-header">Visible Columns</div>
+          <label class="col-check-item"><input type="checkbox" checked data-col="function" onchange="toggleColumn('function',this.checked)"> <span>Function</span></label>
+          <label class="col-check-item"><input type="checkbox" checked data-col="uploader" onchange="toggleColumn('uploader',this.checked)"> <span>Uploaded By</span></label>
+          <label class="col-check-item"><input type="checkbox" checked data-col="date" onchange="toggleColumn('date',this.checked)"> <span>Date</span></label>
+        </div>
+      </div>
+      <div class="sort-wrap">
+        <label class="sort-label">Sort:</label>
+        <div class="filter-select-wrap">
+          <i class="fa fa-sort filter-icon"></i>
+          <select class="filter-select filter-select-sm" id="sortSelect" onchange="renderTable()">
+            <option value="date_desc">Newest First</option>
+            <option value="date_asc">Oldest First</option>
+            <option value="name_asc">Name A–Z</option>
+            <option value="name_desc">Name Z–A</option>
+            <option value="status">By Status</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Table wrapper ── -->
+  <div class="table-scroll-outer">
+    <div class="table-wrapper" id="tableWrapper">
+      <div id="tableArea">
+        <div class="loading-state">
+          <div class="loading-spinner"><i class="fa fa-circle-notch fa-spin"></i></div>
+          <div class="loading-text">Loading wireframes…</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Pagination ── -->
+  <div class="pagination-bar" id="paginationBar" style="display:none;">
+    <div class="pagination-info" id="paginationInfo"></div>
+    <div class="pagination-controls" id="paginationControls"></div>
+    <div class="per-page-wrap">
+      <span class="per-page-label">Per page:</span>
+      <select class="per-page-select" id="perPageSelect" onchange="onPerPageChange()">
+        <option value="10">10</option>
+        <option value="20" selected>20</option>
+        <option value="50">50</option>
+        <option value="100">100</option>
+      </select>
+    </div>
+  </div>
+
+</div><!-- /main-container -->
+
+
+<!-- ════════════════ ADD / EDIT WIREFRAME MODAL ════════════════ -->
+<div class="modal-overlay" id="wireframeOverlay">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title">
+        <span class="modal-title-icon"><i class="fa fa-drafting-compass"></i></span>
+        <span id="wireframeModalTitle">Add Wireframe</span>
+      </span>
+      <button class="modal-close" onclick="closeModal('wireframeOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="wireframeId" />
+      <div class="form-group">
+        <label class="form-label">Dashboard / Project Name <span class="required">*</span></label>
+        <input type="text" class="form-control" id="wfDashboard" placeholder="e.g. Sales Dashboard" />
+      </div>
+      <div class="form-row-3">
+        <div class="form-group">
+          <label class="form-label">Industry <span class="required">*</span></label>
+          <select class="form-control" id="wfIndustry">
+            <option value="">Select Industry…</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Function</label>
+          <select class="form-control" id="wfFunction">
+            <option value="">Select Function…</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Status <span class="required">*</span></label>
+          <select class="form-control" id="wfStatus">
+            <option value="pending">Pending</option>
+            <option value="in_review">In Review</option>
+            <option value="approved">Approved</option>
+            <option value="rejected">Rejected</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Description</label>
+        <textarea class="form-control" id="wfDesc" placeholder="Brief description of this wireframe…"></textarea>
+      </div>
+      <!-- FILE TYPE SELECTOR -->
+      <div class="form-group" id="fileTypeSelectorGroup">
+        <label class="form-label">Wireframe File Type <span class="required">*</span></label>
+        <div class="file-type-selector" id="fileTypeSelector">
+          <button type="button" class="ftype-btn" data-type="pdf" onclick="selectFileType('pdf')">
+            <span class="ftype-icon file-pdf"><i class="fa fa-file-pdf"></i></span>
+            <span class="ftype-label">PDF</span>
+          </button>
+          <button type="button" class="ftype-btn" data-type="xlsx" onclick="selectFileType('xlsx')">
+            <span class="ftype-icon file-excel"><i class="fa fa-file-excel"></i></span>
+            <span class="ftype-label">Excel</span>
+          </button>
+          <button type="button" class="ftype-btn" data-type="pptx" onclick="selectFileType('pptx')">
+            <span class="ftype-icon file-ppt"><i class="fa fa-file-powerpoint"></i></span>
+            <span class="ftype-label">PowerPoint</span>
+          </button>
+          <button type="button" class="ftype-btn" data-type="fig" onclick="selectFileType('fig')">
+            <span class="ftype-icon file-figma"><i class="fa fa-bezier-curve"></i></span>
+            <span class="ftype-label">Figma</span>
+          </button>
+          <button type="button" class="ftype-btn" data-type="other" onclick="selectFileType('other')">
+            <span class="ftype-icon file-other"><i class="fa fa-file-lines"></i></span>
+            <span class="ftype-label">Other</span>
+          </button>
+        </div>
+      </div>
+      <!-- FIGMA LINK -->
+      <div class="form-group" id="figmaLinkGroup" style="display:none;">
+        <label class="form-label">
+          <i class="fa fa-bezier-curve" style="color:var(--figma-clr);"></i>
+          Figma Link <span class="required">*</span>
+        </label>
+        <div class="figma-link-wrap">
+          <span class="figma-link-prefix"><i class="fa fa-link"></i></span>
+          <input type="url" class="form-control figma-link-input" id="wfFigmaLink"
+            placeholder="https://www.figma.com/file/..." />
+        </div>
+        <div class="figma-hint">
+          <i class="fa fa-circle-info"></i>
+          Paste your Figma file or prototype link. Make sure sharing is set to <strong>"Anyone with the link"</strong> in Figma.
+        </div>
+      </div>
+      <!-- FILE UPLOAD -->
+      <div class="form-group" id="fileUploadGroup" style="display:none;">
+        <label class="form-label">
+          Wireframe File
+          <span id="fileRequiredLabel" class="required">*</span>
+          <span id="fileTypeHint" class="file-type-hint-label"></span>
+        </label>
+        <div class="upload-area" id="uploadArea">
+          <div class="upload-inner">
+            <div class="upload-icon" id="uploadIcon"><i class="fa fa-cloud-arrow-up"></i></div>
+            <div class="upload-label">Drop your file here or click to browse</div>
+            <div class="upload-hint" id="uploadHint">Supported: all file types · Max 100 MB</div>
+            <input type="file" id="wfFileInput"
+              accept=".xlsx,.xls,.xltx,.xltm,.pptx,.ppt,.pptm,.potx,.pdf,.fig,.png,.jpg,.jpeg,.gif,.svg,.docx,.doc,.zip,.rar,.7z"
+              style="display:none;" onchange="onFileSelected(this)" />
+            <button class="btn btn-secondary btn-sm" style="margin-top:12px;"
+              onclick="document.getElementById('wfFileInput').click()">
+              <i class="fa fa-folder-open"></i> Choose File
+            </button>
+          </div>
+        </div>
+        <div id="selectedFileInfo" style="display:none;" class="selected-file-info">
+          <div class="selected-file-row">
+            <span class="file-icon-sm" id="selectedFileIcon"><i class="fa fa-file"></i></span>
+            <div class="selected-file-details">
+              <div class="selected-file-name" id="selectedFileName"></div>
+              <div class="selected-file-size" id="selectedFileSize"></div>
+            </div>
+            <button class="btn-remove-file" onclick="clearFile()" title="Remove file"><i class="fa fa-times"></i></button>
+          </div>
+        </div>
+      </div>
+      <!-- Tags -->
+      <div class="form-group">
+        <label class="form-label">Tags
+          <span style="font-weight:400;text-transform:none;font-size:11px;color:var(--text-muted);">(comma separated)</span>
+        </label>
+        <input type="text" class="form-control" id="wfTags" placeholder="e.g. sales, revenue, v2" />
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('wireframeOverlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveWireframe()"><i class="fa fa-save"></i> Save Wireframe</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════ VIEW WIREFRAME DETAIL MODAL ════════════════ -->
+<div class="modal-overlay" id="viewOverlay">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title">
+        <span class="modal-title-icon"><i class="fa fa-eye"></i></span>
+        <span id="viewModalTitle">Wireframe Details</span>
+      </span>
+      <button class="modal-close" onclick="closeModal('viewOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body" id="viewModalBody"></div>
+    <div class="modal-footer" id="viewModalFooter"></div>
+  </div>
+</div>
+
+
+<!-- ════════════════ FILE PREVIEW MODAL ════════════════ -->
+<div class="modal-overlay" id="previewOverlay">
+  <div class="modal modal-preview">
+    <div class="modal-header">
+      <span class="modal-title">
+        <span class="modal-title-icon" id="previewFileIcon"><i class="fa fa-file"></i></span>
+        <span id="previewFileName">File Preview</span>
+      </span>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <a class="btn btn-secondary btn-sm" id="previewDownloadBtn" href="#" title="Download file">
+          <i class="fa fa-download"></i> Download
+        </a>
+        <button class="modal-close" onclick="closeModal('previewOverlay')"><i class="fa fa-times"></i></button>
+      </div>
+    </div>
+    <div class="preview-body" id="previewBody">
+      <div class="preview-loading">
+        <i class="fa fa-circle-notch fa-spin"></i>
+        <span>Loading preview…</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════ STATUS CHANGE MODAL ════════════════ -->
+<div class="modal-overlay" id="statusOverlay">
+  <div class="modal" style="max-width:420px;">
+    <div class="modal-header">
+      <span class="modal-title">
+        <span class="modal-title-icon"><i class="fa fa-tags"></i></span>
+        Change Status
+      </span>
+      <button class="modal-close" onclick="closeModal('statusOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="statusWireframeId" />
+      <div class="form-group">
+        <label class="form-label">New Status <span class="required">*</span></label>
+        <select class="form-control" id="newStatus">
+          <option value="pending">Pending</option>
+          <option value="in_review">In Review</option>
+          <option value="approved">Approved</option>
+          <option value="rejected">Rejected</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Remarks / Comments</label>
+        <textarea class="form-control" id="statusRemarks"
+          placeholder="Add a note about this status change…"
+          style="min-height:90px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('statusOverlay')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveStatus()"><i class="fa fa-check"></i> Update Status</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════ CONFIRM DELETE ════════════════ -->
+<div class="modal-overlay" id="confirmOverlay">
+  <div class="modal confirm-dialog">
+    <div class="confirm-body">
+      <div class="confirm-icon"><i class="fa fa-triangle-exclamation"></i></div>
+      <h3 id="confirmTitle">Delete Wireframe?</h3>
+      <p id="confirmMsg">This action cannot be undone.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('confirmOverlay')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmDeleteAction()"><i class="fa fa-trash"></i> Delete</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════ LOGIN MODAL ════════════════ -->
+<div class="modal-overlay" id="loginOverlay">
+  <div class="modal login-modal" style="max-width:420px;">
+    <div class="modal-body">
+      <div class="login-logo">
+        <i class="fa fa-shield-alt"></i>
+        <h2>Welcome to DataChamps</h2>
+        <p>Sign in with your organization Google account</p>
+      </div>
+      <div class="access-notice" id="loginNotice" style="display:none;">
+        <i class="fa fa-triangle-exclamation"></i>
+        <span id="loginNoticeMsg">Your account is not authorized. Contact your administrator.</span>
+      </div>
+      <a class="btn-google" href="php/google_auth.php" id="googleLoginBtn">
+        <svg width="20" height="20" viewBox="0 0 24 24">
+          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
+          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
+        </svg>
+        Continue with Google
+      </a>
+      <p style="text-align:center;font-family:'Sora',sans-serif;font-size:11px;color:var(--text-muted);margin-top:18px;line-height:1.6;">
+        Only pre-approved organization accounts can access this system.<br>Contact your admin if you need access.
+      </p>
+    </div>
+  </div>
+</div>
+
+
+<!-- ════════════════ NOTIFICATIONS MODAL ════════════════ -->
+<div class="modal-overlay" id="notifOverlay">
+  <div class="modal aq-modal notif-modal">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fa fa-bell" style="color:#2d4cc8;"></i> Notifications</span>
+      <button class="modal-close" onclick="closeModal('notifOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body aq-modal-body">
+      <div id="notifList"></div>
+    </div>
+  </div>
+</div>
+
+
+<div class="toast-container" id="toastContainer"></div>
+
+<!-- ═══════════════════════ JAVASCRIPT ═══════════════════ -->
+<script>
+'use strict';
+
+var API_URL = 'php/api.php';
+var WF_API  = 'php/wireframe_api.php';
+
+var state = {
+  isSuperAdmin:   false,
+  isContributor:  false,
+  isBiDev:        false,
+  canAddContent:  false,
+  isLoggedIn:     false,
+  userRole:       '',
+  userName:       '',
+  wireframes:     [],
+  filtered:       [],
+  selectedFile:   null,
+  selectedType:   '',
+  deleteCallback: null,
+  searchTimer:    null,
+  currentPage:    1,
+  perPage:        20,
+  hiddenCols:     {},
+  colMenuOpen:    false,
+  pptxSlides:     [],
+  pptxCurrent:    0,
+  pendingCount:   0,
+  notifCount:     0,
+  notifTimer:     null
+};
+
+var FILE_TYPE_CONFIG = {
+  pdf:  { accept: '.pdf',                                     hint: 'Supported: PDF (.pdf) · Max 100 MB',                                              icon: 'fa-file-pdf',        iconCls: 'file-pdf',     label: 'PDF'        },
+  xlsx: { accept: '.xlsx,.xls,.xltx,.xltm',                  hint: 'Supported: Excel (.xlsx, .xls, .xltx, .xltm) · Max 100 MB',                       icon: 'fa-file-excel',      iconCls: 'file-excel',   label: 'Excel'      },
+  pptx: { accept: '.pptx,.ppt,.pptm,.potx',                  hint: 'Supported: PowerPoint (.pptx, .ppt, .pptm, .potx) · Max 100 MB',                  icon: 'fa-file-powerpoint', iconCls: 'file-ppt',     label: 'PowerPoint' },
+  fig:  { accept: '.fig',                                     hint: 'Supported: Figma (.fig) or Figma link · Max 100 MB',                              icon: 'fa-bezier-curve',    iconCls: 'file-figma',   label: 'Figma'      },
+  other:{ accept: '.xlsx,.xls,.pptx,.ppt,.pdf,.fig,.png,.jpg,.jpeg,.gif,.svg,.docx,.doc,.zip,.rar,.7z',
+                                                              hint: 'Supported: Excel, PowerPoint, PDF, Figma, Image, Word, ZIP · Max 100 MB',          icon: 'fa-file-lines',      iconCls: 'file-other',   label: 'File'       }
+};
+
+// ── Init ──────────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', function() {
+  checkSession().then(function() {
+    loadWireframes();
+    loadIndustries();
+    if (state.isLoggedIn) startNotifPolling();
+  });
+  setupDragDrop();
+  setupClickOutside();
+  setupModalOverlayClose();
+  setupKeyboard();
+});
+
+// ── Session ───────────────────────────────────────────────
+function checkSession() {
+  return fetch(API_URL + '?action=session_check')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      state.isLoggedIn    = !!data.logged_in;
+      state.isSuperAdmin  = !!(data.is_super_admin || data.role === 'super_admin');
+      state.isContributor = !!(data.is_contributor || data.role === 'contributor');
+      state.isBiDev       = !!(data.is_bi_developer || data.role === 'bi_developer');
+      state.canAddContent = !!(data.can_add_content);
+      state.userRole      = data.role || '';
+      state.userName      = data.name || '';
+      state.pendingCount  = data.pending_count || 0;
+      updateAuthUI(data);
+      updatePendingBadge();
+    }).catch(function(err) {
+      console.warn('Session check failed:', err);
+      updateAuthUI({});
+    });
+}
+
+// ── Auth UI ──────────────────────────────────────────────
+function updateAuthUI(data) {
+  var loggedIn = state.isLoggedIn;
+
+  var guestActions = document.getElementById('guestActions');
+  var adminActions = document.getElementById('adminActions');
+
+  if (guestActions) guestActions.style.display = loggedIn ? 'none' : 'block';
+  if (adminActions) adminActions.style.display = loggedIn ? 'flex' : 'none';
+
+  // Show Add Wireframe button for users who can add content.
+  // Supports super_admin, contributor, and API permission can_add_content=true.
+  var addBtn = document.getElementById('addBtn');
+  if (addBtn) {
+    var canShowAddBtn = loggedIn && (state.isSuperAdmin || state.isContributor || state.canAddContent);
+    addBtn.style.display = canShowAddBtn ? 'inline-flex' : 'none';
+  }
+
+  var approvalQueueItem = document.getElementById('approvalQueueItem');
+  var mySubmissionsItem = document.getElementById('mySubmissionsItem');
+  var notifBellWrap     = document.getElementById('notifBellWrap');
+
+  if (approvalQueueItem) approvalQueueItem.style.display = state.isSuperAdmin  ? 'flex' : 'none';
+  if (mySubmissionsItem) mySubmissionsItem.style.display = state.isContributor ? 'flex' : 'none';
+  if (notifBellWrap)     notifBellWrap.style.display     = (state.isContributor || state.isSuperAdmin) ? 'flex' : 'none';
+
+  if (loggedIn) {
+    var firstName = state.userName ? state.userName.split(' ')[0] : 'User';
+    var initial   = state.userName ? state.userName.charAt(0).toUpperCase() : 'U';
+
+    var adminNameEl = document.getElementById('adminName');
+    if (adminNameEl) adminNameEl.textContent = firstName;
+
+    var rb = document.getElementById('roleBadge');
+    if (rb) {
+      if (state.isSuperAdmin) {
+        rb.className = 'role-badge super_admin';
+        rb.innerHTML = '<i class="fa fa-crown" style="font-size:9px;"></i> Super Admin';
+      } else if (state.isContributor) {
+        rb.className = 'role-badge contributor';
+        rb.innerHTML = '<i class="fa fa-pen" style="font-size:9px;"></i> Contributor';
+      } else {
+        rb.className = 'role-badge bi_developer';
+        rb.innerHTML = '<i class="fa fa-chart-bar" style="font-size:9px;"></i> BI Dev';
+      }
+    }
+
+    var wrap = document.getElementById('profileAvatarWrap');
+    if (wrap) {
+      if (data && data.picture) {
+        wrap.innerHTML = '<img src="' + data.picture + '" class="avatar-img" alt="Avatar" onerror="this.parentNode.innerHTML=\'<div class=avatar>' + esc(initial) + '</div>\'" />';
+      } else {
+        wrap.innerHTML = '<div class="avatar">' + esc(initial) + '</div>';
+      }
+    }
+
+    var dropdownNameEl = document.getElementById('dropdownName');
+    if (dropdownNameEl) dropdownNameEl.textContent = state.userName || 'User';
+
+    var dropdownRole = document.getElementById('dropdownRole');
+    if (dropdownRole) {
+      if (state.isSuperAdmin) {
+        dropdownRole.innerHTML = '<i class="fa fa-crown"></i> Super Administrator';
+        dropdownRole.className = 'dropdown-role super-admin-role';
+      } else if (state.isContributor) {
+        dropdownRole.innerHTML = '<i class="fa fa-pen"></i> Contributor';
+        dropdownRole.className = 'dropdown-role contributor-role';
+      } else {
+        dropdownRole.innerHTML = '<i class="fa fa-chart-bar"></i> BI Developer';
+        dropdownRole.className = 'dropdown-role dev-role';
+      }
+    }
+
+    var dropWrap = document.getElementById('dropdownAvatarWrap');
+    if (dropWrap) {
+      if (data && data.picture) {
+        dropWrap.innerHTML = '<img src="' + data.picture + '" class="dropdown-avatar-img" alt="Avatar" onerror="this.parentNode.innerHTML=\'<div class=avatar-lg>' + esc(initial) + '</div>\'" />';
+      } else {
+        dropWrap.innerHTML = '<div class="avatar-lg">' + esc(initial) + '</div>';
+      }
+    }
+  }
+}
+
+function updatePendingBadge() {
+  var badge = document.getElementById('pendingBadge');
+  if (!badge) return;
+  if (state.pendingCount > 0) {
+    badge.textContent = state.pendingCount;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ── Notification polling ──────────────────────────────────
+function startNotifPolling() {
+  loadNotifications();
+  state.notifTimer = setInterval(loadNotifications, 30000);
+}
+
+function loadNotifications() {
+  fetch(API_URL + '?action=get_notifications')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var items  = data.data || [];
+      var unread = items.filter(function(n) { return !n.is_read; }).length;
+      updateNotifBellBadge(unread);
+
+      if (state.isSuperAdmin) {
+        fetch(API_URL + '?action=get_pending_count')
+          .then(function(r) { return r.json(); })
+          .then(function(d) {
+            state.pendingCount = d.count || 0;
+            updatePendingBadge();
+            if (unread === 0 && state.pendingCount > 0) {
+              updateNotifBellBadge(state.pendingCount);
+            }
+          }).catch(function() {});
+      }
+    }).catch(function() {});
+}
+
+function updateNotifBellBadge(unreadCount) {
+  var dot   = document.getElementById('notifDot');
+  var badge = document.getElementById('notifCountBadge');
+  state.notifCount = unreadCount;
+  if (unreadCount > 0) {
+    if (dot)   dot.style.display   = 'block';
+    if (badge) { badge.textContent = unreadCount > 99 ? '99+' : unreadCount; badge.style.display = 'flex'; }
+  } else {
+    if (dot)   dot.style.display   = 'none';
+    if (badge) badge.style.display = 'none';
+  }
+}
+
+function openNotifModal() {
+  openModal('notifOverlay');
+  loadNotifList();
+  fetch(API_URL + '?action=mark_notifications_read', { method: 'POST' })
+    .then(function() { updateNotifBellBadge(0); }).catch(function() {});
+}
+
+function loadNotifList() {
+  var listEl = document.getElementById('notifList');
+  listEl.innerHTML = '<div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading…</div>';
+  fetch(API_URL + '?action=get_notifications')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var items = data.data || [];
+      if (!items.length) {
+        listEl.innerHTML = '<div class="aq-empty"><i class="fa fa-bell-slash"></i><div class="aq-empty-title">No notifications yet</div><div class="aq-empty-sub">Activity updates will appear here.</div></div>';
+        return;
+      }
+      var actionIcons  = { submitted:'fa-paper-plane', approved:'fa-check-circle', rejected:'fa-times-circle' };
+      var actionColors = { submitted:'#2d4cc8', approved:'#2f9e44', rejected:'#c92a2a' };
+      var actionBg     = { submitted:'#eef1fd', approved:'#e9faf0', rejected:'#fff0f0' };
+      var actionLabels = { submitted:'Submitted', approved:'Approved', rejected:'Rejected' };
+      var html = '<div class="aq-table-wrap"><table class="aq-table notif-table"><thead><tr>' +
+        '<th>#</th><th>Item</th><th>Status</th><th>Message</th><th>Date</th>' +
+        '</tr></thead><tbody>';
+      items.forEach(function(n, idx) {
+        var clr  = actionColors[n.action] || '#2d4cc8';
+        var bg   = actionBg[n.action]     || '#eef1fd';
+        var icon = actionIcons[n.action]  || 'fa-bell';
+        var unreadDot = !n.is_read ? '<span class="notif-unread-dot"></span>' : '';
+        html += '<tr class="' + (n.is_read ? '' : 'notif-row-unread') + '">' +
+          '<td class="aq-num">' + (idx + 1) + unreadDot + '</td>' +
+          '<td><span class="aq-item-name">' + esc(n.item_name) + '</span><br><span class="aq-type-label">' + esc((n.item_type || '').replace('_', ' ')) + '</span></td>' +
+          '<td><span class="aq-status-badge" style="background:' + bg + ';color:' + clr + ';border-color:' + clr + '33;"><i class="fa ' + icon + '"></i> ' + esc(actionLabels[n.action] || n.action) + '</span></td>' +
+          '<td><span class="aq-desc">' + esc(n.message) + '</span></td>' +
+          '<td class="aq-date">' + formatDate(n.created_at) + '</td>' +
+          '</tr>';
+      });
+      html += '</tbody></table></div>';
+      listEl.innerHTML = html;
+    }).catch(function() {
+      listEl.innerHTML = '<div class="aq-empty"><i class="fa fa-triangle-exclamation" style="color:#e67700;"></i><div class="aq-empty-title">Error loading notifications</div></div>';
+    });
+}
+
+// ── My Submissions modal (for contributors) ───────────────
+function openMySubmissionsModal() {
+  closeProfileDropdown();
+  openModal('mySubmissionsOverlay');
+  loadMySubmissions();
+}
+
+function loadMySubmissions() {
+  var listEl = document.getElementById('mySubmissionsList');
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading…</div>';
+  fetch(API_URL + '?action=get_my_submissions')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var items = data.data || [];
+      var sBadge = document.getElementById('submissionsBadge');
+      var pendingCount = items.filter(function(i) { return i.approval_status === 'pending'; }).length;
+      if (sBadge) {
+        if (pendingCount > 0) { sBadge.textContent = pendingCount; sBadge.style.display = 'flex'; }
+        else { sBadge.style.display = 'none'; }
+      }
+      if (!items.length) {
+        listEl.innerHTML = '<div class="aq-empty"><i class="fa fa-inbox"></i><div class="aq-empty-title">No submissions yet</div><div class="aq-empty-sub">Your pending or rejected submissions will appear here.</div></div>';
+        return;
+      }
+      var typeLabels = { industry:'Industry', function:'Function', company_size:'Company Size', dashboard:'Dashboard' };
+      var html = '<div class="aq-table-wrap"><table class="aq-table"><thead><tr>' +
+        '<th>#</th><th>Type</th><th>Name</th><th>Status</th><th>Submitted On</th><th>Rejection Reason</th>' +
+        '</tr></thead><tbody>';
+      items.forEach(function(item, idx) {
+        var isPending  = item.approval_status === 'pending';
+        var statusBadge = isPending
+          ? '<span class="aq-status-badge pending"><i class="fa fa-clock"></i> Pending</span>'
+          : '<span class="aq-status-badge rejected"><i class="fa fa-times-circle"></i> Rejected</span>';
+        html += '<tr>' +
+          '<td class="aq-num">' + (idx + 1) + '</td>' +
+          '<td><span class="aq-type-label">' + esc(typeLabels[item.item_type] || item.item_type) + '</span></td>' +
+          '<td><span class="aq-item-name">' + esc(item.name) + '</span>' + (item.description ? '<br><span class="aq-desc">' + esc(item.description) + '</span>' : '') + '</td>' +
+          '<td>' + statusBadge + '</td>' +
+          '<td class="aq-date">' + formatDate(item.created_at) + '</td>' +
+          '<td>' + (item.rejection_reason ? '<span class="aq-reject-reason">' + esc(item.rejection_reason) + '</span>' : '<span class="aq-no-desc">—</span>') + '</td>' +
+          '</tr>';
+      });
+      html += '</tbody></table></div>';
+      listEl.innerHTML = html;
+    }).catch(function() {
+      listEl.innerHTML = '<div class="aq-empty"><i class="fa fa-triangle-exclamation" style="color:#e67700;"></i><div class="aq-empty-title">Error loading submissions</div></div>';
+    });
+}
+
+// ── Approval Queue modal (for super_admin) ────────────────
+function openApprovalQueueModal() {
+  closeProfileDropdown();
+  openModal('approvalQueueOverlay');
+  loadApprovalQueue();
+}
+
+function loadApprovalQueue() {
+  var listEl = document.getElementById('approvalQueueList');
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading submissions…</div>';
+  fetch(API_URL + '?action=get_pending_items')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var items = data.data || [];
+      var badge = document.getElementById('aqModalBadge');
+      if (badge) { badge.textContent = items.length; badge.style.display = items.length > 0 ? 'inline-flex' : 'none'; }
+
+      if (!items.length) {
+        listEl.innerHTML = '<div class="aq-empty"><i class="fa fa-check-circle"></i><div class="aq-empty-title">All clear!</div><div class="aq-empty-sub">No pending submissions at this time.</div></div>';
+        return;
+      }
+      var typeColors = { industry:'#2d4cc8', function:'#0c7c59', company_size:'#9c36b5', dashboard:'#e67700' };
+      var typeBg     = { industry:'#eef1fd', function:'#e6f5ef', company_size:'#f5eaf9', dashboard:'#fff4ed' };
+      var typeIcons  = { industry:'fa-industry', function:'fa-sitemap', company_size:'fa-building', dashboard:'fa-chart-bar' };
+      var html = '<div class="aq-cards-grid">';
+      items.forEach(function(item, idx) {
+        var clr  = typeColors[item.item_type] || '#2d4cc8';
+        var bg   = typeBg[item.item_type]     || '#eef1fd';
+        var icon = typeIcons[item.item_type]  || 'fa-tag';
+        var submitterInitial = (item.submitted_by_name || '?').charAt(0).toUpperCase();
+        var descHtml = item.description
+          ? '<div class="aq-card-desc">' + esc(item.description) + '</div>'
+          : '<div class="aq-card-desc aq-no-desc-text">No description provided</div>';
+        var urlHtml = item.embed_url
+          ? '<a href="' + esc(item.embed_url) + '" target="_blank" class="aq-card-url" onclick="event.stopPropagation()"><i class="fa fa-external-link-alt"></i> Preview URL</a>'
+          : '';
+        html += '<div class="aq-card" id="aqrow-' + item.item_type + '-' + item.id + '">' +
+          '<div class="aq-card-strip" style="background:linear-gradient(90deg,' + clr + ',' + clr + '99);"></div>' +
+          '<div class="aq-card-body">' +
+            '<div class="aq-card-row aq-card-meta-row">' +
+              '<span class="aq-type-badge" style="background:' + bg + ';color:' + clr + ';border-color:' + clr + '33;">' +
+                '<i class="fa ' + icon + '"></i> ' + esc(item.item_label) +
+              '</span>' +
+              '<span class="aq-card-num">#' + (idx + 1) + '</span>' +
+            '</div>' +
+            '<div class="aq-card-name">' + esc(item.name) + '</div>' +
+            urlHtml +
+            descHtml +
+            '<div class="aq-card-submitter">' +
+              '<div class="aq-avatar">' + esc(submitterInitial) + '</div>' +
+              '<div class="aq-submitter-info">' +
+                '<span class="aq-submitter-name">' + esc(item.submitted_by_name || 'Unknown') + '</span>' +
+                '<span class="aq-submitter-email">' + esc(item.submitted_by_email || '') + '</span>' +
+              '</div>' +
+              '<span class="aq-card-date"><i class="fa fa-clock"></i> ' + formatDate(item.created_at) + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="aq-card-footer">' +
+            '<button class="btn-aq-reject" onclick="openRejectModal(\'' + item.item_type + '\',' + item.id + ',\'' + esc(item.name) + '\')"><i class="fa fa-times"></i> Reject</button>' +
+            '<button class="btn-aq-approve" onclick="reviewItem(\'approve\',\'' + item.item_type + '\',' + item.id + ')"><i class="fa fa-check"></i> Approve</button>' +
+          '</div>' +
+        '</div>';
+      });
+      html += '</div>';
+      listEl.innerHTML = html;
+    }).catch(function() {
+      listEl.innerHTML = '<div class="aq-empty"><i class="fa fa-triangle-exclamation" style="color:#e67700;"></i><div class="aq-empty-title">Error loading submissions</div><div class="aq-empty-sub">Please try again.</div></div>';
+    });
+}
+
+function reviewItem(action, itemType, id) {
+  fetch(API_URL + '?action=' + action + '_item', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ item_type: itemType, id: id })
+  }).then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.success) {
+        showToast(action === 'approve' ? 'Approved and published!' : 'Submission rejected', 'success');
+        var row = document.getElementById('aqrow-' + itemType + '-' + id);
+        if (row) {
+          row.style.transition = 'opacity .3s,transform .3s';
+          row.style.opacity    = '0';
+          row.style.transform  = 'translateY(-8px) scale(.97)';
+          setTimeout(function() { if (row.parentNode) row.parentNode.removeChild(row); checkEmptyQueue(); }, 300);
+        }
+        state.pendingCount = Math.max(0, state.pendingCount - 1);
+        updatePendingBadge();
+        loadNotifications();
+      } else { showToast(data.message || 'Error', 'error'); }
+    }).catch(function() { showToast('Network error', 'error'); });
+}
+
+function checkEmptyQueue() {
+  var grid = document.querySelector('.aq-cards-grid');
+  if (grid && grid.children.length === 0) {
+    document.getElementById('approvalQueueList').innerHTML = '<div class="aq-empty"><i class="fa fa-check-circle"></i><div class="aq-empty-title">All clear!</div><div class="aq-empty-sub">No pending submissions at this time.</div></div>';
+    var badge = document.getElementById('aqModalBadge');
+    if (badge) badge.style.display = 'none';
+  } else if (grid) {
+    var badge = document.getElementById('aqModalBadge');
+    if (badge) { badge.textContent = grid.children.length; }
+  }
+}
+
+var _rejectItemType = '', _rejectItemId = 0;
+function openRejectModal(itemType, id, name) {
+  _rejectItemType = itemType; _rejectItemId = id;
+  document.getElementById('rejectItemName').textContent = name;
+  document.getElementById('rejectReason').value = '';
+  openModal('rejectOverlay');
+}
+function confirmReject() {
+  var reason = document.getElementById('rejectReason').value.trim();
+  fetch(API_URL + '?action=reject_item', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ item_type: _rejectItemType, id: _rejectItemId, reason: reason })
+  }).then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.success) {
+        showToast('Submission rejected', 'success');
+        closeModal('rejectOverlay');
+        var row = document.getElementById('aqrow-' + _rejectItemType + '-' + _rejectItemId);
+        if (row) {
+          row.style.transition = 'opacity .3s'; row.style.opacity = '0';
+          setTimeout(function() { if (row.parentNode) row.parentNode.removeChild(row); checkEmptyQueue(); }, 300);
+        }
+        state.pendingCount = Math.max(0, state.pendingCount - 1);
+        updatePendingBadge();
+        loadNotifications();
+      } else { showToast(data.message || 'Error', 'error'); }
+    }).catch(function() { showToast('Network error', 'error'); });
+}
+
+function openLoginModal() {
+  document.getElementById('loginNotice').style.display = 'none';
+  openModal('loginOverlay');
+}
+
+function logout() {
+  closeProfileDropdown();
+  if (state.notifTimer) clearInterval(state.notifTimer);
+  fetch(API_URL + '?action=logout', { method: 'POST' }).finally(function() {
+    sessionStorage.removeItem('dc_authed');
+    window.location.href = 'login.html';
+  });
+}
+
+// ── Load wireframes ───────────────────────────────────────
+function loadWireframes() {
+  document.getElementById('tableArea').innerHTML =
+    '<div class="loading-state">' +
+      '<div class="loading-spinner"><i class="fa fa-circle-notch fa-spin"></i></div>' +
+      '<div class="loading-text">Loading wireframes…</div>' +
+    '</div>';
+  fetch(WF_API + '?action=get_wireframes')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.success) {
+        state.wireframes = data.data || [];
+        updateStats();
+        renderTable();
+      } else {
+        showError('Could not load wireframes: ' + (data.message || 'Unknown error'));
+      }
+    }).catch(function() { showError('Network error loading wireframes'); });
+}
+
+function updateStats() {
+  var all      = state.wireframes;
+  var approved = all.filter(function(w) { return w.status === 'approved'; }).length;
+  var pending  = all.filter(function(w) { return w.status === 'pending' || w.status === 'in_review'; }).length;
+  var indSet   = {};
+  all.forEach(function(w) { if (w.industry_name) indSet[w.industry_name] = 1; });
+  animateNum('statTotal',      all.length);
+  animateNum('statApproved',   approved);
+  animateNum('statPending',    pending);
+  animateNum('statIndustries', Object.keys(indSet).length);
+}
+
+function animateNum(id, target) {
+  var el = document.getElementById(id);
+  if (!el) return;
+  var start = 0, dur = 600, startTime = null;
+  function step(ts) {
+    if (!startTime) startTime = ts;
+    var progress = Math.min((ts - startTime) / dur, 1);
+    el.textContent = Math.round(progress * target);
+    if (progress < 1) requestAnimationFrame(step);
+    else el.textContent = target;
+  }
+  requestAnimationFrame(step);
+}
+
+function onSearch() {
+  var val = document.getElementById('searchInput').value;
+  document.getElementById('searchClearBtn').style.display = val ? 'flex' : 'none';
+  clearTimeout(state.searchTimer);
+  state.searchTimer = setTimeout(function() { state.currentPage = 1; renderTable(); }, 280);
+  updateResetBtn();
+}
+
+function clearSearch() {
+  document.getElementById('searchInput').value = '';
+  document.getElementById('searchClearBtn').style.display = 'none';
+  state.currentPage = 1;
+  renderTable();
+  updateResetBtn();
+}
+
+function resetFilters() {
+  document.getElementById('searchInput').value  = '';
+  document.getElementById('filterStatus').value = '';
+  document.getElementById('filterType').value   = '';
+  document.getElementById('searchClearBtn').style.display = 'none';
+  state.currentPage = 1;
+  renderTable();
+  updateResetBtn();
+}
+
+function updateResetBtn() {
+  var hasFilter = document.getElementById('searchInput').value ||
+                  document.getElementById('filterStatus').value ||
+                  document.getElementById('filterType').value;
+  document.getElementById('resetFiltersBtn').style.display = hasFilter ? 'inline-flex' : 'none';
+}
+
+function onPerPageChange() {
+  state.perPage     = parseInt(document.getElementById('perPageSelect').value);
+  state.currentPage = 1;
+  renderTable();
+}
+
+// ── Sorting ───────────────────────────────────────────────
+function sortList(list) {
+  var sort = (document.getElementById('sortSelect') || {}).value || 'date_desc';
+  var statusOrder = { pending: 0, in_review: 1, approved: 2, rejected: 3 };
+  return list.slice().sort(function(a, b) {
+    switch (sort) {
+      case 'date_asc':  return new Date(a.created_at) - new Date(b.created_at);
+      case 'date_desc': return new Date(b.created_at) - new Date(a.created_at);
+      case 'name_asc':  return (a.dashboard_name || '').localeCompare(b.dashboard_name || '');
+      case 'name_desc': return (b.dashboard_name || '').localeCompare(a.dashboard_name || '');
+      case 'status':    return (statusOrder[a.status] || 0) - (statusOrder[b.status] || 0);
+      default:          return new Date(b.created_at) - new Date(a.created_at);
+    }
+  });
+}
+
+// ── Render table ──────────────────────────────────────────
+function renderTable() {
+  var search       = (document.getElementById('searchInput').value || '').toLowerCase().trim();
+  var filterStatus = document.getElementById('filterStatus').value;
+  var filterType   = document.getElementById('filterType').value;
+
+  updateResetBtn();
+
+  var list = state.wireframes.filter(function(w) {
+    var matchSearch = !search ||
+      (w.dashboard_name   || '').toLowerCase().includes(search) ||
+      (w.industry_name    || '').toLowerCase().includes(search) ||
+      (w.function_name    || '').toLowerCase().includes(search) ||
+      (w.tags             || '').toLowerCase().includes(search) ||
+      (w.uploaded_by_name || '').toLowerCase().includes(search);
+    var matchStatus = !filterStatus || w.status === filterStatus;
+    var matchType   = !filterType   || getFileCategory(w.file_ext, w.file_type) === filterType;
+    return matchSearch && matchStatus && matchType;
+  });
+
+  list = sortList(list);
+  state.filtered = list;
+
+  var total      = list.length;
+  var perPage    = state.perPage;
+  var totalPages = Math.max(1, Math.ceil(total / perPage));
+  if (state.currentPage > totalPages) state.currentPage = totalPages;
+  var start    = (state.currentPage - 1) * perPage;
+  var pageList = list.slice(start, start + perPage);
+
+  document.getElementById('sectionCount').textContent = total;
+
+  if (!total) {
+    document.getElementById('tableArea').innerHTML =
+      '<div class="empty-state">' +
+        '<div class="empty-icon"><i class="fa fa-drafting-compass"></i></div>' +
+        '<div class="empty-title">' + (search || filterStatus || filterType ? 'No results found' : 'No wireframes yet') + '</div>' +
+        '<div class="empty-sub">' + (search || filterStatus || filterType
+          ? 'Try adjusting your search or filters.'
+          : (state.isSuperAdmin ? 'Click "Add Wireframe" to upload the first one.' : 'No wireframes have been uploaded yet.')) + '</div>' +
+        (search || filterStatus || filterType
+          ? '<button class="btn btn-secondary btn-sm" style="margin-top:16px;" onclick="resetFilters()"><i class="fa fa-rotate-left"></i> Reset Filters</button>'
+          : '') +
+      '</div>';
+    document.getElementById('paginationBar').style.display = 'none';
+    return;
+  }
+
+  var colHidden = state.hiddenCols;
+
+  var html =
+    '<table class="wf-table" id="wfTable">' +
+    '<colgroup>' +
+      '<col style="width:48px;">' +
+      '<col style="min-width:180px;">' +
+      '<col style="min-width:140px;">' +
+      (colHidden.function ? '' : '<col style="min-width:150px;">') +
+      '<col style="min-width:110px;">' +
+      '<col style="min-width:120px;">' +
+      (colHidden.uploader ? '' : '<col style="min-width:160px;">') +
+      (colHidden.date     ? '' : '<col style="min-width:100px;">') +
+      '<col style="width:96px;">' +
+    '</colgroup>' +
+    '<thead>' +
+    '<tr>' +
+      '<th class="th-num">#</th>' +
+      '<th class="th-sortable" onclick="cycleSort(\'name\')">Dashboard Name ' + sortIndicator('name') + '</th>' +
+      '<th>Industry</th>' +
+      (colHidden.function ? '' : '<th>Function</th>') +
+      '<th>File</th>' +
+      '<th class="th-sortable" onclick="cycleSort(\'status\')">Status ' + sortIndicator('status') + '</th>' +
+      (colHidden.uploader ? '' : '<th>Uploaded By</th>') +
+      (colHidden.date     ? '' : '<th class="th-sortable" onclick="cycleSort(\'date\')">Date ' + sortIndicator('date') + '</th>') +
+      '<th class="th-actions">Actions</th>' +
+    '</tr>' +
+    '</thead>' +
+    '<tbody>';
+
+  pageList.forEach(function(w, idx) {
+    var statusCls   = { pending: 'status-pending', in_review: 'status-review', approved: 'status-approved', rejected: 'status-rejected' };
+    var statusLabel = { pending: 'Pending', in_review: 'In Review', approved: 'Approved', rejected: 'Rejected' };
+    var statusIcon  = { pending: 'fa-clock', in_review: 'fa-magnifying-glass', approved: 'fa-check-circle', rejected: 'fa-times-circle' };
+    var fileInfo    = getFileDisplay(w.file_ext, w.original_name, w.file_type);
+    var isFigma     = (w.file_type === 'fig') || (!w.file_name && w.figma_link);
+
+    var tags    = (w.tags || '').split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+    var tagHtml = tags.slice(0, 2).map(function(t) { return '<span class="tag-pill">' + esc(t) + '</span>'; }).join('');
+    if (tags.length > 2) tagHtml += '<span class="tag-pill tag-more">+' + (tags.length - 2) + '</span>';
+
+    var isPreviewable = canPreview(w);
+    var fileCellContent;
+    if (isFigma && w.figma_link) {
+      fileCellContent =
+        '<div class="file-cell">' +
+          '<span class="file-type-badge ' + fileInfo.cls + ' file-badge-clickable" ' +
+            'onclick="event.stopPropagation();openFigmaPreview(\'' + esc(w.figma_link) + '\')" ' +
+            'title="Open Figma file">' +
+            '<i class="fa ' + fileInfo.icon + '"></i> ' + fileInfo.label +
+            ' <i class="fa fa-arrow-up-right-from-square file-ext-link-icon"></i>' +
+          '</span>' +
+          '<span class="file-size-sm figma-link-indicator"><i class="fa fa-link"></i> Link</span>' +
+        '</div>';
+    } else if (w.file_name) {
+      fileCellContent =
+        '<div class="file-cell">' +
+          '<span class="file-type-badge ' + fileInfo.cls + (isPreviewable ? ' file-badge-clickable' : '') + '" ' +
+            (isPreviewable ? 'onclick="event.stopPropagation();openFilePreview(' + w.id + ')" title="Click to preview"' : '') + '>' +
+            '<i class="fa ' + fileInfo.icon + '"></i> ' + fileInfo.label +
+            (isPreviewable ? ' <i class="fa fa-expand file-preview-icon"></i>' : '') +
+          '</span>' +
+          '<span class="file-size-sm">' + esc(w.file_size_display || '') + '</span>' +
+        '</div>';
+    } else {
+      fileCellContent =
+        '<div class="file-cell">' +
+          '<span class="file-type-badge file-none"><i class="fa fa-file-circle-xmark"></i> No File</span>' +
+        '</div>';
+    }
+
+    var adminBtns = state.isSuperAdmin
+      ? '<button class="action-btn edit-btn"   title="Edit"   onclick="event.stopPropagation();editWireframe(' + w.id + ')"><i class="fa fa-pen"></i></button>' +
+        '<button class="action-btn delete-btn" title="Delete" onclick="event.stopPropagation();deleteWireframe(' + w.id + ',\'' + esc(w.dashboard_name || w.name || '') + '\')"><i class="fa fa-trash"></i></button>'
+      : '';
+
+    var rowNum = start + idx + 1;
+
+    html +=
+      '<tr onclick="viewWireframe(' + w.id + ')" class="table-row-clickable" tabindex="0">' +
+        '<td class="td-num">' + rowNum + '</td>' +
+        '<td class="td-name" data-label="Dashboard">' +
+          '<div class="wf-name-cell">' +
+            '<div class="wf-name-text">' + esc(w.dashboard_name || '—') + '</div>' +
+            (tagHtml ? '<div class="wf-tags">' + tagHtml + '</div>' : '') +
+          '</div>' +
+        '</td>' +
+        '<td class="td-industry" data-label="Industry">' +
+          '<span class="industry-label">' +
+            '<span class="industry-dot"></span>' +
+            '<span class="industry-text">' + esc(w.industry_name || '—') + '</span>' +
+          '</span>' +
+        '</td>' +
+        (colHidden.function ? '' :
+          '<td class="td-fn" data-label="Function">' +
+            '<span class="fn-label">' + esc(w.function_name || '—') + '</span>' +
+          '</td>') +
+        '<td data-label="File" onclick="event.stopPropagation()">' + fileCellContent + '</td>' +
+        '<td data-label="Status">' +
+          '<span class="status-badge ' + (statusCls[w.status] || '') + '">' +
+            '<i class="fa ' + (statusIcon[w.status] || 'fa-circle') + '"></i> ' + (statusLabel[w.status] || w.status) +
+          '</span>' +
+        '</td>' +
+        (colHidden.uploader ? '' :
+          '<td class="td-uploader" data-label="Uploaded By">' +
+            '<div class="uploader-cell">' +
+              '<div class="uploader-avatar">' + esc((w.uploaded_by_name || '?').charAt(0).toUpperCase()) + '</div>' +
+              '<span class="uploader-name">' + esc(w.uploaded_by_name || '—') + '</span>' +
+            '</div>' +
+          '</td>') +
+        (colHidden.date ? '' :
+          '<td data-label="Date"><span class="td-date">' + formatDate(w.created_at) + '</span></td>') +
+        '<td onclick="event.stopPropagation()" class="td-actions">' +
+          '<div class="action-group">' + adminBtns + '</div>' +
+        '</td>' +
+      '</tr>';
+  });
+
+  html += '</tbody></table>';
+  document.getElementById('tableArea').innerHTML = html;
+  renderPagination(total, totalPages);
+}
+
+// ── Can Preview ───────────────────────────────────────────
+function canPreview(w) {
+  if (!w.file_name) return false;
+  var ext = (w.file_ext || '').toLowerCase().replace('.', '');
+  var previewable = ['pdf', 'png', 'jpg', 'jpeg', 'gif', 'svg', 'pptx', 'ppt', 'pptm', 'potx', 'xlsx', 'xls', 'docx', 'doc'];
+  return previewable.includes(ext);
+}
+
+// ── PPTX offline preview ──────────────────────────────────
+function openFilePreview(id) {
+  var w = state.wireframes.find(function(x) { return x.id == id; });
+  if (!w || !w.file_name) return;
+
+  var fileInfo    = getFileDisplay(w.file_ext, w.original_name, w.file_type);
+  var ext         = (w.file_ext || '').toLowerCase().replace('.', '');
+  var downloadUrl = WF_API + '?action=download_wireframe&id=' + w.id;
+  var fileName    = w.original_name || w.file_name;
+
+  document.getElementById('previewFileName').textContent = fileName;
+  document.getElementById('previewFileIcon').innerHTML =
+    '<span class="file-type-badge ' + fileInfo.cls + '" style="padding:4px 8px;"><i class="fa ' + fileInfo.icon + '"></i></span>';
+  document.getElementById('previewDownloadBtn').href = downloadUrl;
+
+  var body = document.getElementById('previewBody');
+  body.innerHTML = '<div class="preview-loading"><i class="fa fa-circle-notch fa-spin"></i><span>Loading preview…</span></div>';
+
+  openModal('previewOverlay');
+
+  if (ext === 'pdf') {
+    body.innerHTML = '<iframe class="preview-iframe" src="' + downloadUrl + '" title="PDF Preview"></iframe>';
+  } else if (['png', 'jpg', 'jpeg', 'gif', 'svg'].includes(ext)) {
+    var img = new Image();
+    img.onload = function() { body.innerHTML = '<div class="preview-img-wrap"><img src="' + downloadUrl + '" class="preview-img" alt="' + esc(fileName) + '" /></div>'; };
+    img.onerror = function() { showPreviewFallback(body, fileInfo, fileName, downloadUrl); };
+    img.src = downloadUrl;
+  } else if (['pptx', 'ppt', 'pptm', 'potx'].includes(ext)) {
+    renderPptxOffline(w, body, downloadUrl, fileInfo, fileName);
+  } else if (['xlsx', 'xls', 'xltx', 'xltm', 'docx', 'doc'].includes(ext)) {
+    var absUrl = window.location.origin + window.location.pathname.replace(/\/[^\/]*$/, '/') + downloadUrl;
+    var officeUrl = 'https://view.officeapps.live.com/op/embed.aspx?src=' + encodeURIComponent(absUrl);
+    body.innerHTML =
+      '<div class="preview-office-notice">' +
+        '<div class="preview-office-icon"><i class="fa ' + fileInfo.icon + '"></i></div>' +
+        '<div class="preview-office-info">' +
+          '<div class="preview-office-name">' + esc(fileName) + '</div>' +
+          '<div class="preview-office-meta">' + (w.file_size_display || '') + ' · ' + fileInfo.label + '</div>' +
+          '<p class="preview-office-desc">Preview opens in Microsoft Office Online viewer.</p>' +
+          '<div class="preview-office-actions">' +
+            '<a class="btn btn-primary" href="' + officeUrl + '" target="_blank" rel="noopener"><i class="fa fa-external-link-alt"></i> Open in Office Online</a>' +
+            '<a class="btn btn-secondary" href="' + downloadUrl + '"><i class="fa fa-download"></i> Download File</a>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+      '<div class="preview-iframe-wrap"><iframe class="preview-iframe" src="' + officeUrl + '" title="Office Preview"></iframe></div>';
+  } else {
+    showPreviewFallback(body, fileInfo, fileName, downloadUrl);
+  }
+}
+
+function renderPptxOffline(w, body, downloadUrl, fileInfo, fileName) {
+  if (typeof JSZip === 'undefined') { showPreviewFallback(body, fileInfo, fileName, downloadUrl); return; }
+  body.innerHTML = '<div class="preview-loading"><i class="fa fa-circle-notch fa-spin"></i><span>Parsing slides…</span></div>';
+  fetch(downloadUrl)
+    .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.arrayBuffer(); })
+    .then(function(ab) { return JSZip.loadAsync(ab); })
+    .then(function(zip) { return parsePptxSlides(zip); })
+    .then(function(slides) {
+      if (!slides || slides.length === 0) { showPreviewFallback(body, fileInfo, fileName, downloadUrl); return; }
+      state.pptxSlides  = slides;
+      state.pptxCurrent = 0;
+      renderPptxViewer(body, slides, downloadUrl);
+    })
+    .catch(function(err) { console.error('PPTX parse error:', err); showPreviewFallback(body, fileInfo, fileName, downloadUrl); });
+}
+
+function parsePptxSlides(zip) {
+  var slideKeys = [];
+  zip.forEach(function(path) {
+    if (/^ppt\/slides\/slide[0-9]+\.xml$/i.test(path)) slideKeys.push(path);
+  });
+  slideKeys.sort(function(a, b) {
+    return parseInt(a.match(/slide(\d+)/i)[1]) - parseInt(b.match(/slide(\d+)/i)[1]);
+  });
+  if (slideKeys.length === 0) return Promise.resolve([]);
+  return Promise.all(slideKeys.map(function(key, idx) {
+    return zip.file(key).async('string').then(function(xml) { return parseSlideXml(xml, idx + 1); });
+  }));
+}
+
+function parseSlideXml(xml, slideNum) {
+  var parser = new DOMParser();
+  var doc    = parser.parseFromString(xml, 'text/xml');
+  var slide  = { num: slideNum, bg: parseSlideBg(doc), shapes: [] };
+  var spList = doc.querySelectorAll('sp, pic');
+  spList.forEach(function(sp) {
+    var shape = parseShape(sp, doc);
+    if (shape) slide.shapes.push(shape);
+  });
+  return slide;
+}
+
+function parseSlideBg(doc) {
+  var solidFill = doc.querySelector('bg bgPr solidFill srgbClr');
+  if (solidFill) return '#' + (solidFill.getAttribute('val') || 'ffffff');
+  var schemeClr = doc.querySelector('bg bgPr solidFill schemeClr');
+  if (schemeClr) {
+    var name = schemeClr.getAttribute('val') || '';
+    var schemeMap = { 'lt1':'#ffffff','dk1':'#000000','lt2':'#f8f8f8','dk2':'#1f1f1f','accent1':'#4472c4','accent2':'#ed7d31','accent3':'#a9d18e' };
+    return schemeMap[name] || '#ffffff';
+  }
+  var gradFill = doc.querySelector('bg bgPr gradFill gsLst gs srgbClr');
+  if (gradFill) return '#' + (gradFill.getAttribute('val') || 'ffffff');
+  return '#ffffff';
+}
+
+function parseShape(sp, doc) {
+  var xfrm = sp.querySelector('spPr xfrm');
+  if (!xfrm) return null;
+  var off  = xfrm.querySelector('off');
+  var ext  = xfrm.querySelector('ext');
+  if (!off || !ext) return null;
+  var SLIDE_W = 9144000, SLIDE_H = 5143500;
+  var shape = {
+    x: (parseInt(off.getAttribute('x') || 0) / SLIDE_W * 100).toFixed(4),
+    y: (parseInt(off.getAttribute('y') || 0) / SLIDE_H * 100).toFixed(4),
+    w: (parseInt(ext.getAttribute('cx') || 0) / SLIDE_W * 100).toFixed(4),
+    h: (parseInt(ext.getAttribute('cy') || 0) / SLIDE_H * 100).toFixed(4),
+    rot: xfrm.getAttribute('rot') ? parseInt(xfrm.getAttribute('rot')) / 60000 : 0,
+    texts: [], fill: null, border: null,
+    isImage: sp.tagName.includes('pic') || sp.tagName === 'pic'
+  };
+  var fillClr = sp.querySelector('spPr solidFill srgbClr');
+  if (fillClr) shape.fill = '#' + fillClr.getAttribute('val');
+  var ln = sp.querySelector('spPr ln');
+  if (ln) {
+    var borderClr = ln.querySelector('solidFill srgbClr');
+    shape.border  = borderClr ? '#' + borderClr.getAttribute('val') : '#cccccc';
+    shape.borderW = parseInt(ln.getAttribute('w') || 12700) / 12700;
+  }
+  var paras = sp.querySelectorAll('txBody p');
+  paras.forEach(function(para) {
+    var paraObj = { runs: [], align: 'left' };
+    var pPr = para.querySelector('pPr');
+    if (pPr) {
+      paraObj.align = pPr.getAttribute('algn') || 'left';
+      if (paraObj.align === 'ctr')  paraObj.align = 'center';
+      if (paraObj.align === 'r')    paraObj.align = 'right';
+      if (paraObj.align === 'just') paraObj.align = 'justify';
+    }
+    var runs = para.querySelectorAll('r');
+    if (runs.length === 0) { paraObj.runs.push({ text: '', size: 14, bold: false, italic: false, color: '#333333' }); }
+    runs.forEach(function(r) {
+      var rPr = r.querySelector('rPr');
+      var t   = r.querySelector('t');
+      var runObj = { text: t ? (t.textContent || '') : '', size: 14, bold: false, italic: false, underline: false, color: '#222222' };
+      if (rPr) {
+        var szAttr = rPr.getAttribute('sz');
+        if (szAttr) runObj.size = parseInt(szAttr) / 100;
+        runObj.bold      = rPr.getAttribute('b') === '1';
+        runObj.italic    = rPr.getAttribute('i') === '1';
+        runObj.underline = (rPr.getAttribute('u') || 'none') !== 'none';
+        var rClr = rPr.querySelector('solidFill srgbClr');
+        if (rClr) runObj.color = '#' + rClr.getAttribute('val');
+        else {
+          var rScheme = rPr.querySelector('solidFill schemeClr');
+          if (rScheme) {
+            var sv = rScheme.getAttribute('val') || '';
+            var sColors = { 'lt1':'#ffffff','dk1':'#000000','dk2':'#202020','lt2':'#f0f0f0','accent1':'#4472c4','accent2':'#ed7d31','tx1':'#000000','tx2':'#555555','bg1':'#ffffff','bg2':'#f5f5f5' };
+            runObj.color = sColors[sv] || '#222222';
+          }
+        }
+      }
+      paraObj.runs.push(runObj);
+    });
+    shape.texts.push(paraObj);
+  });
+  var bodyPr = sp.querySelector('txBody bodyPr');
+  if (bodyPr) shape.vAlign = bodyPr.getAttribute('anchor') || 't';
+  return shape;
+}
+
+function renderPptxViewer(body, slides, downloadUrl) {
+  var total = slides.length;
+  var html =
+    '<div class="pptx-viewer" id="pptxViewer">' +
+      '<div class="pptx-toolbar">' +
+        '<button class="pptx-nav-btn" id="pptxPrev" onclick="pptxGoSlide(-1)" title="Previous slide"><i class="fa fa-chevron-left"></i></button>' +
+        '<span class="pptx-slide-counter" id="pptxCounter">Slide 1 / ' + total + '</span>' +
+        '<button class="pptx-nav-btn" id="pptxNext" onclick="pptxGoSlide(1)" title="Next slide"><i class="fa fa-chevron-right"></i></button>' +
+        '<div class="pptx-zoom-wrap">' +
+          '<span class="pptx-zoom-label">Zoom:</span>' +
+          '<select class="pptx-zoom-select" id="pptxZoom" onchange="pptxSetZoom(this.value)">' +
+            '<option value="fit" selected>Fit</option>' +
+            '<option value="75">75%</option>' +
+            '<option value="100">100%</option>' +
+            '<option value="125">125%</option>' +
+            '<option value="150">150%</option>' +
+          '</select>' +
+        '</div>' +
+        '<a class="btn btn-secondary btn-sm" href="' + downloadUrl + '" style="margin-left:8px;" title="Download PPTX"><i class="fa fa-download"></i> Download</a>' +
+      '</div>' +
+      '<div class="pptx-content-area" id="pptxContentArea">' +
+        '<div class="pptx-sidebar" id="pptxSidebar"></div>' +
+        '<div class="pptx-main-wrap">' +
+          '<div class="pptx-slide-canvas" id="pptxCanvas">' +
+            '<div class="pptx-slide-inner" id="pptxSlideInner"></div>' +
+          '</div>' +
+        '</div>' +
+      '</div>' +
+    '</div>';
+  body.innerHTML = html;
+
+  var sidebar = document.getElementById('pptxSidebar');
+  slides.forEach(function(slide, i) {
+    var thumb = document.createElement('div');
+    thumb.className = 'pptx-thumb' + (i === 0 ? ' active' : '');
+    thumb.setAttribute('data-idx', i);
+    thumb.onclick = function() { pptxJumpSlide(i); };
+    var mini = buildSlideEl(slide, true);
+    mini.style.cssText = 'width:100%;height:100%;position:absolute;inset:0;';
+    thumb.appendChild(mini);
+    var num = document.createElement('span');
+    num.className = 'pptx-thumb-num'; num.textContent = slide.num;
+    thumb.appendChild(num);
+    sidebar.appendChild(thumb);
+  });
+  pptxRenderSlide(0);
+}
+
+function buildSlideEl(slide, mini) {
+  var el = document.createElement('div');
+  el.className = 'pptx-slide-bg';
+  el.style.background = slide.bg || '#ffffff';
+  slide.shapes.forEach(function(shape) {
+    var div = document.createElement('div');
+    div.className = 'pptx-shape';
+    div.style.left = shape.x + '%'; div.style.top = shape.y + '%';
+    div.style.width = shape.w + '%'; div.style.height = shape.h + '%';
+    if (shape.rot) { div.style.transform = 'rotate(' + shape.rot + 'deg)'; div.style.transformOrigin = 'center center'; }
+    if (shape.fill)   div.style.background = shape.fill;
+    if (shape.border) div.style.border = (Math.max(1, shape.borderW || 1)) + 'px solid ' + shape.border;
+    if (shape.isImage) {
+      div.style.background = shape.fill || '#e8e8e8';
+      var icon = document.createElement('div');
+      icon.style.cssText = 'display:flex;align-items:center;justify-content:center;width:100%;height:100%;color:#aaa;font-size:' + (mini ? '8px' : '24px');
+      icon.innerHTML = '<i class="fa fa-image"></i>';
+      div.appendChild(icon);
+    } else if (shape.texts && shape.texts.length > 0) {
+      var textWrap = document.createElement('div');
+      textWrap.className = 'pptx-shape-text';
+      if (shape.vAlign === 'ctr') textWrap.style.justifyContent = 'center';
+      else if (shape.vAlign === 'b') textWrap.style.justifyContent = 'flex-end';
+      shape.texts.forEach(function(para) {
+        var paraEl = document.createElement('div');
+        paraEl.className = 'pptx-para';
+        paraEl.style.textAlign = para.align || 'left';
+        var hasText = para.runs.some(function(r) { return r.text.trim(); });
+        if (!hasText) { paraEl.innerHTML = '&nbsp;'; paraEl.style.minHeight = mini ? '4px' : '8px'; textWrap.appendChild(paraEl); return; }
+        para.runs.forEach(function(run) {
+          if (!run.text) return;
+          var span = document.createElement('span');
+          span.textContent  = run.text;
+          var scaleFactor   = mini ? 0.14 : 0.83;
+          span.style.fontSize   = Math.max(mini ? 4 : 8, run.size * scaleFactor) + 'px';
+          span.style.color      = run.color || '#222222';
+          span.style.fontWeight = run.bold   ? '700' : '400';
+          span.style.fontStyle  = run.italic ? 'italic' : 'normal';
+          if (run.underline) span.style.textDecoration = 'underline';
+          paraEl.appendChild(span);
+        });
+        textWrap.appendChild(paraEl);
+      });
+      div.appendChild(textWrap);
+    }
+    el.appendChild(div);
+  });
+  return el;
+}
+
+function pptxRenderSlide(idx) {
+  var slides = state.pptxSlides;
+  if (idx < 0 || idx >= slides.length) return;
+  state.pptxCurrent = idx;
+  var inner = document.getElementById('pptxSlideInner');
+  if (!inner) return;
+  inner.innerHTML = '';
+  var slideEl = buildSlideEl(slides[idx], false);
+  slideEl.style.cssText = 'position:absolute;inset:0;';
+  inner.appendChild(slideEl);
+  var numLabel = document.createElement('div');
+  numLabel.className   = 'pptx-slide-num';
+  numLabel.textContent = slides[idx].num + ' / ' + slides.length;
+  inner.appendChild(numLabel);
+  var counter  = document.getElementById('pptxCounter');
+  if (counter) counter.textContent = 'Slide ' + (idx + 1) + ' / ' + slides.length;
+  var prevBtn  = document.getElementById('pptxPrev');
+  var nextBtn  = document.getElementById('pptxNext');
+  if (prevBtn) prevBtn.disabled = (idx === 0);
+  if (nextBtn) nextBtn.disabled = (idx === slides.length - 1);
+  document.querySelectorAll('.pptx-thumb').forEach(function(t, i) { t.classList.toggle('active', i === idx); });
+  var activeThumb = document.querySelector('.pptx-thumb.active');
+  if (activeThumb) activeThumb.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+function pptxGoSlide(delta) {
+  var next = state.pptxCurrent + delta;
+  if (next >= 0 && next < state.pptxSlides.length) pptxRenderSlide(next);
+}
+
+function pptxJumpSlide(idx) { pptxRenderSlide(idx); }
+
+function pptxSetZoom(val) {
+  var canvas = document.getElementById('pptxCanvas');
+  if (!canvas) return;
+  if (val === 'fit') { canvas.style.width = ''; canvas.style.maxWidth = '800px'; }
+  else { canvas.style.width = (800 * parseInt(val) / 100) + 'px'; canvas.style.maxWidth = 'none'; }
+}
+
+function openFigmaPreview(link) { window.open(link, '_blank', 'noopener,noreferrer'); }
+
+function showPreviewFallback(body, fileInfo, fileName, downloadUrl) {
+  body.innerHTML =
+    '<div class="preview-fallback">' +
+      '<div class="preview-fallback-icon file-type-badge ' + fileInfo.cls + '"><i class="fa ' + fileInfo.icon + '"></i></div>' +
+      '<div class="preview-fallback-name">' + esc(fileName) + '</div>' +
+      '<p class="preview-fallback-msg">This file type cannot be previewed directly.<br>Download it to view in the appropriate application.</p>' +
+      '<a class="btn btn-primary" href="' + downloadUrl + '"><i class="fa fa-download"></i> Download File</a>' +
+    '</div>';
+}
+
+// ── Sort indicator ────────────────────────────────────────
+function sortIndicator(col) {
+  var sort = (document.getElementById('sortSelect') || {}).value || 'date_desc';
+  if (col === 'name') {
+    if (sort === 'name_asc')  return '<i class="fa fa-arrow-up-short-wide sort-ind active"></i>';
+    if (sort === 'name_desc') return '<i class="fa fa-arrow-down-wide-short sort-ind active"></i>';
+  }
+  if (col === 'date') {
+    if (sort === 'date_desc') return '<i class="fa fa-arrow-down-wide-short sort-ind active"></i>';
+    if (sort === 'date_asc')  return '<i class="fa fa-arrow-up-short-wide sort-ind active"></i>';
+  }
+  if (col === 'status' && sort === 'status') return '<i class="fa fa-arrow-down-wide-short sort-ind active"></i>';
+  return '<i class="fa fa-sort sort-ind"></i>';
+}
+
+function cycleSort(col) {
+  var sel = document.getElementById('sortSelect');
+  if (!sel) return;
+  var cur = sel.value;
+  if (col === 'name')   sel.value = (cur === 'name_asc')  ? 'name_desc' : 'name_asc';
+  if (col === 'date')   sel.value = (cur === 'date_desc') ? 'date_asc'  : 'date_desc';
+  if (col === 'status') sel.value = 'status';
+  renderTable();
+}
+
+// ── Pagination ────────────────────────────────────────────
+function renderPagination(total, totalPages) {
+  var bar = document.getElementById('paginationBar');
+  if (total === 0) { bar.style.display = 'none'; return; }
+  bar.style.display = 'flex';
+  var start = (state.currentPage - 1) * state.perPage + 1;
+  var end   = Math.min(state.currentPage * state.perPage, total);
+  document.getElementById('paginationInfo').innerHTML = 'Showing <strong>' + start + '–' + end + '</strong> of <strong>' + total + '</strong>';
+  var ctrl = '';
+  ctrl += '<button class="page-btn" onclick="goPage(' + (state.currentPage - 1) + ')" ' + (state.currentPage <= 1 ? 'disabled' : '') + '><i class="fa fa-chevron-left"></i></button>';
+  buildPageRange(state.currentPage, totalPages).forEach(function(p) {
+    if (p === '...') ctrl += '<span class="page-ellipsis">…</span>';
+    else ctrl += '<button class="page-btn' + (p === state.currentPage ? ' active' : '') + '" onclick="goPage(' + p + ')">' + p + '</button>';
+  });
+  ctrl += '<button class="page-btn" onclick="goPage(' + (state.currentPage + 1) + ')" ' + (state.currentPage >= totalPages ? 'disabled' : '') + '><i class="fa fa-chevron-right"></i></button>';
+  document.getElementById('paginationControls').innerHTML = ctrl;
+  document.getElementById('perPageSelect').value = state.perPage;
+}
+
+function buildPageRange(current, total) {
+  if (total <= 7) { var r = []; for (var i = 1; i <= total; i++) r.push(i); return r; }
+  var pages = [1];
+  if (current > 3) pages.push('...');
+  for (var i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) pages.push(i);
+  if (current < total - 2) pages.push('...');
+  pages.push(total);
+  return pages;
+}
+
+function goPage(p) {
+  var totalPages = Math.ceil(state.filtered.length / state.perPage);
+  if (p < 1 || p > totalPages) return;
+  state.currentPage = p;
+  renderTable();
+  document.getElementById('tableWrapper').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+// ── Column toggle ─────────────────────────────────────────
+function toggleColMenu() {
+  state.colMenuOpen = !state.colMenuOpen;
+  document.getElementById('colDropdown').classList.toggle('open', state.colMenuOpen);
+}
+
+function toggleColumn(col, visible) {
+  state.hiddenCols[col] = !visible;
+  renderTable();
+}
+
+// ── File type selector ────────────────────────────────────
+function selectFileType(type) {
+  state.selectedType = type;
+  document.querySelectorAll('.ftype-btn').forEach(function(btn) { btn.classList.toggle('active', btn.dataset.type === type); });
+  var figmaGroup  = document.getElementById('figmaLinkGroup');
+  var uploadGroup = document.getElementById('fileUploadGroup');
+  if (type === 'fig') {
+    figmaGroup.style.display = 'block'; uploadGroup.style.display = 'none'; clearFile();
+  } else {
+    figmaGroup.style.display = 'none'; uploadGroup.style.display = 'block';
+    document.getElementById('wfFigmaLink').value = '';
+    var cfg = FILE_TYPE_CONFIG[type] || FILE_TYPE_CONFIG.other;
+    document.getElementById('wfFileInput').accept        = cfg.accept;
+    document.getElementById('uploadHint').textContent    = cfg.hint;
+    document.getElementById('uploadIcon').innerHTML      = '<i class="fa ' + cfg.icon + ' ' + cfg.iconCls + '" style="font-size:36px;"></i>';
+    var hintLabel = document.getElementById('fileTypeHint');
+    hintLabel.textContent = '— ' + cfg.label + ' only';
+    hintLabel.style.cssText = 'color:var(--text-muted);font-weight:400;text-transform:none;font-size:11px;margin-left:4px;';
+    clearFile();
+  }
+}
+
+function resetFileTypeSelector() {
+  state.selectedType = '';
+  document.querySelectorAll('.ftype-btn').forEach(function(btn) { btn.classList.remove('active'); });
+  document.getElementById('figmaLinkGroup').style.display  = 'none';
+  document.getElementById('fileUploadGroup').style.display = 'none';
+  document.getElementById('wfFigmaLink').value = '';
+  clearFile();
+}
+
+// ── File helpers ──────────────────────────────────────────
+function getFileCategory(ext, fileType) {
+  if (fileType) return fileType;
+  ext = (ext || '').toLowerCase().replace('.', '');
+  if (['xlsx','xls','xltx','xltm'].includes(ext)) return 'xlsx';
+  if (['pptx','ppt','pptm','potx'].includes(ext)) return 'pptx';
+  if (ext === 'pdf') return 'pdf';
+  if (ext === 'fig') return 'fig';
+  return 'other';
+}
+
+function getFileDisplay(ext, originalName, fileType) {
+  if (fileType === 'fig' || ext === 'fig') return { icon: 'fa-bezier-curve',     label: 'Figma',   cls: 'file-figma' };
+  var cat = getFileCategory(ext, fileType);
+  var map = {
+    xlsx:  { icon: 'fa-file-excel',      label: 'Excel', cls: 'file-excel' },
+    pptx:  { icon: 'fa-file-powerpoint', label: 'PPT',   cls: 'file-ppt'   },
+    pdf:   { icon: 'fa-file-pdf',        label: 'PDF',   cls: 'file-pdf'   },
+    other: { icon: 'fa-file-lines',      label: 'File',  cls: 'file-other' }
+  };
+  if (!ext && !originalName && !fileType) return { icon: 'fa-file-circle-xmark', label: 'No File', cls: 'file-none' };
+  var e = (ext || '').toLowerCase().replace('.', '');
+  if (['png','jpg','jpeg','gif','svg'].includes(e)) return { icon: 'fa-file-image',  label: 'Image',   cls: 'file-image' };
+  if (['docx','doc'].includes(e))                   return { icon: 'fa-file-word',   label: 'Word',    cls: 'file-word' };
+  if (['zip','rar','7z'].includes(e))               return { icon: 'fa-file-zipper', label: 'Archive', cls: 'file-archive' };
+  return map[cat] || map.other;
+}
+
+// ── Industries / Functions ────────────────────────────────
+function loadIndustries() {
+  fetch(API_URL + '?action=get_industries&search=')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      var sel = document.getElementById('wfIndustry');
+      (data.data || []).forEach(function(ind) {
+        var opt = document.createElement('option');
+        opt.value = ind.id; opt.textContent = ind.name;
+        sel.appendChild(opt);
+      });
+    }).catch(function() {});
+}
+
+document.getElementById('wfIndustry').addEventListener('change', function() {
+  var indId = this.value;
+  var fnSel = document.getElementById('wfFunction');
+  fnSel.innerHTML = '<option value="">Select Function…</option>';
+  if (!indId) return;
+  fetch(API_URL + '?action=get_functions&industry_id=' + indId + '&search=')
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      (data.data || []).forEach(function(fn) {
+        var opt = document.createElement('option');
+        opt.value = fn.id; opt.textContent = fn.name;
+        fnSel.appendChild(opt);
+      });
+    }).catch(function() {});
+});
+
+// ── Add modal ─────────────────────────────────────────────
+function openAddModal() {
+  document.getElementById('wireframeId').value    = '';
+  document.getElementById('wfDashboard').value    = '';
+  document.getElementById('wfIndustry').value     = '';
+  document.getElementById('wfFunction').innerHTML = '<option value="">Select Function…</option>';
+  document.getElementById('wfStatus').value       = 'pending';
+  document.getElementById('wfDesc').value         = '';
+  document.getElementById('wfTags').value         = '';
+  document.getElementById('wireframeModalTitle').textContent = 'Add Wireframe';
+  document.getElementById('fileRequiredLabel').style.display = 'inline';
+  resetFileTypeSelector();
+  openModal('wireframeOverlay');
+}
+
+// ── Edit modal ────────────────────────────────────────────
+function editWireframe(id) {
+  var w = state.wireframes.find(function(x) { return x.id == id; });
+  if (!w) return;
+  document.getElementById('wireframeId').value = w.id;
+  document.getElementById('wfDashboard').value = w.dashboard_name || w.name || '';
+  document.getElementById('wfStatus').value    = w.status || 'pending';
+  document.getElementById('wfDesc').value      = w.description || '';
+  document.getElementById('wfTags').value      = w.tags || '';
+  document.getElementById('wireframeModalTitle').textContent = 'Edit Wireframe';
+  document.getElementById('fileRequiredLabel').style.display = 'none';
+  var storedType = w.file_type || getFileCategory(w.file_ext, w.file_type);
+  resetFileTypeSelector();
+  if (storedType) {
+    document.querySelectorAll('.ftype-btn').forEach(function(btn) { btn.classList.toggle('active', btn.dataset.type === storedType); });
+    state.selectedType = storedType;
+    if (storedType === 'fig') {
+      document.getElementById('figmaLinkGroup').style.display  = 'block';
+      document.getElementById('fileUploadGroup').style.display = 'none';
+      document.getElementById('wfFigmaLink').value = w.figma_link || '';
+    } else {
+      document.getElementById('figmaLinkGroup').style.display  = 'none';
+      document.getElementById('fileUploadGroup').style.display = 'block';
+      var cfg = FILE_TYPE_CONFIG[storedType] || FILE_TYPE_CONFIG.other;
+      document.getElementById('wfFileInput').accept     = cfg.accept;
+      document.getElementById('uploadHint').textContent = cfg.hint;
+    }
+  }
+  document.getElementById('wfIndustry').value = w.industry_id || '';
+  var fnSel = document.getElementById('wfFunction');
+  fnSel.innerHTML = '<option value="">Select Function…</option>';
+  if (w.industry_id) {
+    fetch(API_URL + '?action=get_functions&industry_id=' + w.industry_id + '&search=')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        (data.data || []).forEach(function(fn) {
+          var opt = document.createElement('option');
+          opt.value = fn.id; opt.textContent = fn.name;
+          fnSel.appendChild(opt);
+        });
+        fnSel.value = w.function_id || '';
+      }).catch(function() {});
+  }
+  openModal('wireframeOverlay');
+}
+
+// ── View modal ────────────────────────────────────────────
+function viewWireframe(id) {
+  var w = state.wireframes.find(function(x) { return x.id == id; });
+  if (!w) return;
+  var statusLabel = { pending:'Pending', in_review:'In Review', approved:'Approved', rejected:'Rejected' };
+  var statusCls   = { pending:'status-pending', in_review:'status-review', approved:'status-approved', rejected:'status-rejected' };
+  var statusIcon  = { pending:'fa-clock', in_review:'fa-magnifying-glass', approved:'fa-check-circle', rejected:'fa-times-circle' };
+  var fileInfo    = getFileDisplay(w.file_ext, w.file_name, w.file_type);
+  var isFigma     = (w.file_type === 'fig');
+  var tags        = (w.tags || '').split(',').map(function(t) { return t.trim(); }).filter(Boolean);
+  var tagHtml     = tags.map(function(t) { return '<span class="tag-pill">' + esc(t) + '</span>'; }).join('');
+
+  document.getElementById('viewModalTitle').textContent = w.dashboard_name || w.name || 'Wireframe Details';
+  document.getElementById('viewModalBody').innerHTML =
+    '<div class="view-grid">' +
+      '<div class="view-section"><div class="view-label">Status</div><div class="view-value"><span class="status-badge ' + (statusCls[w.status]||'') + '"><i class="fa ' + (statusIcon[w.status]||'fa-circle') + '"></i> ' + (statusLabel[w.status]||w.status) + '</span></div></div>' +
+      '<div class="view-section"><div class="view-label">Industry</div><div class="view-value">' + esc(w.industry_name||'—') + '</div></div>' +
+      '<div class="view-section"><div class="view-label">Function</div><div class="view-value">' + esc(w.function_name||'—') + '</div></div>' +
+      '<div class="view-section"><div class="view-label">Dashboard / Project</div><div class="view-value">' + esc(w.dashboard_name||'—') + '</div></div>' +
+      '<div class="view-section"><div class="view-label">File Type</div><div class="view-value"><span class="file-type-badge ' + fileInfo.cls + '"><i class="fa ' + fileInfo.icon + '"></i> ' + fileInfo.label + '</span></div></div>' +
+      '<div class="view-section"><div class="view-label">Uploaded By</div><div class="view-value">' + esc(w.uploaded_by_name||'—') + '</div></div>' +
+      '<div class="view-section"><div class="view-label">Upload Date</div><div class="view-value">' + formatDate(w.created_at) + '</div></div>' +
+    '</div>' +
+    (w.description ? '<div class="view-desc"><div class="view-label" style="margin-bottom:6px;">Description</div><p>' + esc(w.description) + '</p></div>' : '') +
+    (tagHtml ? '<div class="view-desc"><div class="view-label" style="margin-bottom:8px;">Tags</div><div class="wf-tags">' + tagHtml + '</div></div>' : '') +
+    (w.remarks ? '<div class="view-desc"><div class="view-label" style="margin-bottom:6px;">Latest Remarks</div><p class="remarks-text">' + esc(w.remarks) + '</p></div>' : '') +
+    '<div class="view-file-section">' +
+      '<div class="view-label" style="margin-bottom:10px;">' + (isFigma ? 'Figma Link' : 'Attached File') + '</div>' +
+      (isFigma && w.figma_link
+        ? '<div class="view-figma-card"><div class="view-figma-icon file-type-badge file-figma"><i class="fa fa-bezier-curve"></i></div><div class="view-file-info"><div class="view-file-name">Figma Wireframe</div><div class="view-file-meta view-figma-url">' + esc(w.figma_link) + '</div></div></div>'
+        : (w.file_name
+            ? '<div class="view-file-card"><span class="view-file-icon file-type-badge ' + fileInfo.cls + '"><i class="fa ' + fileInfo.icon + '"></i></span><div class="view-file-info"><div class="view-file-name">' + esc(w.original_name||w.file_name) + '</div><div class="view-file-meta">' + esc(w.file_size_display||'') + '</div></div></div>'
+            : '<div class="no-file-notice"><i class="fa fa-file-circle-xmark"></i> No file attached</div>')) +
+    '</div>';
+
+  var footerHtml = '';
+  if (isFigma && w.figma_link) {
+    footerHtml += '<a class="btn btn-figma" href="' + esc(w.figma_link) + '" target="_blank" rel="noopener"><i class="fa fa-arrow-up-right-from-square"></i> Open in Figma</a>';
+  } else if (w.file_name) {
+    if (canPreview(w)) footerHtml += '<button class="btn btn-secondary" onclick="closeModal(\'viewOverlay\');openFilePreview(' + w.id + ')"><i class="fa fa-eye"></i> Preview</button>';
+    footerHtml += '<a class="btn btn-primary" href="' + WF_API + '?action=download_wireframe&id=' + w.id + '"><i class="fa fa-download"></i> Download File</a>';
+  }
+  if (state.isSuperAdmin) {
+    footerHtml +=
+      '<button class="btn btn-secondary" onclick="closeModal(\'viewOverlay\');editWireframe(' + w.id + ')"><i class="fa fa-pen"></i> Edit</button>' +
+      '<button class="btn btn-secondary" onclick="closeModal(\'viewOverlay\');openStatusModal(' + w.id + ',\'' + esc(w.status) + '\')"><i class="fa fa-tags"></i> Change Status</button>';
+  }
+  footerHtml += '<button class="btn btn-secondary" onclick="closeModal(\'viewOverlay\')">Close</button>';
+  document.getElementById('viewModalFooter').innerHTML = footerHtml;
+  openModal('viewOverlay');
+}
+
+// ── Save wireframe ────────────────────────────────────────
+function saveWireframe() {
+  var id            = document.getElementById('wireframeId').value;
+  var dashboardName = document.getElementById('wfDashboard').value.trim();
+  var industryId    = document.getElementById('wfIndustry').value;
+  var functionId    = document.getElementById('wfFunction').value;
+  var status        = document.getElementById('wfStatus').value;
+  var desc          = document.getElementById('wfDesc').value.trim();
+  var tags          = document.getElementById('wfTags').value.trim();
+  var file          = state.selectedFile;
+  var fileType      = state.selectedType;
+  var figmaLink     = document.getElementById('wfFigmaLink').value.trim();
+
+  if (!dashboardName) { showToast('Dashboard / Project name is required', 'error'); return; }
+  if (!industryId)    { showToast('Please select an industry', 'error'); return; }
+  if (!id) {
+    if (!fileType) { showToast('Please select a file type', 'error'); return; }
+    if (fileType === 'fig') {
+      if (!figmaLink)                    { showToast('Please enter a Figma link', 'error'); return; }
+      if (!figmaLink.startsWith('http')) { showToast('Please enter a valid Figma URL', 'error'); return; }
+    } else {
+      if (!file) { showToast('Please attach a file', 'error'); return; }
+    }
+  }
+  if (fileType === 'fig' && figmaLink && !figmaLink.startsWith('http')) {
+    showToast('Please enter a valid Figma URL', 'error'); return;
+  }
+
+  var fd = new FormData();
+  fd.append('name',           dashboardName);
+  fd.append('dashboard_name', dashboardName);
+  fd.append('industry_id',    industryId);
+  fd.append('function_id',    functionId || '');
+  fd.append('status',         status);
+  fd.append('description',    desc);
+  fd.append('tags',           tags);
+  fd.append('file_type',      fileType || '');
+  if (figmaLink) fd.append('figma_link', figmaLink);
+  if (file)      fd.append('wireframe_file', file);
+  if (id)        fd.append('id', id);
+
+  var btn = document.querySelector('#wireframeOverlay .btn-primary');
+  btn.disabled = true;
+  btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Saving…';
+
+  var action = id ? 'update_wireframe' : 'create_wireframe';
+  fetch(WF_API + '?action=' + action, { method: 'POST', body: fd })
+    .then(function(r) { return r.json(); })
+    .then(function(data) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-save"></i> Save Wireframe';
+      if (data.success) {
+        showToast(id ? 'Wireframe updated!' : 'Wireframe added!', 'success');
+        closeModal('wireframeOverlay');
+        loadWireframes();
+      } else {
+        showToast(data.message || 'Error saving wireframe', 'error');
+      }
+    }).catch(function() {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa fa-save"></i> Save Wireframe';
+      showToast('Network error', 'error');
+    });
+}
+
+// ── Status change ─────────────────────────────────────────
+function openStatusModal(id, currentStatus) {
+  document.getElementById('statusWireframeId').value = id;
+  document.getElementById('newStatus').value         = currentStatus || 'pending';
+  document.getElementById('statusRemarks').value     = '';
+  openModal('statusOverlay');
+}
+
+function saveStatus() {
+  var id      = document.getElementById('statusWireframeId').value;
+  var status  = document.getElementById('newStatus').value;
+  var remarks = document.getElementById('statusRemarks').value.trim();
+  fetch(WF_API + '?action=update_status', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id: parseInt(id), status: status, remarks: remarks })
+  }).then(function(r) { return r.json(); })
+    .then(function(data) {
+      if (data.success) { showToast('Status updated!', 'success'); closeModal('statusOverlay'); loadWireframes(); }
+      else showToast(data.message || 'Error updating status', 'error');
+    }).catch(function() { showToast('Network error', 'error'); });
+}
+
+// ── Delete ────────────────────────────────────────────────
+function deleteWireframe(id, name) {
+  document.getElementById('confirmTitle').textContent = 'Delete Wireframe?';
+  document.getElementById('confirmMsg').textContent   = 'Delete "' + name + '"? The attached file will also be permanently removed.';
+  state.deleteCallback = function() {
+    fetch(WF_API + '?action=delete_wireframe', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ id: parseInt(id) })
+    }).then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.success) { showToast('Wireframe deleted', 'success'); closeModal('confirmOverlay'); loadWireframes(); }
+        else showToast(data.message || 'Error deleting', 'error');
+      }).catch(function() { showToast('Network error', 'error'); });
+  };
+  openModal('confirmOverlay');
+}
+
+function confirmDeleteAction() { if (state.deleteCallback) state.deleteCallback(); }
+
+// ── File selection ────────────────────────────────────────
+var ALLOWED_EXTS  = ['xlsx','xls','xltx','xltm','pptx','ppt','pptm','potx','pdf','fig','png','jpg','jpeg','gif','svg','docx','doc','zip','rar','7z'];
+var MAX_FILE_SIZE = 100 * 1024 * 1024;
+
+function onFileSelected(input) {
+  var file = input.files[0]; if (!file) return;
+  var ext  = file.name.split('.').pop().toLowerCase();
+  if (!ALLOWED_EXTS.includes(ext))  { showToast('File type not supported.', 'error'); input.value = ''; return; }
+  if (file.size > MAX_FILE_SIZE)     { showToast('File too large. Max 100 MB.', 'error'); input.value = ''; return; }
+  state.selectedFile = file;
+  showSelectedFile(file);
+}
+
+function showSelectedFile(file) {
+  var ext = file.name.split('.').pop().toLowerCase();
+  var fi  = getFileDisplay(ext, file.name, state.selectedType);
+  document.getElementById('uploadArea').style.display       = 'none';
+  document.getElementById('selectedFileInfo').style.display = 'block';
+  document.getElementById('selectedFileIcon').innerHTML     = '<i class="fa ' + fi.icon + ' ' + fi.cls + '" style="font-size:26px;"></i>';
+  document.getElementById('selectedFileName').textContent   = file.name;
+  var sz = file.size >= 1048576 ? (file.size / 1048576).toFixed(1) + ' MB' : Math.round(file.size / 1024) + ' KB';
+  document.getElementById('selectedFileSize').textContent = sz;
+}
+
+function clearFile() {
+  state.selectedFile = null;
+  document.getElementById('wfFileInput').value = '';
+  document.getElementById('uploadArea').style.display       = 'block';
+  document.getElementById('selectedFileInfo').style.display = 'none';
+}
+
+function setupDragDrop() {
+  var area = document.getElementById('uploadArea'); if (!area) return;
+  area.addEventListener('dragover',  function(e) { e.preventDefault(); area.classList.add('drag-over'); });
+  area.addEventListener('dragleave', function()  { area.classList.remove('drag-over'); });
+  area.addEventListener('drop',      function(e) {
+    e.preventDefault(); area.classList.remove('drag-over');
+    var file = e.dataTransfer.files[0]; if (!file) return;
+    var dt = new DataTransfer(); dt.items.add(file);
+    var inp = document.getElementById('wfFileInput'); inp.files = dt.files; onFileSelected(inp);
+  });
+}
+
+// ── Modals ────────────────────────────────────────────────
+function openModal(id)  { document.getElementById(id).classList.add('open');    document.body.style.overflow = 'hidden'; }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
+
+function setupModalOverlayClose() {
+  document.querySelectorAll('.modal-overlay').forEach(function(o) {
+    o.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); });
+  });
+}
+
+function setupKeyboard() {
+  document.addEventListener('keydown', function(e) {
+    if (document.getElementById('previewOverlay').classList.contains('open') && state.pptxSlides.length > 0) {
+      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') { e.preventDefault(); pptxGoSlide(1); return; }
+      if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { e.preventDefault(); pptxGoSlide(-1); return; }
+    }
+    if (e.key === 'Escape') {
+      closeProfileDropdown();
+      if (state.colMenuOpen) toggleColMenu();
+      document.querySelectorAll('.modal-overlay.open').forEach(function(m) { closeModal(m.id); });
+    }
+  });
+}
+
+// ── Profile dropdown ──────────────────────────────────────
+function toggleProfileDropdown(e) {
+  e.stopPropagation();
+  var d = document.getElementById('profileDropdown');
+  var c = document.getElementById('profileChevron');
+  if (d.classList.contains('open')) { closeProfileDropdown(); }
+  else { d.classList.add('open'); document.getElementById('profileBtn').setAttribute('aria-expanded', 'true'); c.style.transform = 'rotate(180deg)'; }
+}
+
+function closeProfileDropdown() {
+  var d = document.getElementById('profileDropdown');
+  var c = document.getElementById('profileChevron');
+  if (d) { d.classList.remove('open'); document.getElementById('profileBtn').setAttribute('aria-expanded', 'false'); c.style.transform = ''; }
+}
+
+function setupClickOutside() {
+  document.addEventListener('click', function(e) {
+    var wrap = document.getElementById('profileDropdownWrap');
+    if (wrap && !wrap.contains(e.target)) closeProfileDropdown();
+    var colWrap = document.getElementById('colToggleWrap');
+    if (colWrap && !colWrap.contains(e.target) && state.colMenuOpen) toggleColMenu();
+    var nav = document.getElementById('navbarNav');
+    var btn = document.getElementById('hamburger');
+    if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) closeNav();
+  });
+}
+
+// ── Hamburger ─────────────────────────────────────────────
+function toggleNav() {
+  var nav = document.getElementById('navbarNav');
+  var btn = document.getElementById('hamburger');
+  var isOpen = nav.classList.toggle('open');
+  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+  var spans = btn.querySelectorAll('span');
+  if (isOpen) { spans[0].style.transform = 'rotate(45deg) translate(5px,5px)'; spans[1].style.opacity = '0'; spans[2].style.transform = 'rotate(-45deg) translate(5px,-5px)'; }
+  else        { spans[0].style.transform = ''; spans[1].style.opacity = ''; spans[2].style.transform = ''; }
+}
+
+function closeNav() {
+  var nav = document.getElementById('navbarNav');
+  var btn = document.getElementById('hamburger');
+  nav.classList.remove('open');
+  btn.setAttribute('aria-expanded', 'false');
+  var spans = btn.querySelectorAll('span');
+  spans[0].style.transform = ''; spans[1].style.opacity = ''; spans[2].style.transform = '';
+}
+
+// ── Toast ─────────────────────────────────────────────────
+function showToast(msg, type) {
+  var icons = { success:'fa-circle-check', error:'fa-circle-xmark', info:'fa-circle-info' };
+  var t = document.createElement('div');
+  t.className = 'toast ' + (type || 'info');
+  t.innerHTML = '<i class="fa ' + (icons[type] || icons.info) + '"></i> <span>' + msg + '</span>';
+  document.getElementById('toastContainer').appendChild(t);
+  setTimeout(function() {
+    t.style.opacity = '0'; t.style.transition = 'opacity .3s';
+    setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 300);
+  }, 4000);
+}
+
+function showError(msg) {
+  document.getElementById('tableArea').innerHTML =
+    '<div class="empty-state">' +
+      '<div class="empty-icon warn"><i class="fa fa-triangle-exclamation"></i></div>' +
+      '<div class="empty-title">Error Loading Data</div>' +
+      '<div class="empty-sub">' + msg + '</div>' +
+    '</div>';
+}
+
+// ── Utilities ─────────────────────────────────────────────
+function esc(s) {
+  return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function formatDate(str) {
+  if (!str) return '—';
+  var d = new Date(str);
+  return isNaN(d) ? str : d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+</script>
+
+
+<!-- ════════════════ APPROVAL QUEUE MODAL ════════════════ -->
+<div class="modal-overlay" id="approvalQueueOverlay">
+  <div class="modal aq-modal">
+    <div class="modal-header">
+      <span class="modal-title">
+        <i class="fa fa-tasks" style="color:#f76707;"></i>
+        Approval Queue
+        <span class="aq-modal-badge" id="aqModalBadge" style="display:none;">0</span>
+      </span>
+      <button class="modal-close" onclick="closeModal('approvalQueueOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body aq-modal-body">
+      <div id="approvalQueueList"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ REJECT REASON MODAL ════════════════ -->
+<div class="modal-overlay" id="rejectOverlay">
+  <div class="modal" style="max-width:440px;">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fa fa-times-circle" style="color:#c92a2a;"></i> Reject Submission</span>
+      <button class="modal-close" onclick="closeModal('rejectOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Rejecting: <strong id="rejectItemName"></strong></p>
+      <div class="form-group">
+        <label class="form-label">Reason (shown to contributor)</label>
+        <textarea class="form-control" id="rejectReason" placeholder="e.g. Duplicate entry, incorrect category, missing information..." style="min-height:80px;"></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="closeModal('rejectOverlay')">Cancel</button>
+      <button class="btn btn-danger" onclick="confirmReject()"><i class="fa fa-times"></i> Confirm Reject</button>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════ MY SUBMISSIONS MODAL ════════════════ -->
+<div class="modal-overlay" id="mySubmissionsOverlay">
+  <div class="modal aq-modal">
+    <div class="modal-header">
+      <span class="modal-title"><i class="fa fa-paper-plane" style="color:#9c36b5;"></i> My Submissions</span>
+      <button class="modal-close" onclick="closeModal('mySubmissionsOverlay')"><i class="fa fa-times"></i></button>
+    </div>
+    <div class="modal-body aq-modal-body">
+      <div id="mySubmissionsList"></div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>

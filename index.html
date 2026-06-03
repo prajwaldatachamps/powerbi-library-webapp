@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <!-- ═══ AUTH GUARD — runs before anything renders ═══ -->
-  <script>
+  <head>
+    <script>
   (function() {
     var params = new URLSearchParams(window.location.search);
     if (params.get('auth') === '1') {
@@ -16,445 +15,482 @@
   })();
   </script>
 
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Industry Wise Dashboards — DataChamps</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
-  <link rel="icon" type="image/png" href="logo/favicon.png">
-  <link rel="stylesheet" href="css/index.css" />
-</head>
-<body>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Industry Wise Dashboards — DataChamps</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link rel="icon" type="image/png" href="logo/favicon.png">
+    <link rel="stylesheet" href="css/index.css" />
+  </head>
+  <body>
 
-<!-- ═══════════════════════ NAVBAR ═══════════════════════ -->
-<nav class="navbar">
-  <a class="navbar-brand" href="index.html">
-    <img src="logo/favicon.png" alt="DataChamps Logo" class="brand-logo" onerror="this.style.display='none'" />
-    <span class="brand-name">DataChamps</span>
-  </a>
-
-  <ul class="navbar-nav" id="navbarNav">
-    <li><a class="nav-link active" onclick="navigateTo('industries');closeNav()"><i class="fa fa-th-large"></i> Dashboards</a></li>
-    <li><a class="nav-link" href="kpi.html"><i class="fa fa-chart-line"></i> KPI Details</a></li>
-    <li><a class="nav-link" href="visual.html"><i class="fa fa-eye"></i> Visual Details</a></li>
-    <li><a class="nav-link" href="wireframe"><i class="fa fa-eye"></i> Wireframe</a></li>
-  </ul>
-
-  <div class="navbar-actions">
-    <!-- Guest -->
-    <div id="guestActions">
-      <button class="btn-login" onclick="openLoginModal()">
-        <i class="fa fa-lock"></i>
-        <span class="btn-text">Login</span>
-      </button>
-    </div>
-
-    <!-- Logged in — single profile button with dropdown -->
-    <div id="adminActions" style="display:none; align-items:center; gap:10px;" class="profile-wrapper">
-      <!-- Profile Dropdown Trigger -->
-      <div class="profile-dropdown-wrap" id="profileDropdownWrap">
-        <button class="btn-profile" id="profileBtn" onclick="toggleProfileDropdown(event)" aria-haspopup="true" aria-expanded="false">
-          <div id="profileAvatarWrap">
-            <div class="avatar" id="adminAvatar">A</div>
-          </div>
-          <div class="profile-info">
-            <span class="admin-name" id="adminName">User</span>
-            <span class="role-badge" id="roleBadge">—</span>
-          </div>
-          <i class="fa fa-chevron-down profile-chevron" id="profileChevron"></i>
-        </button>
-
-        <!-- Dropdown Menu -->
-        <div class="profile-dropdown" id="profileDropdown" role="menu">
-          <!-- User info header -->
-          <div class="dropdown-header">
-            <div class="dropdown-avatar" id="dropdownAvatarWrap">
-              <div class="avatar-lg" id="dropdownAvatar">A</div>
-            </div>
-            <div class="dropdown-user-info">
-              <div class="dropdown-name" id="dropdownName">User</div>
-              <div class="dropdown-role" id="dropdownRole">—</div>
-            </div>
-          </div>
-          <div class="dropdown-divider"></div>
-
-          <!-- Menu items -->
-          <a class="dropdown-item" href="profile.html" role="menuitem">
-            <span class="dropdown-item-icon"><i class="fa fa-user-circle"></i></span>
-            <span class="dropdown-item-text">My Profile</span>
-          </a>
-
-          <!-- Admin only: Manage Users -->
-          <button class="dropdown-item" id="manageUsersItem" style="display:none;" onclick="closeProfileDropdown();openUsersModal();" role="menuitem">
-            <span class="dropdown-item-icon admin-icon"><i class="fa fa-users-cog"></i></span>
-            <span class="dropdown-item-text">Manage Users</span>
-            <span class="dropdown-item-badge">Admin</span>
-          </button>
-
-          <div class="dropdown-divider"></div>
-
-          <button class="dropdown-item danger" onclick="logout()" role="menuitem">
-            <span class="dropdown-item-icon"><i class="fa fa-sign-out-alt"></i></span>
-            <span class="dropdown-item-text">Logout</span>
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu" aria-expanded="false">
-    <span></span><span></span><span></span>
-  </button>
-</nav>
-
-<!-- ═══════════════════════ HERO ═════════════════════════ -->
-<div class="hero">
-  <div class="hero-breadcrumb"><i class="fa fa-th-large"></i><span id="heroPath">All Industries</span></div>
-  <h1 id="heroTitle">Industry Wise Dashboards</h1>
-  <p id="heroSubtitle">Select an industry to browse its Power BI dashboards</p>
-</div>
-
-<!-- ═══════════════════════ STAT BAR ═════════════════════ -->
-<div class="stat-bar">
-  <div class="stat-item">
-    <div class="stat-icon blue"><i class="fa fa-industry"></i></div>
-    <div class="stat-info"><span class="stat-num" id="statIndustries">—</span><span class="stat-lbl">Industries</span></div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-icon green"><i class="fa fa-users"></i></div>
-    <div class="stat-info"><span class="stat-num" id="statClients">—</span><span class="stat-lbl">Clients</span></div>
-  </div>
-  <div class="stat-item">
-    <div class="stat-icon amber"><i class="fa fa-chart-bar"></i></div>
-    <div class="stat-info"><span class="stat-num" id="statDashboards">—</span><span class="stat-lbl">Total Dashboards</span></div>
-  </div>
-</div>
-
-<!-- ═══════════════════════ MAIN ═════════════════════════ -->
-<div class="main-container">
-  <div class="page-breadcrumb" id="pageBreadcrumb" style="display:none;"></div>
-  <div class="section-heading">
-    <h2 id="sectionTitle">Industries</h2>
-    <span class="count-badge" id="sectionCount">0</span>
-  </div>
-  <p class="section-sub" id="sectionSub">Click an industry to view its clients and dashboards</p>
-  <div class="toolbar">
-    <div class="search-box">
-      <i class="fa fa-search"></i>
-      <input type="text" id="searchInput" placeholder="Search industries..." oninput="onSearch()" />
-    </div>
-    <div class="toolbar-right">
-      <button class="btn btn-primary" id="addBtn" style="display:none;" onclick="openAddModal()">
-        <i class="fa fa-plus"></i> <span id="addBtnLabel">Add Industry</span>
-      </button>
-    </div>
-  </div>
-  <div id="cardsArea"></div>
-</div>
-
-<!-- ═══════════════════════════════════════════════════════
-     LOGIN MODAL
-═══════════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="loginOverlay">
-  <div class="modal login-modal" style="max-width:420px;">
-    <div class="modal-body">
-      <div class="login-logo">
-        <i class="fa fa-shield-alt"></i>
-        <h2>Welcome to DataChamps</h2>
-        <p>Sign in with your organization Google account</p>
-      </div>
-
-      <div class="access-notice" id="loginNotice" style="display:none;">
-        <i class="fa fa-triangle-exclamation"></i>
-        <span id="loginNoticeMsg">Your account is not authorized. Contact your administrator.</span>
-      </div>
-
-      <a class="btn-google" href="php/google_auth.php" id="googleLoginBtn">
-        <svg width="20" height="20" viewBox="0 0 24 24">
-          <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-          <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-          <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"/>
-          <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-        </svg>
-        Continue with Google
+    <!-- ═══════════════════════ NAVBAR ═══════════════════════ -->
+    <nav class="navbar">
+      <a class="navbar-brand" href="index.html">
+        <img src="logo/favicon.png" alt="DataChamps Logo" class="brand-logo" onerror="this.style.display='none'" />
+        <span class="brand-name">DataChamps</span>
       </a>
 
-      <p style="text-align:center;font-family:'Sora',sans-serif;font-size:11px;color:var(--text-muted);margin-top:18px;line-height:1.6;">
-        Only pre-approved organization accounts can access this system.<br>Contact your admin if you need access.
-      </p>
-    </div>
-  </div>
-</div>
+      <ul class="navbar-nav" id="navbarNav">
+        <li><a class="nav-link active" onclick="navigateTo('industries');closeNav()"><i class="fa fa-th-large"></i> Dashboards</a></li>
+        <li><a class="nav-link" href="kpi.html"><i class="fa fa-chart-line"></i> KPI Details</a></li>
+        <li><a class="nav-link" href="visual.html"><i class="fa fa-eye"></i> Visual Details</a></li>
+        <li><a class="nav-link" href="wireframe.html"><i class="fa fa-drafting-compass"></i> Wireframe</a></li>
+      </ul>
 
-<!-- ═══════════════════════════════════════════════════════
-     INDUSTRY MODAL
-═══════════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="industryOverlay">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title"><i class="fa fa-industry"></i> <span id="industryModalTitle">Add Industry</span></span>
-      <button class="modal-close" onclick="closeModal('industryOverlay')"><i class="fa fa-times"></i></button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="industryId" />
-      <div class="form-group">
-        <label class="form-label">Industry Name <span class="required">*</span></label>
-        <input type="text" class="form-control" id="industryName" placeholder="e.g. Construction, Healthcare" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Icon (Font Awesome class)</label>
-        <input type="text" class="form-control" id="industryIcon" placeholder="e.g. fa-building" value="fa-industry" />
-        <small style="color:var(--text-muted);font-size:11px;margin-top:5px;display:block;font-family:'Sora',sans-serif;">
-          Browse at <a href="https://fontawesome.com/icons" target="_blank" style="color:var(--blue);font-weight:600;">fontawesome.com</a>
-        </small>
-      </div>
-      <div class="form-group">
-        <label class="form-label">Description</label>
-        <textarea class="form-control" id="industryDesc" placeholder="Brief description..."></textarea>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('industryOverlay')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveIndustry()"><i class="fa fa-save"></i> Save</button>
-    </div>
-  </div>
-</div>
-
-<!-- Functions MODAL -->
-<div class="modal-overlay" id="clientOverlay">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title"><i class="fa fa-user-tie"></i> <span id="clientModalTitle">Add Functions</span></span>
-      <button class="modal-close" onclick="closeModal('clientOverlay')"><i class="fa fa-times"></i></button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="clientId" />
-      <input type="hidden" id="clientIndustryId" />
-      <div class="form-group">
-        <label class="form-label">Function <span class="required">*</span></label>
-        <input type="text" class="form-control" id="clientName" placeholder="e.g. Acme Corp" />
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">Email</label>
-          <input type="email" class="form-control" id="clientEmail" placeholder="client@example.com" />
+      <div class="navbar-actions">
+        <div id="guestActions">
+          <button class="btn-login" onclick="openLoginModal()">
+            <i class="fa fa-lock"></i>
+            <span class="btn-text">Login</span>
+          </button>
         </div>
-        <div class="form-group">
-          <label class="form-label">Phone</label>
-          <input type="text" class="form-control" id="clientPhone" placeholder="+91 XXXXX XXXXX" />
+
+        <div id="adminActions" style="display:none; align-items:center; gap:10px;" class="profile-wrapper">
+
+          <!-- Notification bell — visible to contributors AND super admins -->
+      
+
+          <div class="profile-dropdown-wrap" id="profileDropdownWrap">
+            <button class="btn-profile" id="profileBtn" onclick="toggleProfileDropdown(event)" aria-haspopup="true" aria-expanded="false">
+              <div id="profileAvatarWrap"><div class="avatar" id="adminAvatar">A</div></div>
+              <div class="profile-info">
+                <span class="admin-name" id="adminName">User</span>
+                <span class="role-badge" id="roleBadge">—</span>
+              </div>
+              <i class="fa fa-chevron-down profile-chevron" id="profileChevron"></i>
+            </button>
+
+            <div class="profile-dropdown" id="profileDropdown" role="menu">
+              <div class="dropdown-header">
+                <div class="dropdown-avatar" id="dropdownAvatarWrap"><div class="avatar-lg" id="dropdownAvatar">A</div></div>
+                <div class="dropdown-user-info">
+                  <div class="dropdown-name" id="dropdownName">User</div>
+                  <div class="dropdown-role" id="dropdownRole">—</div>
+                </div>
+              </div>
+              <div class="dropdown-divider"></div>
+              <a class="dropdown-item" href="profile.html" role="menuitem">
+                <span class="dropdown-item-icon"><i class="fa fa-user-circle"></i></span>
+                <span class="dropdown-item-text">My Profile</span>
+              </a>
+              <!-- ✅ REMOVED: Manage Users option -->
+              <button class="dropdown-item" id="approvalQueueItem" style="display:none;" onclick="openApprovalQueueModal();" role="menuitem">
+                <span class="dropdown-item-icon admin-icon"><i class="fa fa-tasks"></i></span>
+                <span class="dropdown-item-text">Approval Queue</span>
+                <span class="pending-badge-nav" id="pendingBadge" style="display:none;">0</span>
+              </button>
+              <button class="dropdown-item" id="mySubmissionsItem" style="display:none;" onclick="openMySubmissionsModal();" role="menuitem">
+                <span class="dropdown-item-icon" style="background:#f5eaf9;color:#9c36b5;"><i class="fa fa-paper-plane"></i></span>
+                <span class="dropdown-item-text">My Submissions</span>
+                <span class="submissions-badge-nav" id="submissionsBadge" style="display:none;">0</span>
+              </button>
+              <div class="dropdown-divider"></div>
+              <button class="dropdown-item danger" onclick="logout()" role="menuitem">
+                <span class="dropdown-item-icon"><i class="fa fa-sign-out-alt"></i></span>
+                <span class="dropdown-item-text">Logout</span>
+              </button>
+            </div>
+          </div>
         </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Description</label>
-        <textarea class="form-control" id="clientDesc" placeholder="About this client..."></textarea>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('clientOverlay')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveClient()"><i class="fa fa-save"></i> Save</button>
-    </div>
-  </div>
-</div>
 
-<!-- DASHBOARD MODAL -->
-<div class="modal-overlay" id="dashboardOverlay">
-  <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title"><i class="fa fa-chart-pie"></i> <span id="dashboardModalTitle">Add Dashboard</span></span>
-      <button class="modal-close" onclick="closeModal('dashboardOverlay')"><i class="fa fa-times"></i></button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="dashboardId" />
-      <input type="hidden" id="dashboardClientId" />
-      <input type="hidden" id="dashboardIndustryId" />
-      <div class="form-group">
-        <label class="form-label">Dashboard Name <span class="required">*</span></label>
-        <input type="text" class="form-control" id="dashboardName" placeholder="e.g. Sales Dashboard" />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Power BI Embed URL <span class="required">*</span></label>
-        <input type="url" class="form-control" id="dashboardUrl" placeholder="https://app.powerbi.com/reportEmbed?..." />
-      </div>
-      <div class="form-group">
-        <label class="form-label">Description</label>
-        <textarea class="form-control" id="dashboardDesc" placeholder="What insights does this dashboard show?"></textarea>
-      </div>
-      <div class="form-group">
-        <label class="form-check">
-          <input type="checkbox" id="dashboardActive" checked /> Mark as Active
-        </label>
-      </div>
-    </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('dashboardOverlay')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveDashboard()"><i class="fa fa-save"></i> Save</button>
-    </div>
-  </div>
-</div>
+      <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+    </nav>
 
-<!-- ═══════════════════════════════════════════════════════
-     MANAGE USERS MODAL (admin only)
-═══════════════════════════════════════════════════════ -->
-<div class="modal-overlay" id="usersOverlay">
-  <div class="modal users-modal">
-    <div class="modal-header">
-      <span class="modal-title"><i class="fa fa-users-cog"></i> Manage Users</span>
-      <button class="modal-close" onclick="closeModal('usersOverlay')"><i class="fa fa-times"></i></button>
-    </div>
-    <div class="modal-body">
-      <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
-        <button class="btn btn-primary btn-sm" onclick="openAddUserModal()"><i class="fa fa-plus"></i> Add User</button>
+    <!-- ═══════════════════════ HERO ═════════════════════════ -->
+    <div class="hero">
+      <div class="hero-breadcrumb">
+        <i class="fa fa-th-large"></i>
+        <span id="heroPath">All Industries</span>
       </div>
-      <div id="usersList"><div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading users…</div></div>
+      <h1 id="heroTitle">Industry Wise Dashboards</h1>
+      <p id="heroSubtitle">Select an industry to browse its dashboards</p>
     </div>
-  </div>
-</div>
 
-<!-- ADD/EDIT USER MODAL -->
-<div class="modal-overlay" id="userFormOverlay">
-  <div class="modal" style="max-width:440px;">
-    <div class="modal-header">
-      <span class="modal-title"><i class="fa fa-user-plus"></i> <span id="userFormTitle">Add User</span></span>
-      <button class="modal-close" onclick="closeModal('userFormOverlay')"><i class="fa fa-times"></i></button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="userFormId" />
-      <div class="form-group">
-        <label class="form-label">Full Name <span class="required">*</span></label>
-        <input type="text" class="form-control" id="userFormName" placeholder="e.g. Prajwal Shendge" />
+    <!-- ═══════════════════════ STAT BAR ═════════════════════ -->
+    <div class="stat-bar">
+      <div class="stat-item">
+        <div class="stat-icon blue"><i class="fa fa-industry"></i></div>
+        <div class="stat-info"><span class="stat-num" id="statIndustries">—</span><span class="stat-lbl">Industries</span></div>
       </div>
-      <div class="form-group" id="userEmailGroup">
-        <label class="form-label">Gmail Address <span class="required">*</span></label>
-        <input type="email" class="form-control" id="userFormEmail" placeholder="user@gmail.com" />
-        <small style="color:var(--text-muted);font-size:11px;margin-top:4px;display:block;font-family:'Sora',sans-serif;">Must match their Google account email exactly.</small>
+      <div class="stat-item">
+        <div class="stat-icon purple"><i class="fa fa-sitemap"></i></div>
+        <div class="stat-info"><span class="stat-num" id="statFunctions">—</span><span class="stat-lbl">Functions</span></div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Role <span class="required">*</span></label>
-        <select class="form-control" id="userFormRole">
-          <option value="bi_developer">BI Developer — View &amp; Download only</option>
-          <option value="admin">Admin — Full Access</option>
-        </select>
+      <div class="stat-item">
+        <div class="stat-icon green"><i class="fa fa-building"></i></div>
+        <div class="stat-info"><span class="stat-num" id="statCompanySizes">—</span><span class="stat-lbl">Company Sizes</span></div>
       </div>
-      <div class="form-group" id="userActiveGroup" style="display:none;">
-        <label class="form-check">
-          <input type="checkbox" id="userFormActive" checked /> Account Active
-        </label>
+      <div class="stat-item">
+        <div class="stat-icon amber"><i class="fa fa-chart-bar"></i></div>
+        <div class="stat-info"><span class="stat-num" id="statDashboards">—</span><span class="stat-lbl">Total Dashboards</span></div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('userFormOverlay')">Cancel</button>
-      <button class="btn btn-primary" onclick="saveUser()"><i class="fa fa-save"></i> Save</button>
-    </div>
-  </div>
-</div>
 
-<!-- PBIX MODAL -->
-<div class="modal-overlay" id="pbixOverlay">
-  <div class="modal pbix-modal">
-    <div class="modal-header">
-      <span class="modal-title">
-        <i class="fa fa-file-powerpoint" style="color:#f76707;"></i>
-        <span id="pbixModalDashboardName">Power BI Files</span>
-      </span>
-      <button class="modal-close" onclick="closeModal('pbixOverlay')"><i class="fa fa-times"></i></button>
-    </div>
-    <div id="pbixUploadSection" style="display:none;">
-      <div class="pbix-upload-area" id="pbixUploadArea">
-        <div class="pbix-upload-inner">
-          <div class="pbix-upload-icon"><i class="fa fa-cloud-arrow-up"></i></div>
-          <div class="pbix-upload-label">Upload Power BI File</div>
-          <div class="pbix-upload-hint">Click to browse or drag &amp; drop · .pbix / .pbit · max 2 GB</div>
-          <input type="file" id="pbixFileInput" accept=".pbix,.pbit" style="display:none;" onchange="onPbixFileSelected(this)" />
-          <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="document.getElementById('pbixFileInput').click()">
-            <i class="fa fa-folder-open"></i> Choose File
+    <!-- ═══════════════════════ MAIN ═════════════════════════ -->
+    <div class="main-container">
+      <div class="page-breadcrumb" id="pageBreadcrumb" style="display:none;"></div>
+      <div class="section-heading">
+        <h2 id="sectionTitle">Industries</h2>
+        <span class="count-badge" id="sectionCount">0</span>
+      </div>
+      <p class="section-sub" id="sectionSub">Click an industry to view its functions</p>
+      <div class="toolbar">
+        <div class="search-box">
+          <i class="fa fa-search"></i>
+          <input type="text" id="searchInput" placeholder="Search industries..." oninput="onSearch()" />
+        </div>
+        <div class="toolbar-right">
+          <button class="btn btn-primary" id="addBtn" style="display:none;" onclick="openAddModal()">
+            <i class="fa fa-plus"></i> <span id="addBtnLabel">Add Industry</span>
           </button>
         </div>
       </div>
-      <div id="pbixUploadForm" style="display:none;padding:0 26px 20px;">
-        <div class="pbix-selected-file" id="pbixSelectedFile"></div>
-        <div class="form-group" style="margin-top:14px;">
-          <label class="form-label">Display Name <span class="required">*</span></label>
-          <input type="text" class="form-control" id="pbixDisplayName" placeholder="e.g. Sales Analysis v2" />
-        </div>
-        <div class="form-group">
-          <label class="form-label">Notes / Description</label>
-          <textarea class="form-control" id="pbixDescription" placeholder="e.g. Contains DAX measures for Q1..." style="min-height:64px;"></textarea>
-        </div>
-        <div style="display:flex;gap:10px;justify-content:flex-end;">
-          <button class="btn btn-secondary btn-sm" onclick="cancelPbixUpload()"><i class="fa fa-times"></i> Cancel</button>
-          <button class="btn btn-primary btn-sm" id="pbixUploadBtn" onclick="uploadPbixFile()"><i class="fa fa-upload"></i> Upload File</button>
+      <div id="cardsArea"></div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════
+     LOGIN MODAL
+═══════════════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="loginOverlay">
+      <div class="modal login-modal" style="max-width:420px;">
+        <div class="modal-body">
+          <div class="login-logo">
+            <i class="fa fa-shield-alt"></i>
+            <h2>Welcome to DataChamps</h2>
+            <p>Sign in with your organization Google account</p>
+          </div>
+          <div class="access-notice" id="loginNotice" style="display:none;">
+            <i class="fa fa-triangle-exclamation"></i>
+            <span id="loginNoticeMsg">Your account is not authorized. Contact your administrator.</span>
+          </div>
+          <a class="btn-google" href="php/google_auth.php" id="googleLoginBtn">
+            <svg width="20" height="20" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+            </svg>
+            Continue with Google
+          </a>
+          <p style="text-align:center;font-family:'Sora',sans-serif;font-size:11px;color:var(--text-muted);margin-top:18px;line-height:1.6;">
+            Only pre-approved organization accounts can access this system.<br>Contact your admin if you need access.
+          </p>
         </div>
       </div>
     </div>
-    <div id="pbixDivider" style="height:1px;background:var(--border);display:none;"></div>
-    <div class="modal-body" style="padding-top:20px;">
-      <div id="pbixFileList"><div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading files…</div></div>
-    </div>
-  </div>
-</div>
 
-<!-- PBIX EDIT MODAL -->
-<div class="modal-overlay" id="pbixEditOverlay">
-  <div class="modal" style="max-width:440px;">
-    <div class="modal-header">
-      <span class="modal-title"><i class="fa fa-pen"></i> Edit File Info</span>
-      <button class="modal-close" onclick="closeModal('pbixEditOverlay')"><i class="fa fa-times"></i></button>
-    </div>
-    <div class="modal-body">
-      <input type="hidden" id="pbixEditId" />
-      <div class="form-group">
-        <label class="form-label">Display Name <span class="required">*</span></label>
-        <input type="text" class="form-control" id="pbixEditDisplayName" />
+    <!-- ═══════════════════════════════════════════════════════
+     INDUSTRY MODAL
+═══════════════════════════════════════════════════════ -->
+    <div class="modal-overlay" id="industryOverlay">
+      <div class="modal">
+        <div class="modal-header">
+          <span class="modal-title"><i class="fa fa-industry"></i> <span id="industryModalTitle">Add Industry</span></span>
+          <button class="modal-close" onclick="closeModal('industryOverlay')"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="industryId" />
+          <div class="form-group">
+            <label class="form-label">Industry Name <span class="required">*</span></label>
+            <input type="text" class="form-control" id="industryName" placeholder="e.g. Pharma, IT, Retail" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Icon (Font Awesome class)</label>
+            <input type="text" class="form-control" id="industryIcon" placeholder="e.g. fa-building" value="fa-industry" />
+            <small style="color:var(--text-muted);font-size:11px;margin-top:5px;display:block;font-family:'Sora',sans-serif;">
+              Browse at <a href="https://fontawesome.com/icons" target="_blank" style="color:var(--blue);font-weight:600;">fontawesome.com</a>
+            </small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" id="industryDesc" placeholder="Brief description..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal('industryOverlay')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveIndustry()"><i class="fa fa-save"></i> Save</button>
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">Notes / Description</label>
-        <textarea class="form-control" id="pbixEditDescription" style="min-height:64px;"></textarea>
+    </div>
+
+    <!-- FUNCTION MODAL -->
+    <div class="modal-overlay" id="functionOverlay">
+      <div class="modal">
+        <div class="modal-header">
+          <span class="modal-title"><i class="fa fa-sitemap"></i> <span id="functionModalTitle">Add Function</span></span>
+          <button class="modal-close" onclick="closeModal('functionOverlay')"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="functionId" />
+          <input type="hidden" id="functionIndustryId" />
+          <div class="form-group">
+            <label class="form-label">Function Name <span class="required">*</span></label>
+            <input type="text" class="form-control" id="functionName" placeholder="e.g. Sales, Inventory, Finance" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Icon (Font Awesome class)</label>
+            <input type="text" class="form-control" id="functionIcon" placeholder="e.g. fa-chart-line" value="fa-sitemap" />
+            <small style="color:var(--text-muted);font-size:11px;margin-top:5px;display:block;font-family:'Sora',sans-serif;">
+              Browse at <a href="https://fontawesome.com/icons" target="_blank" style="color:var(--blue);font-weight:600;">fontawesome.com</a>
+            </small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" id="functionDesc" placeholder="About this function..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal('functionOverlay')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveFunction()"><i class="fa fa-save"></i> Save</button>
+        </div>
       </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('pbixEditOverlay')">Cancel</button>
-      <button class="btn btn-primary" onclick="savePbixEdit()"><i class="fa fa-save"></i> Save</button>
-    </div>
-  </div>
-</div>
 
-<!-- CONFIRM DELETE -->
-<div class="modal-overlay" id="confirmOverlay">
-  <div class="modal confirm-dialog">
-    <div class="confirm-body">
-      <div class="confirm-icon"><i class="fa fa-triangle-exclamation"></i></div>
-      <h3 id="confirmTitle">Delete Item?</h3>
-      <p id="confirmMsg">This action cannot be undone.</p>
+    <!-- COMPANY SIZE MODAL -->
+    <div class="modal-overlay" id="companySizeOverlay">
+      <div class="modal">
+        <div class="modal-header">
+          <span class="modal-title"><i class="fa fa-building"></i> <span id="companySizeModalTitle">Add Company Size</span></span>
+          <button class="modal-close" onclick="closeModal('companySizeOverlay')"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="companySizeId" />
+          <input type="hidden" id="companySizeFunctionId" />
+          <input type="hidden" id="companySizeIndustryId" />
+          <div class="form-group">
+            <label class="form-label">Company Size Label <span class="required">*</span></label>
+            <input type="text" class="form-control" id="companySizeName" placeholder="e.g. Small, Mid-size, Enterprise" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Icon (Font Awesome class)</label>
+            <input type="text" class="form-control" id="companySizeIcon" placeholder="e.g. fa-building" value="fa-building" />
+            <small style="color:var(--text-muted);font-size:11px;margin-top:5px;display:block;font-family:'Sora',sans-serif;">
+              Browse at <a href="https://fontawesome.com/icons" target="_blank" style="color:var(--blue);font-weight:600;">fontawesome.com</a>
+            </small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" id="companySizeDesc" placeholder="e.g. Companies with 1–50 employees..."></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal('companySizeOverlay')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveCompanySize()"><i class="fa fa-save"></i> Save</button>
+        </div>
+      </div>
     </div>
-    <div class="modal-footer">
-      <button class="btn btn-secondary" onclick="closeModal('confirmOverlay')">Cancel</button>
-      <button class="btn btn-danger" onclick="confirmDeleteAction()"><i class="fa fa-trash"></i> Delete</button>
+
+    <!-- DASHBOARD MODAL -->
+    <div class="modal-overlay" id="dashboardOverlay">
+      <div class="modal">
+        <div class="modal-header">
+          <span class="modal-title"><i class="fa fa-chart-pie"></i> <span id="dashboardModalTitle">Add Dashboard</span></span>
+          <button class="modal-close" onclick="closeModal('dashboardOverlay')"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="dashboardId" />
+          <input type="hidden" id="dashboardCompanySizeId" />
+          <input type="hidden" id="dashboardFunctionId" />
+          <input type="hidden" id="dashboardIndustryId" />
+          <div class="form-group">
+            <label class="form-label">Dashboard Name <span class="required">*</span></label>
+            <input type="text" class="form-control" id="dashboardName" placeholder="e.g. Sales Dashboard" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Power BI Embed URL <span class="required">*</span></label>
+            <input type="url" class="form-control" id="dashboardUrl" placeholder="https://app.powerbi.com/reportEmbed?..." />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Description</label>
+            <textarea class="form-control" id="dashboardDesc" placeholder="What insights does this dashboard show?"></textarea>
+          </div>
+          <div class="form-group">
+            <label class="form-check">
+              <input type="checkbox" id="dashboardActive" checked /> Mark as Active
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal('dashboardOverlay')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveDashboard()"><i class="fa fa-save"></i> Save</button>
+        </div>
+      </div>
     </div>
-  </div>
-</div>
 
-<div class="toast-container" id="toastContainer"></div>
+    <!-- MANAGE USERS MODAL (kept for superadmin direct access but removed from dropdown) -->
+    <div class="modal-overlay" id="usersOverlay">
+      <div class="modal users-modal">
+        <div class="modal-header">
+          <span class="modal-title"><i class="fa fa-users-cog"></i> Manage Users</span>
+          <button class="modal-close" onclick="closeModal('usersOverlay')"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+          <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+            <button class="btn btn-primary btn-sm" onclick="openAddUserModal()"><i class="fa fa-plus"></i> Add User</button>
+          </div>
+          <div id="usersList"><div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading users…</div></div>
+        </div>
+      </div>
+    </div>
 
-<!-- ═══════════════════════ JAVASCRIPT ═══════════════════ -->
-<script>
+    <!-- ADD/EDIT USER MODAL -->
+    <div class="modal-overlay" id="userFormOverlay">
+      <div class="modal" style="max-width:440px;">
+        <div class="modal-header">
+          <span class="modal-title"><i class="fa fa-user-plus"></i> <span id="userFormTitle">Add User</span></span>
+          <button class="modal-close" onclick="closeModal('userFormOverlay')"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="userFormId" />
+          <div class="form-group">
+            <label class="form-label">Full Name <span class="required">*</span></label>
+            <input type="text" class="form-control" id="userFormName" placeholder="e.g. Prajwal Shendge" />
+          </div>
+          <div class="form-group" id="userEmailGroup">
+            <label class="form-label">Gmail Address <span class="required">*</span></label>
+            <input type="email" class="form-control" id="userFormEmail" placeholder="user@gmail.com" />
+            <small style="color:var(--text-muted);font-size:11px;margin-top:4px;display:block;font-family:'Sora',sans-serif;">Must match their Google account email exactly.</small>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Role <span class="required">*</span></label>
+            <select class="form-control" id="userFormRole">
+              <option value="bi_developer">BI Developer — View &amp; Download only</option>
+              <option value="contributor">Contributor — Add content (requires approval)</option>
+              <option value="super_admin">Super Admin — Full Access</option>
+            </select>
+          </div>
+          <div class="form-group" id="userActiveGroup" style="display:none;">
+            <label class="form-check">
+              <input type="checkbox" id="userFormActive" checked /> Account Active
+            </label>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal('userFormOverlay')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveUser()"><i class="fa fa-save"></i> Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- PBIX MODAL -->
+    <div class="modal-overlay" id="pbixOverlay">
+      <div class="modal pbix-modal">
+        <div class="modal-header">
+          <span class="modal-title">
+            <i class="fa fa-file-powerpoint" style="color:#f76707;"></i>
+            <span id="pbixModalDashboardName">Power BI Files</span>
+          </span>
+          <button class="modal-close" onclick="closeModal('pbixOverlay')"><i class="fa fa-times"></i></button>
+        </div>
+        <div id="pbixUploadSection" style="display:none;">
+          <div class="pbix-upload-area" id="pbixUploadArea">
+            <div class="pbix-upload-inner">
+              <div class="pbix-upload-icon"><i class="fa fa-cloud-arrow-up"></i></div>
+              <div class="pbix-upload-label">Upload Power BI File</div>
+              <div class="pbix-upload-hint">Click to browse or drag &amp; drop · .pbix / .pbit · max 2 GB</div>
+              <input type="file" id="pbixFileInput" accept=".pbix,.pbit" style="display:none;" onchange="onPbixFileSelected(this)" />
+              <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="document.getElementById('pbixFileInput').click()">
+                <i class="fa fa-folder-open"></i> Choose File
+              </button>
+            </div>
+          </div>
+          <div id="pbixUploadForm" style="display:none;padding:0 26px 20px;">
+            <div class="pbix-selected-file" id="pbixSelectedFile"></div>
+            <div class="form-group" style="margin-top:14px;">
+              <label class="form-label">Display Name <span class="required">*</span></label>
+              <input type="text" class="form-control" id="pbixDisplayName" placeholder="e.g. Sales Analysis v2" />
+            </div>
+            <div class="form-group">
+              <label class="form-label">Notes / Description</label>
+              <textarea class="form-control" id="pbixDescription" placeholder="e.g. Contains DAX measures for Q1..." style="min-height:64px;"></textarea>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:flex-end;">
+              <button class="btn btn-secondary btn-sm" onclick="cancelPbixUpload()"><i class="fa fa-times"></i> Cancel</button>
+              <button class="btn btn-primary btn-sm" id="pbixUploadBtn" onclick="uploadPbixFile()"><i class="fa fa-upload"></i> Upload File</button>
+            </div>
+          </div>
+        </div>
+        <div id="pbixDivider" style="height:1px;background:var(--border);display:none;"></div>
+        <div class="modal-body" style="padding-top:20px;">
+          <div id="pbixFileList"><div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading files…</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PBIX EDIT MODAL -->
+    <div class="modal-overlay" id="pbixEditOverlay">
+      <div class="modal" style="max-width:440px;">
+        <div class="modal-header">
+          <span class="modal-title"><i class="fa fa-pen"></i> Edit File Info</span>
+          <button class="modal-close" onclick="closeModal('pbixEditOverlay')"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+          <input type="hidden" id="pbixEditId" />
+          <div class="form-group">
+            <label class="form-label">Display Name <span class="required">*</span></label>
+            <input type="text" class="form-control" id="pbixEditDisplayName" />
+          </div>
+          <div class="form-group">
+            <label class="form-label">Notes / Description</label>
+            <textarea class="form-control" id="pbixEditDescription" style="min-height:64px;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal('pbixEditOverlay')">Cancel</button>
+          <button class="btn btn-primary" onclick="savePbixEdit()"><i class="fa fa-save"></i> Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONFIRM DELETE -->
+    <div class="modal-overlay" id="confirmOverlay">
+      <div class="modal confirm-dialog">
+        <div class="confirm-body">
+          <div class="confirm-icon"><i class="fa fa-triangle-exclamation"></i></div>
+          <h3 id="confirmTitle">Delete Item?</h3>
+          <p id="confirmMsg">This action cannot be undone.</p>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal('confirmOverlay')">Cancel</button>
+          <button class="btn btn-danger" onclick="confirmDeleteAction()"><i class="fa fa-trash"></i> Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- ═══════════════════════ JAVASCRIPT ═══════════════════ -->
+    <script>
 'use strict';
 
 var API_URL = 'php/api.php';
 
 var state = {
   view: 'industries',
-  isAdmin: false,
+  isSuperAdmin: false,
+  isContributor: false,
+  isBiDev: false,
+  canAddContent: false,
   isLoggedIn: false,
   userRole: '',
   userName: '',
   currentIndustry: null,
-  currentClient: null,
+  currentFunction: null,
+  currentCompanySize: null,
   searchTimer: null,
   deleteCallback: null,
   pbixCurrentDashboardId: null,
-  pbixSelectedFile: null
+  pbixSelectedFile: null,
+  pendingCount: 0,
+  notifCount: 0,
+  notifTimer: null
 };
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -465,11 +501,11 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   if (params.get('error')) {
     var errMap = {
-      not_authorized:        'Your Google account is not authorized. Contact your admin.',
-      google_denied:         'Google sign-in was cancelled.',
-      token_exchange_failed: 'Authentication failed. Please try again.',
-      invalid_state:         'Security check failed. Please try again.',
-      userinfo_failed:       'Could not retrieve your Google profile. Please try again.'
+      not_authorized:'Your Google account is not authorized. Contact your admin.',
+      google_denied:'Google sign-in was cancelled.',
+      token_exchange_failed:'Authentication failed. Please try again.',
+      invalid_state:'Security check failed. Please try again.',
+      userinfo_failed:'Could not retrieve your Google profile. Please try again.'
     };
     var errMsg = errMap[params.get('error')] || 'Login failed. Please try again.';
     if (params.get('email')) errMsg += ' (' + params.get('email') + ')';
@@ -484,45 +520,37 @@ document.addEventListener('DOMContentLoaded', function() {
   checkSession().then(function() {
     loadStats();
     navigateTo('industries');
+    if (state.isLoggedIn) startNotifPolling();
   });
   setupPbixDragDrop();
   setupClickOutsideNav();
   setupClickOutsideDropdown();
 });
 
-// ── Click outside nav to close (mobile) ──────────────────
 function setupClickOutsideNav() {
   document.addEventListener('click', function(e) {
     var nav = document.getElementById('navbarNav');
     var btn = document.getElementById('hamburger');
-    if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) {
-      closeNav();
-    }
+    if (nav && nav.classList.contains('open') && !nav.contains(e.target) && !btn.contains(e.target)) closeNav();
   });
 }
 
-// ── Click outside profile dropdown to close ───────────────
 function setupClickOutsideDropdown() {
   document.addEventListener('click', function(e) {
     var wrap = document.getElementById('profileDropdownWrap');
-    if (wrap && !wrap.contains(e.target)) {
-      closeProfileDropdown();
-    }
+    if (wrap && !wrap.contains(e.target)) closeProfileDropdown();
   });
 }
 
-// ── Profile Dropdown ──────────────────────────────────────
 function toggleProfileDropdown(e) {
   e.stopPropagation();
   var dropdown = document.getElementById('profileDropdown');
   var btn      = document.getElementById('profileBtn');
   var chevron  = document.getElementById('profileChevron');
-  var isOpen   = dropdown.classList.contains('open');
-  if (isOpen) {
-    closeProfileDropdown();
-  } else {
+  if (dropdown.classList.contains('open')) { closeProfileDropdown(); }
+  else {
     dropdown.classList.add('open');
-    btn.setAttribute('aria-expanded', 'true');
+    btn.setAttribute('aria-expanded','true');
     chevron.style.transform = 'rotate(180deg)';
   }
 }
@@ -533,7 +561,7 @@ function closeProfileDropdown() {
   var chevron  = document.getElementById('profileChevron');
   if (dropdown) {
     dropdown.classList.remove('open');
-    btn.setAttribute('aria-expanded', 'false');
+    btn.setAttribute('aria-expanded','false');
     chevron.style.transform = '';
   }
 }
@@ -558,68 +586,138 @@ function api(method, action, body) {
 // ── Session ───────────────────────────────────────────────
 function checkSession() {
   return api('GET', 'session_check').then(function(data) {
-    state.isLoggedIn = !!data.logged_in;
-    state.isAdmin    = !!data.is_admin;
-    state.userRole   = data.role   || '';
-    state.userName   = data.name   || '';
+    state.isLoggedIn    = !!data.logged_in;
+    state.isSuperAdmin  = !!data.is_super_admin;
+    state.isContributor = !!data.is_contributor;
+    state.isBiDev       = !!data.is_bi_developer;
+    state.canAddContent = !!data.can_add_content;
+    state.userRole      = data.role || '';
+    state.userName      = data.name || '';
+    state.pendingCount  = data.pending_count || 0;
     updateAuthUI(data);
+    updatePendingBadge();
   }).catch(function() { updateAuthUI({}); });
 }
 
 function updateAuthUI(data) {
   var loggedIn = state.isLoggedIn;
-  document.getElementById('guestActions').style.display   = loggedIn ? 'none'  : 'block';
+  document.getElementById('guestActions').style.display   = loggedIn ? 'none' : 'block';
   document.getElementById('adminActions').style.display   = loggedIn ? 'flex'  : 'none';
-  document.getElementById('addBtn').style.display         = state.isAdmin ? 'inline-flex' : 'none';
+  document.getElementById('addBtn').style.display         = state.canAddContent ? 'inline-flex' : 'none';
 
-  // Show Manage Users in dropdown only for admin
-  var manageUsersItem = document.getElementById('manageUsersItem');
-  if (manageUsersItem) manageUsersItem.style.display = state.isAdmin ? 'flex' : 'none';
+  // ✅ Manage Users item REMOVED from dropdown — no longer referenced here
+  var approvalQueueItem = document.getElementById('approvalQueueItem');
+  var mySubmissionsItem = document.getElementById('mySubmissionsItem');
+  var notifBellWrap     = document.getElementById('notifBellWrap');
+
+  // Approval Queue: only super admin
+  if (approvalQueueItem) approvalQueueItem.style.display = state.isSuperAdmin  ? 'flex' : 'none';
+  // My Submissions: only contributor
+  if (mySubmissionsItem) mySubmissionsItem.style.display = state.isContributor ? 'flex' : 'none';
+  // Notification bell: contributors see their own submission status updates; super admins see pending alerts
+  if (notifBellWrap)     notifBellWrap.style.display     = (state.isContributor || state.isSuperAdmin) ? 'flex' : 'none';
 
   if (loggedIn) {
     var firstName = state.userName ? state.userName.split(' ')[0] : 'User';
     var initial   = state.userName ? state.userName.charAt(0).toUpperCase() : 'U';
 
-    // Navbar profile button
     document.getElementById('adminName').textContent = firstName;
 
-    // Role badge in navbar
     var rb = document.getElementById('roleBadge');
-    if (state.isAdmin) {
-      rb.className = 'role-badge admin';
-      rb.innerHTML = '<i class="fa fa-shield-alt" style="font-size:9px;"></i> Admin';
+    if (state.isSuperAdmin) {
+      rb.className = 'role-badge super_admin';
+      rb.innerHTML = '<i class="fa fa-crown" style="font-size:9px;"></i> Super Admin';
+    } else if (state.isContributor) {
+      rb.className = 'role-badge contributor';
+      rb.innerHTML = '<i class="fa fa-pen" style="font-size:9px;"></i> Contributor';
     } else {
       rb.className = 'role-badge bi_developer';
       rb.innerHTML = '<i class="fa fa-chart-bar" style="font-size:9px;"></i> BI Dev';
     }
 
-    // Avatar in navbar
     var wrap = document.getElementById('profileAvatarWrap');
     if (data && data.picture) {
-      wrap.innerHTML = '<img src="' + data.picture + '" class="avatar-img" alt="Avatar" onerror="this.parentNode.innerHTML=\'<div class=avatar>' + esc(initial) + '</div>\'" />';
+      wrap.innerHTML = '<img src="'+data.picture+'" class="avatar-img" alt="Avatar" onerror="this.parentNode.innerHTML=\'<div class=avatar>'+esc(initial)+'</div>\'" />';
     } else {
-      wrap.innerHTML = '<div class="avatar">' + esc(initial) + '</div>';
+      wrap.innerHTML = '<div class="avatar">'+esc(initial)+'</div>';
     }
 
-    // Dropdown header
     document.getElementById('dropdownName').textContent = state.userName || 'User';
     var dropdownRole = document.getElementById('dropdownRole');
-    if (state.isAdmin) {
-      dropdownRole.innerHTML = '<i class="fa fa-shield-alt"></i> Administrator';
-      dropdownRole.className = 'dropdown-role admin-role';
+    if (state.isSuperAdmin) {
+      dropdownRole.innerHTML = '<i class="fa fa-crown"></i> Super Administrator';
+      dropdownRole.className = 'dropdown-role super-admin-role';
+    } else if (state.isContributor) {
+      dropdownRole.innerHTML = '<i class="fa fa-pen"></i> Contributor';
+      dropdownRole.className = 'dropdown-role contributor-role';
     } else {
       dropdownRole.innerHTML = '<i class="fa fa-chart-bar"></i> BI Developer';
       dropdownRole.className = 'dropdown-role dev-role';
     }
 
-    // Dropdown avatar
     var dropWrap = document.getElementById('dropdownAvatarWrap');
     if (data && data.picture) {
-      dropWrap.innerHTML = '<img src="' + data.picture + '" class="dropdown-avatar-img" alt="Avatar" onerror="this.parentNode.innerHTML=\'<div class=avatar-lg>' + esc(initial) + '</div>\'" />';
+      dropWrap.innerHTML = '<img src="'+data.picture+'" class="dropdown-avatar-img" alt="Avatar" onerror="this.parentNode.innerHTML=\'<div class=avatar-lg>'+esc(initial)+'</div>\'" />';
     } else {
-      dropWrap.innerHTML = '<div class="avatar-lg">' + esc(initial) + '</div>';
+      dropWrap.innerHTML = '<div class="avatar-lg">'+esc(initial)+'</div>';
     }
   }
+}
+
+function updatePendingBadge() {
+  var badge = document.getElementById('pendingBadge');
+  if (!badge) return;
+  if (state.pendingCount > 0) {
+    badge.textContent = state.pendingCount;
+    badge.style.display = 'flex';
+  } else {
+    badge.style.display = 'none';
+  }
+}
+
+// ── Notification count badge on bell icon ─────────────────
+function updateNotifBellBadge(unreadCount) {
+  var dot   = document.getElementById('notifDot');
+  var badge = document.getElementById('notifCountBadge');
+  state.notifCount = unreadCount;
+
+  if (unreadCount > 0) {
+    if (dot)   dot.style.display   = 'block';
+    if (badge) {
+      badge.textContent = unreadCount > 99 ? '99+' : unreadCount;
+      badge.style.display = 'flex';
+    }
+  } else {
+    if (dot)   dot.style.display   = 'none';
+    if (badge) badge.style.display = 'none';
+  }
+}
+
+function startNotifPolling() {
+  loadNotifications();
+  state.notifTimer = setInterval(loadNotifications, 30000);
+}
+
+function loadNotifications() {
+  api('GET', 'get_notifications').then(function(data) {
+    var items  = data.data || [];
+    var unread = items.filter(function(n){ return !n.is_read; }).length;
+
+    // ✅ Show unread count on bell for BOTH contributors and super admins
+    updateNotifBellBadge(unread);
+
+    if (state.isSuperAdmin) {
+      api('GET', 'get_pending_count').then(function(d) {
+        state.pendingCount = d.count || 0;
+        updatePendingBadge();
+
+        // Super admin also sees pending items count on bell if no unread notifs
+        if (unread === 0 && state.pendingCount > 0) {
+          updateNotifBellBadge(state.pendingCount);
+        }
+      }).catch(function(){});
+    }
+  }).catch(function(){});
 }
 
 function openLoginModal() {
@@ -629,6 +727,7 @@ function openLoginModal() {
 
 function logout() {
   closeProfileDropdown();
+  if (state.notifTimer) clearInterval(state.notifTimer);
   api('POST', 'logout').then(function() {
     sessionStorage.removeItem('dc_authed');
     window.location.href = 'login.html';
@@ -639,577 +738,808 @@ function logout() {
 }
 
 // ── Navigation ────────────────────────────────────────────
-function navigateTo(view, industry, client) {
-  state.view = view;
-  state.currentIndustry = industry || null;
-  state.currentClient   = client   || null;
+function navigateTo(view, industry, func, companySize) {
+  state.view            = view;
+  state.currentIndustry    = industry    || null;
+  state.currentFunction    = func        || null;
+  state.currentCompanySize = companySize || null;
   document.getElementById('searchInput').value = '';
   updateHero(); updateBreadcrumb(); updateToolbar(); renderCurrentView();
 }
 
 function updateHero() {
-  var v = state.view, i = state.currentIndustry, c = state.currentClient;
-  var map = {
-    industries: { path: 'All Industries', title: 'Industry Wise Dashboards', sub: 'Select an industry to browse its Power BI dashboards' },
-    clients:    { path: i ? i.name : '', title: (i ? i.name : '') + ' — Clients', sub: 'Select a client to view their dashboards' },
-    dashboards: { path: (i ? i.name : '') + ' › ' + (c ? c.name : ''), title: (c ? c.name : '') + ' — Dashboards', sub: 'Power BI dashboards for this client' }
+  var v=state.view, i=state.currentIndustry, f=state.currentFunction, c=state.currentCompanySize;
+  var cfgMap={
+    industries:  {path:'All Industries', title:'Industry Wise Dashboards', sub:'Select an industry to browse its functions'},
+    functions:   {path:i?i.name:'', title:(i?i.name:'')+'  Functions', sub:'Select a function to view company sizes'},
+    companySizes:{path:(i?i.name:'')+ '  '+(f?f.name:''), title:(f?f.name:'')+'  Company Sizes', sub:'Select a company size to view dashboards'},
+    dashboards:  {path:(i?i.name:'')+' › '+(f?f.name:'')+' › '+(c?c.name:''), title:(c?c.name:'')+'  Dashboards', sub:'Power BI dashboards for this segment'}
   };
-  var cfg = map[v] || map.industries;
-  document.getElementById('heroPath').textContent     = cfg.path;
-  document.getElementById('heroTitle').textContent    = cfg.title;
-  document.getElementById('heroSubtitle').textContent = cfg.sub;
+  var cfg=cfgMap[v]||cfgMap.industries;
+  document.getElementById('heroPath').textContent    =cfg.path;
+  document.getElementById('heroTitle').textContent   =cfg.title;
+  document.getElementById('heroSubtitle').textContent=cfg.sub;
 }
 
 function updateBreadcrumb() {
-  var bc = document.getElementById('pageBreadcrumb');
-  if (state.view === 'industries') { bc.style.display = 'none'; return; }
-  bc.style.display = 'flex';
-  var html = '<span class="crumb" onclick="navigateTo(\'industries\')"><i class="fa fa-home"></i> All Industries</span>';
-  if (state.view === 'clients') {
-    html += '<span class="sep"><i class="fa fa-chevron-right"></i></span><span class="current">' + esc(state.currentIndustry ? state.currentIndustry.name : '') + '</span>';
-  } else {
-    html += '<span class="sep"><i class="fa fa-chevron-right"></i></span>';
-    html += '<span class="crumb" onclick="navigateTo(\'clients\', state.currentIndustry)">' + esc(state.currentIndustry ? state.currentIndustry.name : '') + '</span>';
-    html += '<span class="sep"><i class="fa fa-chevron-right"></i></span><span class="current">' + esc(state.currentClient ? state.currentClient.name : '') + '</span>';
+  var bc=document.getElementById('pageBreadcrumb');
+  if (state.view==='industries'){bc.style.display='none';return;}
+  bc.style.display='flex';
+  var html='<span class="crumb" onclick="navigateTo(\'industries\')"><i class="fa fa-home"></i> All Industries</span>';
+  if (state.view==='functions'){
+    html+='<span class="sep"><i class="fa fa-chevron-right"></i></span><span class="current">'+esc(state.currentIndustry?state.currentIndustry.name:'')+'</span>';
+  } else if (state.view==='companySizes'){
+    html+='<span class="sep"><i class="fa fa-chevron-right"></i></span><span class="crumb" onclick="navigateTo(\'functions\',state.currentIndustry)">'+esc(state.currentIndustry?state.currentIndustry.name:'')+'</span><span class="sep"><i class="fa fa-chevron-right"></i></span><span class="current">'+esc(state.currentFunction?state.currentFunction.name:'')+'</span>';
+  } else if (state.view==='dashboards'){
+    html+='<span class="sep"><i class="fa fa-chevron-right"></i></span><span class="crumb" onclick="navigateTo(\'functions\',state.currentIndustry)">'+esc(state.currentIndustry?state.currentIndustry.name:'')+'</span><span class="sep"><i class="fa fa-chevron-right"></i></span><span class="crumb" onclick="navigateTo(\'companySizes\',state.currentIndustry,state.currentFunction)">'+esc(state.currentFunction?state.currentFunction.name:'')+'</span><span class="sep"><i class="fa fa-chevron-right"></i></span><span class="current">'+esc(state.currentCompanySize?state.currentCompanySize.name:'')+'</span>';
   }
-  bc.innerHTML = html;
+  bc.innerHTML=html;
 }
 
-function updateToolbar() {
-  var v = state.view;
-  var labels       = { industries: 'Add Industry', clients: 'Add Client', dashboards: 'Add Dashboard' };
-  var placeholders = { industries: 'Search industries...', clients: 'Search clients...', dashboards: 'Search dashboards...' };
-  var titles       = { industries: 'Industries', clients: 'Clients', dashboards: 'Dashboards' };
-  var subs         = {
-    industries: 'Click an industry to view its clients and dashboards',
-    clients:    'Click a client to view their dashboards',
-    dashboards: 'Manage Power BI dashboards for this client'
-  };
-  document.getElementById('addBtnLabel').textContent  = labels[v];
-  document.getElementById('searchInput').placeholder  = placeholders[v];
-  document.getElementById('sectionTitle').textContent = titles[v];
-  document.getElementById('sectionSub').textContent   = subs[v];
-  document.getElementById('addBtn').style.display     = state.isAdmin ? 'inline-flex' : 'none';
+function updateToolbar(){
+  var v=state.view;
+  var labels={industries:'Add Industry',functions:'Add Function',companySizes:'Add Company Size',dashboards:'Add Dashboard'};
+  var placeholders={industries:'Search industries...',functions:'Search functions...',companySizes:'Search company sizes...',dashboards:'Search dashboards...'};
+  var titles={industries:'Industries',functions:'Functions',companySizes:'Company Sizes',dashboards:'Dashboards'};
+  var subs={industries:'Click an industry to view its functions',functions:'Click a function to view company sizes',companySizes:'Click a company size to view dashboards',dashboards:'Manage Power BI dashboards for this segment'};
+  document.getElementById('addBtnLabel').textContent =labels[v];
+  document.getElementById('searchInput').placeholder =placeholders[v];
+  document.getElementById('sectionTitle').textContent=titles[v];
+  document.getElementById('sectionSub').textContent  =subs[v];
+  document.getElementById('addBtn').style.display    =state.canAddContent?'inline-flex':'none';
 }
 
 // ── Render ────────────────────────────────────────────────
-function renderCurrentView() {
-  var s = document.getElementById('searchInput').value.trim();
-  if      (state.view === 'industries') renderIndustries(s);
-  else if (state.view === 'clients')    renderClients(s);
-  else                                  renderDashboards(s);
+function renderCurrentView(){
+  var s=document.getElementById('searchInput').value.trim();
+  if      (state.view==='industries')   renderIndustries(s);
+  else if (state.view==='functions')    renderFunctions(s);
+  else if (state.view==='companySizes') renderCompanySizes(s);
+  else                                   renderDashboards(s);
 }
 
-function onSearch() { clearTimeout(state.searchTimer); state.searchTimer = setTimeout(renderCurrentView, 350); }
+function onSearch(){clearTimeout(state.searchTimer);state.searchTimer=setTimeout(renderCurrentView,350);}
 
-function showSkeleton() {
-  var h = '';
-  for (var i = 0; i < 6; i++) {
-    h += '<div class="skeleton-card"><div class="skel" style="width:52px;height:52px;border-radius:12px;margin-bottom:16px;"></div>' +
-         '<div class="skel" style="width:65%;height:16px;margin-bottom:10px;"></div>' +
-         '<div class="skel" style="width:90%;height:12px;margin-bottom:6px;"></div>' +
-         '<div class="skel" style="width:55%;height:12px;"></div></div>';
-  }
-  document.getElementById('cardsArea').innerHTML = '<div class="skeleton-grid">' + h + '</div>';
+function showSkeleton(){
+  var h='';
+  for(var i=0;i<6;i++) h+='<div class="skeleton-card"><div class="skel" style="width:52px;height:52px;border-radius:12px;margin-bottom:16px;"></div><div class="skel" style="width:65%;height:16px;margin-bottom:10px;"></div><div class="skel" style="width:90%;height:12px;margin-bottom:6px;"></div><div class="skel" style="width:55%;height:12px;"></div></div>';
+  document.getElementById('cardsArea').innerHTML='<div class="skeleton-grid">'+h+'</div>';
 }
 
 // ── Industries ────────────────────────────────────────────
-function renderIndustries(search) {
+function renderIndustries(search){
   showSkeleton();
-  api('GET', 'get_industries&search=' + encodeURIComponent(search || '')).then(function(data) {
-    var list = data.data || [];
-    document.getElementById('sectionCount').textContent = list.length;
-    if (!list.length) { document.getElementById('cardsArea').innerHTML = emptyState(search ? 'No industries found' : 'No industries yet', search ? 'No results for "' + search + '"' : 'Click "Add Industry" to get started.'); return; }
-    var cards = list.map(function(ind) {
-      var adminBtns = state.isAdmin
-        ? '<button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="event.stopPropagation();editIndustry(' + ind.id + ',\'' + esc(ind.name) + '\',\'' + esc(ind.icon) + '\',\'' + esc(ind.description || '') + '\')"><i class="fa fa-pen"></i></button>' +
-          '<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="event.stopPropagation();deleteItem(\'industry\',' + ind.id + ',\'' + esc(ind.name) + '\')"><i class="fa fa-trash"></i></button>'
-        : '';
-      return '<div class="card" onclick="navigateTo(\'clients\',{id:' + ind.id + ',name:\'' + esc(ind.name) + '\',icon:\'' + esc(ind.icon) + '\'})">' +
+  api('GET','get_industries&search='+encodeURIComponent(search||'')).then(function(data){
+    var list=data.data||[];
+    document.getElementById('sectionCount').textContent=list.length;
+    if(!list.length){document.getElementById('cardsArea').innerHTML=emptyState(search?'No industries found':'No industries yet',search?'No results for "'+search+'"':'Click "Add Industry" to get started.');return;}
+    var cards=list.map(function(ind){
+      var adminBtns=state.isSuperAdmin
+        ?'<button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="event.stopPropagation();editIndustry('+ind.id+',\''+esc(ind.name)+'\',\''+esc(ind.icon)+'\',\''+esc(ind.description||'')+'\')"><i class="fa fa-pen"></i></button>'+
+          '<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="event.stopPropagation();deleteItem(\'industry\','+ind.id+',\''+esc(ind.name)+'\')"><i class="fa fa-trash"></i></button>'
+        :'';
+      return '<div class="card" onclick="navigateTo(\'functions\',{id:'+ind.id+',name:\''+esc(ind.name)+'\',icon:\''+esc(ind.icon)+'\'})">' +
         '<div class="card-header-strip"></div>' +
         '<div class="card-body">' +
-          '<div class="card-icon-row"><div class="card-icon"><i class="fa ' + esc(ind.icon || 'fa-industry') + '"></i></div><div class="card-actions-inline">' + adminBtns + '</div></div>' +
-          '<div class="card-title">' + esc(ind.name) + '</div>' +
-          '<div class="card-desc">' + esc(ind.description || 'No description provided.') + '</div>' +
-          '<div class="card-meta"><span class="meta-pill"><i class="fa fa-users"></i> ' + ind.total_clients + ' Client' + (ind.total_clients != 1 ? 's' : '') + '</span><span class="meta-pill"><i class="fa fa-chart-bar"></i> ' + ind.total_dashboards + ' Dashboard' + (ind.total_dashboards != 1 ? 's' : '') + '</span></div>' +
+          '<div class="card-icon-row"><div class="card-icon"><i class="fa '+esc(ind.icon||'fa-industry')+'"></i></div><div class="card-actions-inline">'+adminBtns+'</div></div>' +
+          '<div class="card-title">'+esc(ind.name)+'</div>' +
+          '<div class="card-desc">'+esc(ind.description||'No description provided.')+'</div>' +
+          '<div class="card-meta"><span class="meta-pill"><i class="fa fa-sitemap"></i> '+ind.total_functions+' Function'+(ind.total_functions!=1?'s':'')+'</span><span class="meta-pill"><i class="fa fa-chart-bar"></i> '+ind.total_dashboards+' Dashboard'+(ind.total_dashboards!=1?'s':'')+'</span></div>' +
         '</div>' +
-        '<div class="card-footer"><button class="view-btn">View Clients <i class="fa fa-arrow-right"></i></button></div>' +
+        '<div class="card-footer"><button class="view-btn">View Functions <i class="fa fa-arrow-right"></i></button></div>' +
       '</div>';
     }).join('');
-    document.getElementById('cardsArea').innerHTML = '<div class="cards-grid industry-grid">' + cards + '</div>';
-  }).catch(function() { document.getElementById('cardsArea').innerHTML = errorState('Could not load industries', 'Check your server and database.'); });
+    document.getElementById('cardsArea').innerHTML='<div class="cards-grid industry-grid">'+cards+'</div>';
+  }).catch(function(){document.getElementById('cardsArea').innerHTML=errorState('Could not load industries','Check your server and database.');});
 }
 
-// ── Clients ───────────────────────────────────────────────
-function renderClients(search) {
+// ── Functions ─────────────────────────────────────────────
+function renderFunctions(search){
   showSkeleton();
-  var indId = state.currentIndustry ? state.currentIndustry.id : 0;
-  api('GET', 'get_clients&industry_id=' + indId + '&search=' + encodeURIComponent(search || '')).then(function(data) {
-    var list = data.data || [];
-    document.getElementById('sectionCount').textContent = list.length;
-    if (!list.length) { document.getElementById('cardsArea').innerHTML = emptyState(search ? 'No clients found' : 'No clients yet', search ? 'No results for "' + search + '"' : 'Click "Add Client" to get started.'); return; }
-    var cards = list.map(function(cl) {
-      var adminBtns = state.isAdmin
-        ? '<button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="event.stopPropagation();editClient(' + cl.id + ',\'' + esc(cl.name) + '\',\'' + esc(cl.email || '') + '\',\'' + esc(cl.phone || '') + '\',\'' + esc(cl.description || '') + '\')"><i class="fa fa-pen"></i></button>' +
-          '<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="event.stopPropagation();deleteItem(\'client\',' + cl.id + ',\'' + esc(cl.name) + '\')"><i class="fa fa-trash"></i></button>'
-        : '';
-      return '<div class="card" onclick="navigateTo(\'dashboards\',state.currentIndustry,{id:' + cl.id + ',name:\'' + esc(cl.name) + '\'})">' +
+  var indId=state.currentIndustry?state.currentIndustry.id:0;
+  api('GET','get_functions&industry_id='+indId+'&search='+encodeURIComponent(search||'')).then(function(data){
+    var list=data.data||[];
+    document.getElementById('sectionCount').textContent=list.length;
+    if(!list.length){document.getElementById('cardsArea').innerHTML=emptyState(search?'No functions found':'No functions yet',search?'No results for "'+search+'"':'Click "Add Function" to get started.');return;}
+    var cards=list.map(function(fn){
+      var adminBtns=state.isSuperAdmin
+        ?'<button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="event.stopPropagation();editFunction('+fn.id+',\''+esc(fn.name)+'\',\''+esc(fn.icon||'')+'\',\''+esc(fn.description||'')+'\')"><i class="fa fa-pen"></i></button>'+
+          '<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="event.stopPropagation();deleteItem(\'function\','+fn.id+',\''+esc(fn.name)+'\')"><i class="fa fa-trash"></i></button>'
+        :'';
+      return '<div class="card" onclick="navigateTo(\'companySizes\',state.currentIndustry,{id:'+fn.id+',name:\''+esc(fn.name)+'\',icon:\''+esc(fn.icon||'fa-sitemap')+'\'})">' +
         '<div class="card-header-strip"></div>' +
         '<div class="card-body">' +
-          '<div class="card-icon-row"><div class="card-icon"><i class="fa fa-user-tie"></i></div><div class="card-actions-inline">' + adminBtns + '</div></div>' +
-          '<div class="card-title">' + esc(cl.name) + '</div>' +
-          '<div class="card-desc">' + esc(cl.description || 'No description provided.') + '</div>' +
-          '<div class="card-meta">' + (cl.email ? '<span class="meta-pill"><i class="fa fa-envelope"></i> ' + esc(cl.email) + '</span>' : '') + '<span class="meta-pill"><i class="fa fa-chart-pie"></i> ' + cl.total_dashboards + ' Dashboard' + (cl.total_dashboards != 1 ? 's' : '') + '</span></div>' +
+          '<div class="card-icon-row"><div class="card-icon"><i class="fa '+esc(fn.icon||'fa-sitemap')+'"></i></div><div class="card-actions-inline">'+adminBtns+'</div></div>' +
+          '<div class="card-title">'+esc(fn.name)+'</div>' +
+          '<div class="card-desc">'+esc(fn.description||'No description provided.')+'</div>' +
+          '<div class="card-meta"><span class="meta-pill"><i class="fa fa-building"></i> '+fn.total_company_sizes+' Size'+(fn.total_company_sizes!=1?'s':'')+'</span><span class="meta-pill"><i class="fa fa-chart-bar"></i> '+fn.total_dashboards+' Dashboard'+(fn.total_dashboards!=1?'s':'')+'</span></div>' +
+        '</div>' +
+        '<div class="card-footer"><button class="view-btn">View Company Sizes <i class="fa fa-arrow-right"></i></button></div>' +
+      '</div>';
+    }).join('');
+    document.getElementById('cardsArea').innerHTML='<div class="cards-grid function-grid">'+cards+'</div>';
+  }).catch(function(){document.getElementById('cardsArea').innerHTML=errorState('Could not load functions','Check your server and database.');});
+}
+
+// ── Company Sizes ─────────────────────────────────────────
+function renderCompanySizes(search){
+  showSkeleton();
+  var fnId=state.currentFunction?state.currentFunction.id:0;
+  var indId=state.currentIndustry?state.currentIndustry.id:0;
+  api('GET','get_company_sizes&function_id='+fnId+'&industry_id='+indId+'&search='+encodeURIComponent(search||'')).then(function(data){
+    var list=data.data||[];
+    document.getElementById('sectionCount').textContent=list.length;
+    if(!list.length){document.getElementById('cardsArea').innerHTML=emptyState(search?'No company sizes found':'No company sizes yet',search?'No results for "'+search+'"':'Click "Add Company Size" to get started.');return;}
+    var cards=list.map(function(cs){
+      var adminBtns=state.isSuperAdmin
+        ?'<button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="event.stopPropagation();editCompanySize('+cs.id+',\''+esc(cs.name)+'\',\''+esc(cs.icon||'')+'\',\''+esc(cs.description||'')+'\')"><i class="fa fa-pen"></i></button>'+
+          '<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="event.stopPropagation();deleteItem(\'companySize\','+cs.id+',\''+esc(cs.name)+'\')"><i class="fa fa-trash"></i></button>'
+        :'';
+      return '<div class="card" onclick="navigateTo(\'dashboards\',state.currentIndustry,state.currentFunction,{id:'+cs.id+',name:\''+esc(cs.name)+'\',icon:\''+esc(cs.icon||'fa-building')+'\'})">' +
+        '<div class="card-header-strip"></div>' +
+        '<div class="card-body">' +
+          '<div class="card-icon-row"><div class="card-icon"><i class="fa '+esc(cs.icon||'fa-building')+'"></i></div><div class="card-actions-inline">'+adminBtns+'</div></div>' +
+          '<div class="card-title">'+esc(cs.name)+'</div>' +
+          '<div class="card-desc">'+esc(cs.description||'No description provided.')+'</div>' +
+          '<div class="card-meta"><span class="meta-pill"><i class="fa fa-chart-bar"></i> '+cs.total_dashboards+' Dashboard'+(cs.total_dashboards!=1?'s':'')+'</span></div>' +
         '</div>' +
         '<div class="card-footer"><button class="view-btn">View Dashboards <i class="fa fa-arrow-right"></i></button></div>' +
       '</div>';
     }).join('');
-    document.getElementById('cardsArea').innerHTML = '<div class="cards-grid client-grid">' + cards + '</div>';
-  }).catch(function() { document.getElementById('cardsArea').innerHTML = errorState('Could not load clients', 'Check your server and database.'); });
+    document.getElementById('cardsArea').innerHTML='<div class="cards-grid company-size-grid">'+cards+'</div>';
+  }).catch(function(){document.getElementById('cardsArea').innerHTML=errorState('Could not load company sizes','Check your server and database.');});
 }
 
 // ── Dashboards ────────────────────────────────────────────
-function renderDashboards(search) {
+function renderDashboards(search){
   showSkeleton();
-  var clId  = state.currentClient   ? state.currentClient.id   : 0;
-  var indId = state.currentIndustry ? state.currentIndustry.id : 0;
-  api('GET', 'get_dashboards&client_id=' + clId + '&industry_id=' + indId + '&search=' + encodeURIComponent(search || '')).then(function(data) {
-    var list = data.data || [];
-    document.getElementById('sectionCount').textContent = list.length;
-    if (!list.length) { document.getElementById('cardsArea').innerHTML = emptyState(search ? 'No dashboards found' : 'No dashboards yet', search ? 'No results for "' + search + '"' : 'Click "Add Dashboard" to get started.'); return; }
-    var cards = list.map(function(d) {
-      var isActive  = d.is_active == 1;
-      var pbixCount = parseInt(d.total_pbix_files) || 0;
-      var badge     = '<span class="badge-status ' + (isActive ? 'active' : 'inactive') + '"><i class="fa fa-circle" style="font-size:7px;"></i> ' + (isActive ? 'Active' : 'Inactive') + '</span>';
-      var enc       = encodeURIComponent(JSON.stringify(d));
-      var adminBtns = state.isAdmin
-        ? '<button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="event.stopPropagation();editDashboardEncoded(\'' + enc + '\')"><i class="fa fa-pen"></i></button>' +
-          '<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="event.stopPropagation();deleteItem(\'dashboard\',' + d.id + ',\'' + esc(d.name) + '\')"><i class="fa fa-trash"></i></button>'
-        : '';
-      var pbixPill = '<span class="meta-pill pbix-pill" title="Power BI source files" onclick="event.stopPropagation();handlePbixClick(' + d.id + ',\'' + esc(d.name) + '\')">' +
-        '<i class="fa fa-file-powerpoint" style="color:#f76707;"></i> ' + pbixCount + ' PBI File' + (pbixCount !== 1 ? 's' : '') + '</span>';
+  var csId=state.currentCompanySize?state.currentCompanySize.id:0;
+  var fnId=state.currentFunction?state.currentFunction.id:0;
+  var indId=state.currentIndustry?state.currentIndustry.id:0;
+  api('GET','get_dashboards&company_size_id='+csId+'&function_id='+fnId+'&industry_id='+indId+'&search='+encodeURIComponent(search||'')).then(function(data){
+    var list=data.data||[];
+    document.getElementById('sectionCount').textContent=list.length;
+    if(!list.length){document.getElementById('cardsArea').innerHTML=emptyState(search?'No dashboards found':'No dashboards yet',search?'No results for "'+search+'"':'Click "Add Dashboard" to get started.');return;}
+    var cards=list.map(function(d){
+      var isActive=d.is_active==1;
+      var pbixCount=parseInt(d.total_pbix_files)||0;
+      var badge='<span class="badge-status '+(isActive?'active':'inactive')+'"><i class="fa fa-circle" style="font-size:7px;"></i> '+(isActive?'Active':'Inactive')+'</span>';
+      var enc=encodeURIComponent(JSON.stringify(d));
+      var adminBtns=state.isSuperAdmin
+        ?'<button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="event.stopPropagation();editDashboardEncoded(\''+enc+'\')"><i class="fa fa-pen"></i></button>'+
+          '<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="event.stopPropagation();deleteItem(\'dashboard\','+d.id+',\''+esc(d.name)+'\')"><i class="fa fa-trash"></i></button>'
+        :'';
+      var pbixPill='<span class="meta-pill pbix-pill" onclick="event.stopPropagation();handlePbixClick('+d.id+',\''+esc(d.name)+'\')" title="Power BI source files"><i class="fa fa-file-powerpoint" style="color:#f76707;"></i> '+pbixCount+' PBI File'+(pbixCount!==1?'s':'')+'</span>';
       return '<div class="card">' +
         '<div class="card-header-strip"></div>' +
         '<div class="card-body">' +
-          '<div class="card-icon-row"><div class="card-icon"><i class="fa fa-chart-bar"></i></div><div class="card-actions-inline" style="align-items:center;gap:6px;">' + badge + adminBtns + '</div></div>' +
-          '<div class="card-title">' + esc(d.name) + '</div>' +
-          '<div class="card-desc">' + esc(d.description || 'No description provided.') + '</div>' +
-          '<div class="card-meta">' + pbixPill + '</div>' +
+          '<div class="card-icon-row"><div class="card-icon"><i class="fa fa-chart-bar"></i></div><div class="card-actions-inline" style="align-items:center;gap:6px;">'+badge+adminBtns+'</div></div>' +
+          '<div class="card-title">'+esc(d.name)+'</div>' +
+          '<div class="card-desc">'+esc(d.description||'No description provided.')+'</div>' +
+          '<div class="card-meta">'+pbixPill+'</div>' +
         '</div>' +
         '<div class="card-footer">' +
-          '<a class="view-btn" href="' + esc(d.embed_url) + '" target="_blank" onclick="event.stopPropagation()">Open Dashboard <i class="fa fa-external-link-alt"></i></a>' +
-          '<button class="pbix-footer-btn" onclick="event.stopPropagation();handlePbixClick(' + d.id + ',\'' + esc(d.name) + '\')">' +
-            '<i class="fa fa-file-powerpoint"></i> PBI Files' +
-          '</button>' +
+          '<a class="view-btn" href="'+esc(d.embed_url)+'" target="_blank" onclick="event.stopPropagation()">Open Dashboard <i class="fa fa-external-link-alt"></i></a>' +
+          '<button class="pbix-footer-btn" onclick="event.stopPropagation();handlePbixClick('+d.id+',\''+esc(d.name)+'\')" ><i class="fa fa-file-powerpoint"></i> PBI Files</button>' +
         '</div>' +
       '</div>';
     }).join('');
-    document.getElementById('cardsArea').innerHTML = '<div class="cards-grid dashboard-grid">' + cards + '</div>';
-  }).catch(function() { document.getElementById('cardsArea').innerHTML = errorState('Could not load dashboards', 'Check your server and database.'); });
+    document.getElementById('cardsArea').innerHTML='<div class="cards-grid dashboard-grid">'+cards+'</div>';
+  }).catch(function(){document.getElementById('cardsArea').innerHTML=errorState('Could not load dashboards','Check your server and database.');});
 }
 
-function handlePbixClick(dashboardId, dashboardName) {
-  if (!state.isLoggedIn) { showToast('Please login to view Power BI files.', 'info'); openLoginModal(); return; }
+function handlePbixClick(dashboardId, dashboardName){
+  if (!state.isLoggedIn){showToast('Please login to view Power BI files.','info');openLoginModal();return;}
   openPbixModal(dashboardId, dashboardName);
 }
 
 // ── Stats ─────────────────────────────────────────────────
-function loadStats() {
-  api('GET', 'get_stats').then(function(data) {
-    if (data.success) {
-      document.getElementById('statIndustries').textContent = data.industries;
-      document.getElementById('statClients').textContent    = data.clients;
-      document.getElementById('statDashboards').textContent = data.dashboards;
+function loadStats(){
+  api('GET','get_stats').then(function(data){
+    if(data.success){
+      document.getElementById('statIndustries').textContent  =data.industries;
+      document.getElementById('statFunctions').textContent   =data.functions;
+      document.getElementById('statCompanySizes').textContent=data.company_sizes;
+      document.getElementById('statDashboards').textContent  =data.dashboards;
     }
-  }).catch(function() {});
+  }).catch(function(){});
+}
+
+// ── Add Modal ─────────────────────────────────────────────
+function openAddModal(){
+  var v=state.view;
+  if(v==='industries'){
+    document.getElementById('industryId').value='';document.getElementById('industryName').value='';document.getElementById('industryIcon').value='fa-industry';document.getElementById('industryDesc').value='';
+    document.getElementById('industryModalTitle').textContent='Add Industry';
+    openModal('industryOverlay');
+  } else if(v==='functions'){
+    document.getElementById('functionId').value='';document.getElementById('functionIndustryId').value=state.currentIndustry?state.currentIndustry.id:'';document.getElementById('functionName').value='';document.getElementById('functionIcon').value='fa-sitemap';document.getElementById('functionDesc').value='';
+    document.getElementById('functionModalTitle').textContent='Add Function';
+    openModal('functionOverlay');
+  } else if(v==='companySizes'){
+    document.getElementById('companySizeId').value='';document.getElementById('companySizeFunctionId').value=state.currentFunction?state.currentFunction.id:'';document.getElementById('companySizeIndustryId').value=state.currentIndustry?state.currentIndustry.id:'';document.getElementById('companySizeName').value='';document.getElementById('companySizeIcon').value='fa-building';document.getElementById('companySizeDesc').value='';
+    document.getElementById('companySizeModalTitle').textContent='Add Company Size';
+    openModal('companySizeOverlay');
+  } else {
+    document.getElementById('dashboardId').value='';document.getElementById('dashboardCompanySizeId').value=state.currentCompanySize?state.currentCompanySize.id:'';document.getElementById('dashboardFunctionId').value=state.currentFunction?state.currentFunction.id:'';document.getElementById('dashboardIndustryId').value=state.currentIndustry?state.currentIndustry.id:'';document.getElementById('dashboardName').value='';document.getElementById('dashboardUrl').value='';document.getElementById('dashboardDesc').value='';document.getElementById('dashboardActive').checked=true;
+    document.getElementById('dashboardModalTitle').textContent='Add Dashboard';
+    openModal('dashboardOverlay');
+  }
 }
 
 // ── CRUD ──────────────────────────────────────────────────
-function openAddModal() {
-  var v = state.view;
-  if (v === 'industries') {
-    document.getElementById('industryId').value = ''; document.getElementById('industryName').value = '';
-    document.getElementById('industryIcon').value = 'fa-industry'; document.getElementById('industryDesc').value = '';
-    document.getElementById('industryModalTitle').textContent = 'Add Industry'; openModal('industryOverlay');
-  } else if (v === 'clients') {
-    document.getElementById('clientId').value = ''; document.getElementById('clientIndustryId').value = state.currentIndustry ? state.currentIndustry.id : '';
-    document.getElementById('clientName').value = ''; document.getElementById('clientEmail').value = '';
-    document.getElementById('clientPhone').value = ''; document.getElementById('clientDesc').value = '';
-    document.getElementById('clientModalTitle').textContent = 'Add Client'; openModal('clientOverlay');
-  } else {
-    document.getElementById('dashboardId').value = ''; document.getElementById('dashboardClientId').value = state.currentClient ? state.currentClient.id : '';
-    document.getElementById('dashboardIndustryId').value = state.currentIndustry ? state.currentIndustry.id : '';
-    document.getElementById('dashboardName').value = ''; document.getElementById('dashboardUrl').value = '';
-    document.getElementById('dashboardDesc').value = ''; document.getElementById('dashboardActive').checked = true;
-    document.getElementById('dashboardModalTitle').textContent = 'Add Dashboard'; openModal('dashboardOverlay');
-  }
+function editIndustry(id,name,icon,desc){document.getElementById('industryId').value=id;document.getElementById('industryName').value=name;document.getElementById('industryIcon').value=icon;document.getElementById('industryDesc').value=desc;document.getElementById('industryModalTitle').textContent='Edit Industry';openModal('industryOverlay');}
+
+function saveIndustry(){
+  var id=document.getElementById('industryId').value;
+  var name=document.getElementById('industryName').value.trim();
+  var icon=document.getElementById('industryIcon').value.trim()||'fa-industry';
+  var desc=document.getElementById('industryDesc').value.trim();
+  if(!name){showToast('Industry name is required','error');return;}
+  var body={name:name,icon:icon,description:desc};
+  if(id)body.id=parseInt(id);
+  api(id?'PUT':'POST',id?'update_industry':'create_industry',body).then(function(data){
+    if(data.success){
+      var msg = data.status==='pending' ? 'Industry submitted for approval! It will appear once approved.' : (id?'Industry updated':'Industry created');
+      showToast(msg,'success');
+      closeModal('industryOverlay');loadStats();renderCurrentView();
+    } else showToast(data.message||'Error saving','error');
+  }).catch(function(){});
 }
 
-function editIndustry(id, name, icon, desc) {
-  document.getElementById('industryId').value = id; document.getElementById('industryName').value = name;
-  document.getElementById('industryIcon').value = icon; document.getElementById('industryDesc').value = desc;
-  document.getElementById('industryModalTitle').textContent = 'Edit Industry'; openModal('industryOverlay');
+function editFunction(id,name,icon,desc){document.getElementById('functionId').value=id;document.getElementById('functionIndustryId').value=state.currentIndustry?state.currentIndustry.id:'';document.getElementById('functionName').value=name;document.getElementById('functionIcon').value=icon||'fa-sitemap';document.getElementById('functionDesc').value=desc;document.getElementById('functionModalTitle').textContent='Edit Function';openModal('functionOverlay');}
+
+function saveFunction(){
+  var id=document.getElementById('functionId').value;
+  var indId=document.getElementById('functionIndustryId').value;
+  var name=document.getElementById('functionName').value.trim();
+  var icon=document.getElementById('functionIcon').value.trim()||'fa-sitemap';
+  var desc=document.getElementById('functionDesc').value.trim();
+  if(!name){showToast('Function name is required','error');return;}
+  var body={name:name,icon:icon,description:desc};
+  if(id)body.id=parseInt(id);else body.industry_id=parseInt(indId);
+  api(id?'PUT':'POST',id?'update_function':'create_function',body).then(function(data){
+    if(data.success){
+      showToast(data.status==='pending'?'Function submitted for approval! It will appear once approved.':(id?'Function updated':'Function created'),'success');
+      closeModal('functionOverlay');loadStats();renderCurrentView();
+    } else showToast(data.message||'Error saving','error');
+  }).catch(function(){});
 }
 
-function saveIndustry() {
-  var id   = document.getElementById('industryId').value;
-  var name = document.getElementById('industryName').value.trim();
-  var icon = document.getElementById('industryIcon').value.trim() || 'fa-industry';
-  var desc = document.getElementById('industryDesc').value.trim();
-  if (!name) { showToast('Industry name is required', 'error'); return; }
-  var body = { name: name, icon: icon, description: desc };
-  if (id) body.id = parseInt(id);
-  api(id ? 'PUT' : 'POST', id ? 'update_industry' : 'create_industry', body).then(function(data) {
-    if (data.success) { showToast(id ? 'Industry updated' : 'Industry created', 'success'); closeModal('industryOverlay'); loadStats(); renderCurrentView(); }
-    else showToast(data.message || 'Error saving', 'error');
-  }).catch(function() {});
+function editCompanySize(id,name,icon,desc){document.getElementById('companySizeId').value=id;document.getElementById('companySizeFunctionId').value=state.currentFunction?state.currentFunction.id:'';document.getElementById('companySizeIndustryId').value=state.currentIndustry?state.currentIndustry.id:'';document.getElementById('companySizeName').value=name;document.getElementById('companySizeIcon').value=icon||'fa-building';document.getElementById('companySizeDesc').value=desc;document.getElementById('companySizeModalTitle').textContent='Edit Company Size';openModal('companySizeOverlay');}
+
+function saveCompanySize(){
+  var id=document.getElementById('companySizeId').value;
+  var fnId=document.getElementById('companySizeFunctionId').value;
+  var indId=document.getElementById('companySizeIndustryId').value;
+  var name=document.getElementById('companySizeName').value.trim();
+  var icon=document.getElementById('companySizeIcon').value.trim()||'fa-building';
+  var desc=document.getElementById('companySizeDesc').value.trim();
+  if(!name){showToast('Company size label is required','error');return;}
+  var body={name:name,icon:icon,description:desc};
+  if(id)body.id=parseInt(id);else{body.function_id=parseInt(fnId);body.industry_id=parseInt(indId);}
+  api(id?'PUT':'POST',id?'update_company_size':'create_company_size',body).then(function(data){
+    if(data.success){
+      showToast(data.status==='pending'?'Company size submitted for approval! It will appear once approved.':(id?'Company size updated':'Company size created'),'success');
+      closeModal('companySizeOverlay');loadStats();renderCurrentView();
+    } else showToast(data.message||'Error saving','error');
+  }).catch(function(){});
 }
 
-function editClient(id, name, email, phone, desc) {
-  document.getElementById('clientId').value = id; document.getElementById('clientIndustryId').value = state.currentIndustry ? state.currentIndustry.id : '';
-  document.getElementById('clientName').value = name; document.getElementById('clientEmail').value = email;
-  document.getElementById('clientPhone').value = phone; document.getElementById('clientDesc').value = desc;
-  document.getElementById('clientModalTitle').textContent = 'Edit Client'; openModal('clientOverlay');
+function editDashboardEncoded(encoded){
+  var d=JSON.parse(decodeURIComponent(encoded));
+  document.getElementById('dashboardId').value=d.id;document.getElementById('dashboardCompanySizeId').value=d.company_size_id;document.getElementById('dashboardFunctionId').value=d.function_id;document.getElementById('dashboardIndustryId').value=d.industry_id;document.getElementById('dashboardName').value=d.name;document.getElementById('dashboardUrl').value=d.embed_url;document.getElementById('dashboardDesc').value=d.description||'';document.getElementById('dashboardActive').checked=d.is_active==1;
+  document.getElementById('dashboardModalTitle').textContent='Edit Dashboard';
+  openModal('dashboardOverlay');
 }
 
-function saveClient() {
-  var id    = document.getElementById('clientId').value;
-  var indId = document.getElementById('clientIndustryId').value;
-  var name  = document.getElementById('clientName').value.trim();
-  var email = document.getElementById('clientEmail').value.trim();
-  var phone = document.getElementById('clientPhone').value.trim();
-  var desc  = document.getElementById('clientDesc').value.trim();
-  if (!name) { showToast('Client name is required', 'error'); return; }
-  var body = { name: name, email: email, phone: phone, description: desc };
-  if (id) body.id = parseInt(id); else body.industry_id = parseInt(indId);
-  api(id ? 'PUT' : 'POST', id ? 'update_client' : 'create_client', body).then(function(data) {
-    if (data.success) { showToast(id ? 'Client updated' : 'Client created', 'success'); closeModal('clientOverlay'); loadStats(); renderCurrentView(); }
-    else showToast(data.message || 'Error saving', 'error');
-  }).catch(function() {});
+function saveDashboard(){
+  var id=document.getElementById('dashboardId').value;
+  var companySizeId=document.getElementById('dashboardCompanySizeId').value;
+  var functionId=document.getElementById('dashboardFunctionId').value;
+  var industryId=document.getElementById('dashboardIndustryId').value;
+  var name=document.getElementById('dashboardName').value.trim();
+  var url=document.getElementById('dashboardUrl').value.trim();
+  var desc=document.getElementById('dashboardDesc').value.trim();
+  var active=document.getElementById('dashboardActive').checked?1:0;
+  if(!name){showToast('Dashboard name is required','error');return;}
+  if(!url){showToast('Embed URL is required','error');return;}
+  var body={name:name,embed_url:url,description:desc,is_active:active};
+  if(id){body.id=parseInt(id);}else{body.company_size_id=parseInt(companySizeId);body.function_id=parseInt(functionId);body.industry_id=parseInt(industryId);}
+  api(id?'PUT':'POST',id?'update_dashboard':'create_dashboard',body).then(function(data){
+    if(data.success){
+      showToast(data.status==='pending'?'Dashboard submitted for approval! It will appear once approved.':(id?'Dashboard updated':'Dashboard created'),'success');
+      closeModal('dashboardOverlay');loadStats();renderCurrentView();
+    } else showToast(data.message||'Error saving','error');
+  }).catch(function(){});
 }
 
-function editDashboardEncoded(encoded) {
-  var d = JSON.parse(decodeURIComponent(encoded));
-  document.getElementById('dashboardId').value = d.id; document.getElementById('dashboardClientId').value = d.client_id;
-  document.getElementById('dashboardIndustryId').value = d.industry_id; document.getElementById('dashboardName').value = d.name;
-  document.getElementById('dashboardUrl').value = d.embed_url; document.getElementById('dashboardDesc').value = d.description || '';
-  document.getElementById('dashboardActive').checked = d.is_active == 1;
-  document.getElementById('dashboardModalTitle').textContent = 'Edit Dashboard'; openModal('dashboardOverlay');
-}
-
-function saveDashboard() {
-  var id         = document.getElementById('dashboardId').value;
-  var clientId   = document.getElementById('dashboardClientId').value;
-  var industryId = document.getElementById('dashboardIndustryId').value;
-  var name       = document.getElementById('dashboardName').value.trim();
-  var url        = document.getElementById('dashboardUrl').value.trim();
-  var desc       = document.getElementById('dashboardDesc').value.trim();
-  var active     = document.getElementById('dashboardActive').checked ? 1 : 0;
-  if (!name) { showToast('Dashboard name is required', 'error'); return; }
-  if (!url)  { showToast('Embed URL is required', 'error'); return; }
-  var body = { name: name, embed_url: url, description: desc, is_active: active };
-  if (id) body.id = parseInt(id); else { body.client_id = parseInt(clientId); body.industry_id = parseInt(industryId); }
-  api(id ? 'PUT' : 'POST', id ? 'update_dashboard' : 'create_dashboard', body).then(function(data) {
-    if (data.success) { showToast(id ? 'Dashboard updated' : 'Dashboard created', 'success'); closeModal('dashboardOverlay'); loadStats(); renderCurrentView(); }
-    else showToast(data.message || 'Error saving', 'error');
-  }).catch(function() {});
-}
-
-function deleteItem(type, id, name) {
-  var msgs = {
-    industry:  'Delete industry "' + name + '"? All clients, dashboards and Power BI files will be removed.',
-    client:    'Delete client "' + name + '"? All dashboards and Power BI files will be removed.',
-    dashboard: 'Delete dashboard "' + name + '"? All linked Power BI files will also be permanently removed.'
-  };
-  document.getElementById('confirmTitle').textContent = 'Delete ' + type.charAt(0).toUpperCase() + type.slice(1) + '?';
-  document.getElementById('confirmMsg').textContent   = msgs[type];
-  state.deleteCallback = function() {
-    var acts = { industry: 'delete_industry', client: 'delete_client', dashboard: 'delete_dashboard' };
-    api('DELETE', acts[type], { id: parseInt(id) }).then(function(data) {
-      if (data.success) { showToast(type.charAt(0).toUpperCase() + type.slice(1) + ' deleted', 'success'); closeModal('confirmOverlay'); loadStats(); renderCurrentView(); }
-      else showToast(data.message || 'Error deleting', 'error');
-    }).catch(function() {});
+// ── Delete ────────────────────────────────────────────────
+function deleteItem(type,id,name){
+  var msgs={industry:'Delete industry "'+name+'"? All related data will be removed.',function:'Delete function "'+name+'"? All related data will be removed.',companySize:'Delete company size "'+name+'"? All related data will be removed.',dashboard:'Delete dashboard "'+name+'"? All linked Power BI files will also be removed.'};
+  var acts={industry:'delete_industry',function:'delete_function',companySize:'delete_company_size',dashboard:'delete_dashboard'};
+  document.getElementById('confirmTitle').textContent='Delete '+type.replace(/([A-Z])/g,' $1')+'?';
+  document.getElementById('confirmMsg').textContent=msgs[type]||'This action cannot be undone.';
+  state.deleteCallback=function(){
+    api('DELETE',acts[type],{id:parseInt(id)}).then(function(data){
+      if(data.success){showToast(type.replace(/([A-Z])/g,' $1')+' deleted','success');closeModal('confirmOverlay');loadStats();renderCurrentView();}
+      else showToast(data.message||'Error deleting','error');
+    }).catch(function(){});
   };
   openModal('confirmOverlay');
 }
+function confirmDeleteAction(){if(state.deleteCallback)state.deleteCallback();}
 
-function confirmDeleteAction() { if (state.deleteCallback) state.deleteCallback(); }
+// ── Approval Queue ─────────────────────────────────────────
+function openApprovalQueueModal(){
+  closeProfileDropdown();
+  openModal('approvalQueueOverlay');
+  loadApprovalQueue();
+}
 
-// ══════════════════════════════════════════════════════════
-//  USER MANAGEMENT
-// ══════════════════════════════════════════════════════════
-function openUsersModal() { openModal('usersOverlay'); loadUsers(); }
+function loadApprovalQueue(){
+  var listEl=document.getElementById('approvalQueueList');
+  listEl.innerHTML='<div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading submissions…</div>';
+  api('GET','get_pending_items').then(function(data){
+    var items=data.data||[];
 
-function loadUsers() {
-  var el = document.getElementById('usersList');
-  el.innerHTML = '<div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading users…</div>';
-  api('GET', 'get_users').then(function(data) {
-    var users = data.data || [];
-    if (!users.length) { el.innerHTML = '<div class="pbix-empty">No users found.</div>'; return; }
-    var html = '';
-    users.forEach(function(u) {
-      var roleLabel = u.role === 'admin' ? 'Admin' : 'BI Developer';
-      html += '<div class="user-row">' +
-        '<div class="user-avatar-sm">' + esc(u.name.charAt(0).toUpperCase()) + '</div>' +
-        '<div class="user-info"><div class="user-name">' + esc(u.name) + '</div><div class="user-email">' + esc(u.email) + '</div></div>' +
+    // Update badge in modal header
+    var badge = document.getElementById('aqModalBadge');
+    if(badge) { badge.textContent = items.length; badge.style.display = items.length > 0 ? 'inline-flex' : 'none'; }
+
+    if(!items.length){
+      listEl.innerHTML='<div class="aq-empty"><i class="fa fa-check-circle"></i><div class="aq-empty-title">All clear!</div><div class="aq-empty-sub">No pending submissions at this time.</div></div>';
+      return;
+    }
+
+    var typeColors={industry:'#2d4cc8',function:'#0c7c59',company_size:'#9c36b5',dashboard:'#e67700'};
+    var typeBg   ={industry:'#eef1fd',function:'#e6f5ef',company_size:'#f5eaf9',dashboard:'#fff4ed'};
+    var typeIcons={industry:'fa-industry',function:'fa-sitemap',company_size:'fa-building',dashboard:'fa-chart-bar'};
+
+    // ✅ Approval Queue now uses CARD layout (not table) for better readability
+    var html = '<div class="aq-cards-grid">';
+
+    items.forEach(function(item, idx){
+      var clr  = typeColors[item.item_type] || '#2d4cc8';
+      var bg   = typeBg[item.item_type]    || '#eef1fd';
+      var icon = typeIcons[item.item_type] || 'fa-tag';
+      var submitterInitial = (item.submitted_by_name || '?').charAt(0).toUpperCase();
+      var descHtml = item.description
+        ? '<div class="aq-card-desc">'+esc(item.description)+'</div>'
+        : '<div class="aq-card-desc aq-no-desc-text">No description provided</div>';
+      var urlHtml = item.embed_url
+        ? '<a href="'+esc(item.embed_url)+'" target="_blank" class="aq-card-url" onclick="event.stopPropagation()"><i class="fa fa-external-link-alt"></i> Preview URL</a>'
+        : '';
+
+      html += '<div class="aq-card" id="aqrow-'+item.item_type+'-'+item.id+'">' +
+
+        // Card top strip in type colour
+        '<div class="aq-card-strip" style="background:linear-gradient(90deg,'+clr+','+clr+'99);"></div>' +
+
+        '<div class="aq-card-body">' +
+
+          // Row 1 — type badge + index + date
+          '<div class="aq-card-row aq-card-meta-row">' +
+            '<span class="aq-type-badge" style="background:'+bg+';color:'+clr+';border-color:'+clr+'33;">' +
+              '<i class="fa '+icon+'"></i> '+esc(item.item_label)+
+            '</span>' +
+            '<span class="aq-card-num">#'+(idx+1)+'</span>' +
+          '</div>' +
+
+          // Row 2 — item name
+          '<div class="aq-card-name">'+esc(item.name)+'</div>' +
+          urlHtml +
+
+          // Row 3 — description
+          descHtml +
+
+          // Row 4 — submitted by
+          '<div class="aq-card-submitter">' +
+            '<div class="aq-avatar">'+esc(submitterInitial)+'</div>' +
+            '<div class="aq-submitter-info">' +
+              '<span class="aq-submitter-name">'+esc(item.submitted_by_name||'Unknown')+'</span>' +
+              '<span class="aq-submitter-email">'+esc(item.submitted_by_email||'')+'</span>' +
+            '</div>' +
+            '<span class="aq-card-date"><i class="fa fa-clock"></i> '+formatDate(item.created_at)+'</span>' +
+          '</div>' +
+
+        '</div>' +
+
+        // Card footer — action buttons
+        '<div class="aq-card-footer">' +
+          '<button class="btn-aq-reject" onclick="openRejectModal(\''+item.item_type+'\','+item.id+',\''+esc(item.name)+'\')"><i class="fa fa-times"></i> Reject</button>' +
+          '<button class="btn-aq-approve" onclick="reviewItem(\'approve\',\''+item.item_type+'\','+item.id+')"><i class="fa fa-check"></i> Approve</button>' +
+        '</div>' +
+
+      '</div>';
+    });
+
+    html += '</div>';
+    listEl.innerHTML = html;
+  }).catch(function(){listEl.innerHTML='<div class="aq-empty"><i class="fa fa-triangle-exclamation" style="color:#e67700;"></i><div class="aq-empty-title">Error loading submissions</div><div class="aq-empty-sub">Please try again.</div></div>';});
+}
+
+function reviewItem(action, itemType, id) {
+  api('POST',action+'_item',{item_type:itemType,id:id}).then(function(data){
+    if(data.success){
+      showToast(action==='approve'?'Approved and published!':'Submission rejected','success');
+      var row=document.getElementById('aqrow-'+itemType+'-'+id);
+      if(row){
+        row.style.transition='opacity .3s,transform .3s';
+        row.style.opacity='0';
+        row.style.transform='translateY(-8px) scale(.97)';
+        setTimeout(function(){if(row.parentNode)row.parentNode.removeChild(row);checkEmptyQueue();},300);
+      }
+      state.pendingCount=Math.max(0,state.pendingCount-1);
+      updatePendingBadge();
+      if(action==='approve') renderCurrentView();
+
+      // ✅ Trigger notification for contributor — bell badge updates on next poll
+      loadNotifications();
+    } else showToast(data.message||'Error','error');
+  }).catch(function(){});
+}
+
+function checkEmptyQueue(){
+  var grid = document.querySelector('.aq-cards-grid');
+  if (grid && grid.children.length === 0) {
+    document.getElementById('approvalQueueList').innerHTML='<div class="aq-empty"><i class="fa fa-check-circle"></i><div class="aq-empty-title">All clear!</div><div class="aq-empty-sub">No pending submissions at this time.</div></div>';
+    var badge = document.getElementById('aqModalBadge');
+    if(badge) badge.style.display='none';
+  } else if (grid) {
+    var badge = document.getElementById('aqModalBadge');
+    if(badge) { badge.textContent = grid.children.length; }
+  }
+}
+
+var _rejectItemType='', _rejectItemId=0;
+function openRejectModal(itemType, id, name){
+  _rejectItemType=itemType; _rejectItemId=id;
+  document.getElementById('rejectItemName').textContent=name;
+  document.getElementById('rejectReason').value='';
+  openModal('rejectOverlay');
+}
+function confirmReject(){
+  var reason=document.getElementById('rejectReason').value.trim();
+  api('POST','reject_item',{item_type:_rejectItemType,id:_rejectItemId,reason:reason}).then(function(data){
+    if(data.success){
+      showToast('Submission rejected','success');
+      closeModal('rejectOverlay');
+      var row=document.getElementById('aqrow-'+_rejectItemType+'-'+_rejectItemId);
+      if(row){
+        row.style.transition='opacity .3s';
+        row.style.opacity='0';
+        setTimeout(function(){if(row.parentNode)row.parentNode.removeChild(row);checkEmptyQueue();},300);
+      }
+      state.pendingCount=Math.max(0,state.pendingCount-1);
+      updatePendingBadge();
+      // ✅ Reload notifications so contributor sees the rejection on their bell
+      loadNotifications();
+    } else showToast(data.message||'Error','error');
+  }).catch(function(){});
+}
+
+// ── My Submissions ─────────────────────────────────────────
+function openMySubmissionsModal(){
+  closeProfileDropdown();
+  openModal('mySubmissionsOverlay');
+  loadMySubmissions();
+}
+function loadMySubmissions(){
+  var listEl=document.getElementById('mySubmissionsList');
+  listEl.innerHTML='<div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading…</div>';
+  api('GET','get_my_submissions').then(function(data){
+    var items=data.data||[];
+
+    // Update submissions badge in dropdown
+    var sBadge = document.getElementById('submissionsBadge');
+    var pendingCount = items.filter(function(i){ return i.approval_status==='pending'; }).length;
+    if(sBadge){
+      if(pendingCount>0){ sBadge.textContent=pendingCount; sBadge.style.display='flex'; }
+      else { sBadge.style.display='none'; }
+    }
+
+    if(!items.length){
+      listEl.innerHTML='<div class="aq-empty"><i class="fa fa-inbox"></i><div class="aq-empty-title">No submissions yet</div><div class="aq-empty-sub">Your pending or rejected submissions will appear here.</div></div>';
+      return;
+    }
+    var typeLabels={industry:'Industry',function:'Function',company_size:'Company Size',dashboard:'Dashboard'};
+    var html='<div class="aq-table-wrap"><table class="aq-table"><thead><tr>'+
+      '<th>#</th><th>Type</th><th>Name</th><th>Status</th><th>Submitted On</th><th>Rejection Reason</th>'+
+      '</tr></thead><tbody>';
+    items.forEach(function(item, idx){
+      var isPending=item.approval_status==='pending';
+      var statusBadge=isPending
+        ? '<span class="aq-status-badge pending"><i class="fa fa-clock"></i> Pending</span>'
+        : '<span class="aq-status-badge rejected"><i class="fa fa-times-circle"></i> Rejected</span>';
+      html+='<tr>'+
+        '<td class="aq-num">'+(idx+1)+'</td>'+
+        '<td><span class="aq-type-label">'+esc(typeLabels[item.item_type]||item.item_type)+'</span></td>'+
+        '<td><span class="aq-item-name">'+esc(item.name)+'</span>'+(item.description?'<br><span class="aq-desc">'+esc(item.description)+'</span>':'')+'</td>'+
+        '<td>'+statusBadge+'</td>'+
+        '<td class="aq-date">'+formatDate(item.created_at)+'</td>'+
+        '<td>'+(item.rejection_reason?'<span class="aq-reject-reason">'+esc(item.rejection_reason)+'</span>':'<span class="aq-no-desc">—</span>')+'</td>'+
+      '</tr>';
+    });
+    html+='</tbody></table></div>';
+    listEl.innerHTML=html;
+  }).catch(function(){listEl.innerHTML='<div class="aq-empty"><i class="fa fa-triangle-exclamation" style="color:#e67700;"></i><div class="aq-empty-title">Error loading submissions</div></div>';});
+}
+
+// ── Notifications Modal ────────────────────────────────────
+function openNotifModal(){
+  openModal('notifOverlay');
+  loadNotifList();
+  // Mark as read and clear bell badge
+  api('POST','mark_notifications_read').then(function(){
+    updateNotifBellBadge(0);
+  }).catch(function(){});
+}
+
+function loadNotifList(){
+  var listEl=document.getElementById('notifList');
+  listEl.innerHTML='<div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading…</div>';
+  api('GET','get_notifications').then(function(data){
+    var items=data.data||[];
+    if(!items.length){
+      listEl.innerHTML='<div class="aq-empty"><i class="fa fa-bell-slash"></i><div class="aq-empty-title">No notifications yet</div><div class="aq-empty-sub">Activity updates will appear here.</div></div>';
+      return;
+    }
+    var actionIcons={submitted:'fa-paper-plane',approved:'fa-check-circle',rejected:'fa-times-circle'};
+    var actionColors={submitted:'#2d4cc8',approved:'#2f9e44',rejected:'#c92a2a'};
+    var actionBg={submitted:'#eef1fd',approved:'#e9faf0',rejected:'#fff0f0'};
+    var actionLabels={submitted:'Submitted',approved:'Approved',rejected:'Rejected'};
+    var html='<div class="aq-table-wrap"><table class="aq-table notif-table"><thead><tr>'+
+      '<th>#</th><th>Item</th><th>Status</th><th>Message</th><th>Date</th>'+
+      '</tr></thead><tbody>';
+    items.forEach(function(n, idx){
+      var clr=actionColors[n.action]||'#2d4cc8';
+      var bg=actionBg[n.action]||'#eef1fd';
+      var icon=actionIcons[n.action]||'fa-bell';
+      var unreadDot=!n.is_read?'<span class="notif-unread-dot"></span>':'';
+      html+='<tr class="'+(n.is_read?'':'notif-row-unread')+'">'+
+        '<td class="aq-num">'+(idx+1)+unreadDot+'</td>'+
+        '<td><span class="aq-item-name">'+esc(n.item_name)+'</span><br><span class="aq-type-label">'+esc((n.item_type||'').replace('_',' '))+'</span></td>'+
+        '<td><span class="aq-status-badge" style="background:'+bg+';color:'+clr+';border-color:'+clr+'33;"><i class="fa '+icon+'"></i> '+esc(actionLabels[n.action]||n.action)+'</span></td>'+
+        '<td><span class="aq-desc">'+esc(n.message)+'</span></td>'+
+        '<td class="aq-date">'+formatDate(n.created_at)+'</td>'+
+      '</tr>';
+    });
+    html+='</tbody></table></div>';
+    listEl.innerHTML=html;
+  }).catch(function(){listEl.innerHTML='<div class="aq-empty"><i class="fa fa-triangle-exclamation" style="color:#e67700;"></i><div class="aq-empty-title">Error loading notifications</div></div>';});
+}
+
+// ── User Management ────────────────────────────────────────
+function openUsersModal(){openModal('usersOverlay');loadUsers();}
+
+function loadUsers(){
+  var el=document.getElementById('usersList');
+  el.innerHTML='<div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading users…</div>';
+  api('GET','get_users').then(function(data){
+    var users=data.data||[];
+    if(!users.length){el.innerHTML='<div class="pbix-empty">No users found.</div>';return;}
+    var roleLabels={super_admin:'Super Admin',contributor:'Contributor',bi_developer:'BI Developer'};
+    var html='';
+    users.forEach(function(u){
+      html+='<div class="user-row">' +
+        '<div class="user-avatar-sm">'+esc(u.name.charAt(0).toUpperCase())+'</div>' +
+        '<div class="user-info"><div class="user-name">'+esc(u.name)+'</div><div class="user-email">'+esc(u.email)+'</div></div>' +
         '<div class="user-actions">' +
-          '<span class="badge-role ' + esc(u.role) + '">' + roleLabel + '</span>' +
-          '<span class="' + (u.is_active ? 'badge-active' : 'badge-inactive') + '">' + (u.is_active ? 'Active' : 'Inactive') + '</span>' +
-          '<button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="editUser(' + u.id + ',\'' + esc(u.name) + '\',\'' + esc(u.role) + '\',' + u.is_active + ')"><i class="fa fa-pen"></i></button>' +
-          '<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="deleteUser(' + u.id + ',\'' + esc(u.name) + '\')"><i class="fa fa-trash"></i></button>' +
+          '<span class="badge-role '+esc(u.role)+'">'+roleLabels[u.role]||u.role+'</span>' +
+          '<span class="'+(u.is_active?'badge-active':'badge-inactive')+'">'+(u.is_active?'Active':'Inactive')+'</span>' +
+          '<button class="btn btn-secondary btn-icon btn-sm" title="Edit" onclick="editUser('+u.id+',\''+esc(u.name)+'\',\''+esc(u.role)+'\','+u.is_active+')"><i class="fa fa-pen"></i></button>' +
+          '<button class="btn btn-danger btn-icon btn-sm" title="Delete" onclick="deleteUser('+u.id+',\''+esc(u.name)+'\')"><i class="fa fa-trash"></i></button>' +
         '</div>' +
       '</div>';
     });
-    el.innerHTML = html;
-  }).catch(function() { el.innerHTML = '<div class="pbix-empty">Error loading users.</div>'; });
+    el.innerHTML=html;
+  }).catch(function(){el.innerHTML='<div class="pbix-empty">Error loading users.</div>';});
 }
 
-function openAddUserModal() {
-  document.getElementById('userFormId').value    = '';
-  document.getElementById('userFormName').value  = '';
-  document.getElementById('userFormEmail').value = '';
-  document.getElementById('userFormRole').value  = 'bi_developer';
-  document.getElementById('userFormTitle').textContent = 'Add User';
-  document.getElementById('userEmailGroup').style.display  = 'block';
-  document.getElementById('userActiveGroup').style.display = 'none';
+function openAddUserModal(){
+  document.getElementById('userFormId').value='';document.getElementById('userFormName').value='';document.getElementById('userFormEmail').value='';document.getElementById('userFormRole').value='bi_developer';
+  document.getElementById('userFormTitle').textContent='Add User';
+  document.getElementById('userEmailGroup').style.display='block';document.getElementById('userActiveGroup').style.display='none';
   openModal('userFormOverlay');
 }
-
-function editUser(id, name, role, isActive) {
-  document.getElementById('userFormId').value       = id;
-  document.getElementById('userFormName').value     = name;
-  document.getElementById('userFormRole').value     = role;
-  document.getElementById('userFormActive').checked = !!isActive;
-  document.getElementById('userFormTitle').textContent = 'Edit User';
-  document.getElementById('userEmailGroup').style.display  = 'none';
-  document.getElementById('userActiveGroup').style.display = 'block';
+function editUser(id,name,role,isActive){
+  document.getElementById('userFormId').value=id;document.getElementById('userFormName').value=name;document.getElementById('userFormRole').value=role;document.getElementById('userFormActive').checked=!!isActive;
+  document.getElementById('userFormTitle').textContent='Edit User';
+  document.getElementById('userEmailGroup').style.display='none';document.getElementById('userActiveGroup').style.display='block';
   openModal('userFormOverlay');
 }
-
-function saveUser() {
-  var id     = document.getElementById('userFormId').value;
-  var name   = document.getElementById('userFormName').value.trim();
-  var email  = document.getElementById('userFormEmail').value.trim();
-  var role   = document.getElementById('userFormRole').value;
-  var active = document.getElementById('userFormActive').checked ? 1 : 0;
-  if (!name) { showToast('Name is required', 'error'); return; }
-  if (!id && !email) { showToast('Email is required', 'error'); return; }
-  var body = { name: name, role: role };
-  if (id) { body.id = parseInt(id); body.is_active = active; }
-  else    { body.email = email.toLowerCase(); }
-  api(id ? 'PUT' : 'POST', id ? 'update_user' : 'create_user', body).then(function(data) {
-    if (data.success) { showToast(id ? 'User updated' : 'User added', 'success'); closeModal('userFormOverlay'); loadUsers(); }
-    else showToast(data.message || 'Error saving', 'error');
-  }).catch(function() {});
+function saveUser(){
+  var id=document.getElementById('userFormId').value;
+  var name=document.getElementById('userFormName').value.trim();
+  var email=document.getElementById('userFormEmail').value.trim();
+  var role=document.getElementById('userFormRole').value;
+  var active=document.getElementById('userFormActive').checked?1:0;
+  if(!name){showToast('Name is required','error');return;}
+  if(!id&&!email){showToast('Email is required','error');return;}
+  var body={name:name,role:role};
+  if(id){body.id=parseInt(id);body.is_active=active;}else{body.email=email.toLowerCase();}
+  api(id?'PUT':'POST',id?'update_user':'create_user',body).then(function(data){
+    if(data.success){showToast(id?'User updated':'User added','success');closeModal('userFormOverlay');loadUsers();}
+    else showToast(data.message||'Error saving','error');
+  }).catch(function(){});
 }
-
-function deleteUser(id, name) {
-  document.getElementById('confirmTitle').textContent = 'Delete User?';
-  document.getElementById('confirmMsg').textContent   = 'Remove "' + name + '" from the system? They will no longer be able to login.';
-  state.deleteCallback = function() {
-    api('DELETE', 'delete_user', { id: parseInt(id) }).then(function(data) {
-      if (data.success) { showToast('User removed', 'success'); closeModal('confirmOverlay'); loadUsers(); }
-      else showToast(data.message || 'Error deleting', 'error');
-    }).catch(function() {});
+function deleteUser(id,name){
+  document.getElementById('confirmTitle').textContent='Delete User?';
+  document.getElementById('confirmMsg').textContent='Remove "'+name+'" from the system?';
+  state.deleteCallback=function(){
+    api('DELETE','delete_user',{id:parseInt(id)}).then(function(data){
+      if(data.success){showToast('User removed','success');closeModal('confirmOverlay');loadUsers();}
+      else showToast(data.message||'Error deleting','error');
+    }).catch(function(){});
   };
   openModal('confirmOverlay');
 }
 
-// ══════════════════════════════════════════════════════════
-//  POWER BI FILES MANAGER
-// ══════════════════════════════════════════════════════════
-function openPbixModal(dashboardId, dashboardName) {
-  state.pbixCurrentDashboardId = dashboardId;
-  state.pbixSelectedFile       = null;
-  document.getElementById('pbixModalDashboardName').textContent = dashboardName + ' — PBI Files';
-  var uploadSection = document.getElementById('pbixUploadSection');
-  var divider       = document.getElementById('pbixDivider');
-  uploadSection.style.display = state.isAdmin ? 'block' : 'none';
-  divider.style.display       = state.isAdmin ? 'block' : 'none';
-  cancelPbixUpload();
-  openModal('pbixOverlay');
-  loadPbixFiles();
+// ── Power BI Files ─────────────────────────────────────────
+function openPbixModal(dashboardId,dashboardName){
+  state.pbixCurrentDashboardId=dashboardId;state.pbixSelectedFile=null;
+  document.getElementById('pbixModalDashboardName').textContent=dashboardName+' — PBI Files';
+  var uploadSection=document.getElementById('pbixUploadSection');var divider=document.getElementById('pbixDivider');
+  uploadSection.style.display=state.isSuperAdmin?'block':'none';divider.style.display=state.isSuperAdmin?'block':'none';
+  cancelPbixUpload();openModal('pbixOverlay');loadPbixFiles();
 }
-
-function loadPbixFiles() {
-  var listEl = document.getElementById('pbixFileList');
-  listEl.innerHTML = '<div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading files…</div>';
-  fetch(API_URL + '?action=get_pbix_files&dashboard_id=' + state.pbixCurrentDashboardId)
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      if (!data.success) { listEl.innerHTML = '<div class="pbix-empty"><i class="fa fa-triangle-exclamation"></i> ' + (data.message || 'Error loading') + '</div>'; return; }
-      var files = data.data || [];
-      if (!files.length) {
-        listEl.innerHTML = '<div class="pbix-empty"><i class="fa fa-file-circle-xmark"></i><br>No Power BI files uploaded yet.' +
-          (state.isAdmin ? '<br><span style="font-size:12px;color:var(--text-muted);">Use the upload area above to add .pbix files.</span>' : '') + '</div>';
-        return;
-      }
-      var html = '<div class="pbix-file-list">';
-      files.forEach(function(f) {
-        var ext = f.original_name.split('.').pop().toLowerCase();
-        var extColor = ext === 'pbit' ? '#7048e8' : '#f76707';
-        html += '<div class="pbix-file-row">' +
-          '<div class="pbix-file-icon" style="color:' + extColor + '"><i class="fa fa-file-powerpoint"></i></div>' +
-          '<div class="pbix-file-info">' +
-            '<div class="pbix-file-name">' + esc(f.display_name) + '</div>' +
-            '<div class="pbix-file-meta"><span>' + esc(f.original_name) + '</span><span class="pbix-dot">·</span><span>' + esc(f.file_size_kb) + '</span><span class="pbix-dot">·</span><span>' + esc(f.uploaded_by_name || 'Admin') + '</span><span class="pbix-dot">·</span><span>' + formatDate(f.created_at) + '</span></div>' +
-            (f.description ? '<div class="pbix-file-desc">' + esc(f.description) + '</div>' : '') +
-          '</div>' +
-          '<div class="pbix-file-actions">' +
-            '<a class="btn btn-primary btn-sm" href="' + API_URL + '?action=download_pbix&id=' + f.id + '" title="Download"><i class="fa fa-download"></i> Open File</a>' +
-            (state.isAdmin
-              ? '<button class="btn btn-secondary btn-icon btn-sm" onclick="openPbixEdit(' + f.id + ',\'' + esc(f.display_name) + '\',\'' + esc(f.description || '') + '\')"><i class="fa fa-pen"></i></button>' +
-                '<button class="btn btn-danger btn-icon btn-sm" onclick="deletePbixFile(' + f.id + ',\'' + esc(f.display_name) + '\')"><i class="fa fa-trash"></i></button>'
-              : '') +
-          '</div>' +
+function loadPbixFiles(){
+  var listEl=document.getElementById('pbixFileList');
+  listEl.innerHTML='<div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading files…</div>';
+  fetch(API_URL+'?action=get_pbix_files&dashboard_id='+state.pbixCurrentDashboardId)
+    .then(function(r){return r.json();})
+    .then(function(data){
+      if(!data.success){listEl.innerHTML='<div class="pbix-empty"><i class="fa fa-triangle-exclamation"></i> '+(data.message||'Error loading')+'</div>';return;}
+      var files=data.data||[];
+      if(!files.length){listEl.innerHTML='<div class="pbix-empty"><i class="fa fa-file-circle-xmark"></i><br>No Power BI files uploaded yet.'+(state.isSuperAdmin?'<br><span style="font-size:12px;color:var(--text-muted);">Use the upload area above to add .pbix files.</span>':'')+'</div>';return;}
+      var html='<div class="pbix-file-list">';
+      files.forEach(function(f){
+        var ext=f.original_name.split('.').pop().toLowerCase();var extColor=ext==='pbit'?'#7048e8':'#f76707';
+        html+='<div class="pbix-file-row">' +
+          '<div class="pbix-file-icon" style="color:'+extColor+'"><i class="fa fa-file-powerpoint"></i></div>' +
+          '<div class="pbix-file-info"><div class="pbix-file-name">'+esc(f.display_name)+'</div><div class="pbix-file-meta"><span>'+esc(f.original_name)+'</span><span class="pbix-dot">·</span><span>'+esc(f.file_size_kb)+'</span><span class="pbix-dot">·</span><span>'+esc(f.uploaded_by_name||'Admin')+'</span><span class="pbix-dot">·</span><span>'+formatDate(f.created_at)+'</span></div>'+(f.description?'<div class="pbix-file-desc">'+esc(f.description)+'</div>':'')+'</div>' +
+          '<div class="pbix-file-actions"><a class="btn btn-primary btn-sm" href="'+API_URL+'?action=download_pbix&id='+f.id+'" title="Download"><i class="fa fa-download"></i> Open File</a>'+(state.isSuperAdmin?'<button class="btn btn-secondary btn-icon btn-sm" onclick="openPbixEdit('+f.id+',\''+esc(f.display_name)+'\',\''+esc(f.description||'')+'\')"><i class="fa fa-pen"></i></button><button class="btn btn-danger btn-icon btn-sm" onclick="deletePbixFile('+f.id+',\''+esc(f.display_name)+'\')"><i class="fa fa-trash"></i></button>':'')+'</div>' +
         '</div>';
       });
-      html += '</div>';
-      listEl.innerHTML = html;
-    }).catch(function() { listEl.innerHTML = '<div class="pbix-empty"><i class="fa fa-triangle-exclamation"></i> Network error loading files.</div>'; });
+      html+='</div>';listEl.innerHTML=html;
+    }).catch(function(){listEl.innerHTML='<div class="pbix-empty"><i class="fa fa-triangle-exclamation"></i> Network error loading files.</div>';});
 }
-
-function onPbixFileSelected(input) {
-  var file = input.files[0]; if (!file) return;
-  var ext = file.name.split('.').pop().toLowerCase();
-  if (!['pbix','pbit'].includes(ext)) { showToast('Only .pbix and .pbit files are allowed.', 'error'); input.value = ''; return; }
-  if (file.size > 2 * 1024 * 1024 * 1024) { showToast('File too large. Max 2 GB.', 'error'); input.value = ''; return; }
-  state.pbixSelectedFile = file;
-  document.getElementById('pbixDisplayName').value = file.name.replace(/\.(pbix|pbit)$/i, '');
-  var kb = file.size >= 1048576 ? (file.size / 1048576).toFixed(1) + ' MB' : Math.round(file.size / 1024) + ' KB';
-  document.getElementById('pbixSelectedFile').innerHTML = '<i class="fa fa-file-powerpoint" style="color:#f76707;font-size:18px;"></i><div><div style="font-weight:700;font-size:13px;">' + esc(file.name) + '</div><div style="font-size:11px;color:var(--text-muted);">' + kb + '</div></div>';
-  document.getElementById('pbixUploadForm').style.display = 'block';
-  document.getElementById('pbixUploadArea').style.display = 'none';
+function onPbixFileSelected(input){
+  var file=input.files[0];if(!file)return;
+  var ext=file.name.split('.').pop().toLowerCase();
+  if(!['pbix','pbit'].includes(ext)){showToast('Only .pbix and .pbit files are allowed.','error');input.value='';return;}
+  if(file.size>2*1024*1024*1024){showToast('File too large. Max 2 GB.','error');input.value='';return;}
+  state.pbixSelectedFile=file;
+  document.getElementById('pbixDisplayName').value=file.name.replace(/\.(pbix|pbit)$/i,'');
+  var kb=file.size>=1048576?(file.size/1048576).toFixed(1)+' MB':Math.round(file.size/1024)+' KB';
+  document.getElementById('pbixSelectedFile').innerHTML='<i class="fa fa-file-powerpoint" style="color:#f76707;font-size:18px;"></i><div><div style="font-weight:700;font-size:13px;">'+esc(file.name)+'</div><div style="font-size:11px;color:var(--text-muted);">'+kb+'</div></div>';
+  document.getElementById('pbixUploadForm').style.display='block';document.getElementById('pbixUploadArea').style.display='none';
 }
-
-function cancelPbixUpload() {
-  state.pbixSelectedFile = null;
-  document.getElementById('pbixFileInput').value = '';
-  document.getElementById('pbixDisplayName').value = '';
-  document.getElementById('pbixDescription').value = '';
-  document.getElementById('pbixUploadForm').style.display = 'none';
-  document.getElementById('pbixUploadArea').style.display = 'block';
+function cancelPbixUpload(){state.pbixSelectedFile=null;document.getElementById('pbixFileInput').value='';document.getElementById('pbixDisplayName').value='';document.getElementById('pbixDescription').value='';document.getElementById('pbixUploadForm').style.display='none';document.getElementById('pbixUploadArea').style.display='block';}
+function uploadPbixFile(){
+  if(!state.pbixSelectedFile){showToast('No file selected.','error');return;}
+  var displayName=document.getElementById('pbixDisplayName').value.trim();
+  if(!displayName){showToast('Please enter a display name.','error');return;}
+  var btn=document.getElementById('pbixUploadBtn');btn.disabled=true;btn.innerHTML='<i class="fa fa-spinner fa-spin"></i> Uploading…';
+  var fd=new FormData();fd.append('dashboard_id',state.pbixCurrentDashboardId);fd.append('display_name',displayName);fd.append('description',document.getElementById('pbixDescription').value.trim());fd.append('pbix_file',state.pbixSelectedFile);
+  fetch(API_URL+'?action=upload_pbix_file',{method:'POST',body:fd}).then(function(r){return r.json();}).then(function(data){
+    btn.disabled=false;btn.innerHTML='<i class="fa fa-upload"></i> Upload File';
+    if(data.success){showToast('File uploaded successfully!','success');cancelPbixUpload();loadPbixFiles();renderCurrentView();}
+    else showToast(data.message||'Upload failed','error');
+  }).catch(function(){btn.disabled=false;btn.innerHTML='<i class="fa fa-upload"></i> Upload File';showToast('Upload failed.','error');});
 }
-
-function uploadPbixFile() {
-  if (!state.pbixSelectedFile) { showToast('No file selected.', 'error'); return; }
-  var displayName = document.getElementById('pbixDisplayName').value.trim();
-  if (!displayName) { showToast('Please enter a display name.', 'error'); return; }
-  var btn = document.getElementById('pbixUploadBtn');
-  btn.disabled = true; btn.innerHTML = '<i class="fa fa-spinner fa-spin"></i> Uploading…';
-  var fd = new FormData();
-  fd.append('dashboard_id',  state.pbixCurrentDashboardId);
-  fd.append('display_name',  displayName);
-  fd.append('description',   document.getElementById('pbixDescription').value.trim());
-  fd.append('pbix_file',     state.pbixSelectedFile);
-  fetch(API_URL + '?action=upload_pbix_file', { method: 'POST', body: fd })
-    .then(function(r) { return r.json(); })
-    .then(function(data) {
-      btn.disabled = false; btn.innerHTML = '<i class="fa fa-upload"></i> Upload File';
-      if (data.success) { showToast('File uploaded successfully!', 'success'); cancelPbixUpload(); loadPbixFiles(); renderCurrentView(); }
-      else showToast(data.message || 'Upload failed', 'error');
-    }).catch(function() { btn.disabled = false; btn.innerHTML = '<i class="fa fa-upload"></i> Upload File'; showToast('Upload failed.', 'error'); });
+function openPbixEdit(id,displayName,description){document.getElementById('pbixEditId').value=id;document.getElementById('pbixEditDisplayName').value=displayName;document.getElementById('pbixEditDescription').value=description;openModal('pbixEditOverlay');}
+function savePbixEdit(){
+  var id=document.getElementById('pbixEditId').value;var name=document.getElementById('pbixEditDisplayName').value.trim();var desc=document.getElementById('pbixEditDescription').value.trim();
+  if(!name){showToast('Display name is required.','error');return;}
+  api('PUT','update_pbix_file',{id:parseInt(id),display_name:name,description:desc}).then(function(data){
+    if(data.success){showToast('File info updated.','success');closeModal('pbixEditOverlay');loadPbixFiles();}
+    else showToast(data.message||'Error saving','error');
+  }).catch(function(){});
 }
-
-function openPbixEdit(id, displayName, description) {
-  document.getElementById('pbixEditId').value = id;
-  document.getElementById('pbixEditDisplayName').value = displayName;
-  document.getElementById('pbixEditDescription').value = description;
-  openModal('pbixEditOverlay');
-}
-
-function savePbixEdit() {
-  var id   = document.getElementById('pbixEditId').value;
-  var name = document.getElementById('pbixEditDisplayName').value.trim();
-  var desc = document.getElementById('pbixEditDescription').value.trim();
-  if (!name) { showToast('Display name is required.', 'error'); return; }
-  api('PUT', 'update_pbix_file', { id: parseInt(id), display_name: name, description: desc }).then(function(data) {
-    if (data.success) { showToast('File info updated.', 'success'); closeModal('pbixEditOverlay'); loadPbixFiles(); }
-    else showToast(data.message || 'Error saving', 'error');
-  }).catch(function() {});
-}
-
-function deletePbixFile(id, name) {
-  document.getElementById('confirmTitle').textContent = 'Delete Power BI File?';
-  document.getElementById('confirmMsg').textContent   = 'Delete "' + name + '"? The file will be permanently removed.';
-  state.deleteCallback = function() {
-    api('DELETE', 'delete_pbix_file', { id: parseInt(id) }).then(function(data) {
-      if (data.success) { showToast('File deleted.', 'success'); closeModal('confirmOverlay'); loadPbixFiles(); renderCurrentView(); }
-      else showToast(data.message || 'Error deleting', 'error');
-    }).catch(function() {});
+function deletePbixFile(id,name){
+  document.getElementById('confirmTitle').textContent='Delete Power BI File?';
+  document.getElementById('confirmMsg').textContent='Delete "'+name+'"? The file will be permanently removed.';
+  state.deleteCallback=function(){
+    api('DELETE','delete_pbix_file',{id:parseInt(id)}).then(function(data){
+      if(data.success){showToast('File deleted.','success');closeModal('confirmOverlay');loadPbixFiles();renderCurrentView();}
+      else showToast(data.message||'Error deleting','error');
+    }).catch(function(){});
   };
   openModal('confirmOverlay');
 }
-
-function setupPbixDragDrop() {
-  var area = document.getElementById('pbixUploadArea'); if (!area) return;
-  area.addEventListener('dragover',  function(e) { e.preventDefault(); area.classList.add('drag-over'); });
-  area.addEventListener('dragleave', function()  { area.classList.remove('drag-over'); });
-  area.addEventListener('drop',      function(e) {
-    e.preventDefault(); area.classList.remove('drag-over');
-    var file = e.dataTransfer.files[0]; if (!file) return;
-    var dt = new DataTransfer(); dt.items.add(file);
-    var input = document.getElementById('pbixFileInput'); input.files = dt.files; onPbixFileSelected(input);
-  });
+function setupPbixDragDrop(){
+  var area=document.getElementById('pbixUploadArea');if(!area)return;
+  area.addEventListener('dragover',function(e){e.preventDefault();area.classList.add('drag-over');});
+  area.addEventListener('dragleave',function(){area.classList.remove('drag-over');});
+  area.addEventListener('drop',function(e){e.preventDefault();area.classList.remove('drag-over');var file=e.dataTransfer.files[0];if(!file)return;var dt=new DataTransfer();dt.items.add(file);var input=document.getElementById('pbixFileInput');input.files=dt.files;onPbixFileSelected(input);});
 }
 
-// ── Modals ────────────────────────────────────────────────
-function openModal(id)  { document.getElementById(id).classList.add('open');    document.body.style.overflow = 'hidden'; }
-function closeModal(id) { document.getElementById(id).classList.remove('open'); document.body.style.overflow = ''; }
+// ── Modals ─────────────────────────────────────────────────
+function openModal(id){document.getElementById(id).classList.add('open');document.body.style.overflow='hidden';}
+function closeModal(id){document.getElementById(id).classList.remove('open');document.body.style.overflow='';}
 
-document.querySelectorAll('.modal-overlay').forEach(function(o) {
-  o.addEventListener('click', function(e) { if (e.target === this) closeModal(this.id); });
-});
-document.addEventListener('keydown', function(e) {
-  if (e.key === 'Escape') {
-    closeProfileDropdown();
-    document.querySelectorAll('.modal-overlay.open').forEach(function(m) { closeModal(m.id); });
-  }
-});
+document.querySelectorAll('.modal-overlay').forEach(function(o){o.addEventListener('click',function(e){if(e.target===this)closeModal(this.id);});});
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){closeProfileDropdown();document.querySelectorAll('.modal-overlay.open').forEach(function(m){closeModal(m.id);});}});
 
-// ── Hamburger ─────────────────────────────────────────────
-function toggleNav() {
-  var nav = document.getElementById('navbarNav');
-  var btn = document.getElementById('hamburger');
-  var isOpen = nav.classList.toggle('open');
-  btn.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
-  var spans = btn.querySelectorAll('span');
-  if (isOpen) {
-    spans[0].style.transform = 'rotate(45deg) translate(5px, 5px)';
-    spans[1].style.opacity   = '0';
-    spans[2].style.transform = 'rotate(-45deg) translate(5px, -5px)';
-  } else {
-    spans[0].style.transform = '';
-    spans[1].style.opacity   = '';
-    spans[2].style.transform = '';
-  }
-}
+// ── Hamburger ──────────────────────────────────────────────
+function toggleNav(){var nav=document.getElementById('navbarNav');var btn=document.getElementById('hamburger');var isOpen=nav.classList.toggle('open');btn.setAttribute('aria-expanded',isOpen?'true':'false');var spans=btn.querySelectorAll('span');if(isOpen){spans[0].style.transform='rotate(45deg) translate(5px, 5px)';spans[1].style.opacity='0';spans[2].style.transform='rotate(-45deg) translate(5px, -5px)';}else{spans[0].style.transform='';spans[1].style.opacity='';spans[2].style.transform='';}}
+function closeNav(){var nav=document.getElementById('navbarNav');var btn=document.getElementById('hamburger');nav.classList.remove('open');btn.setAttribute('aria-expanded','false');var spans=btn.querySelectorAll('span');spans[0].style.transform='';spans[1].style.opacity='';spans[2].style.transform='';}
 
-function closeNav() {
-  var nav = document.getElementById('navbarNav');
-  var btn = document.getElementById('hamburger');
-  nav.classList.remove('open');
-  btn.setAttribute('aria-expanded', 'false');
-  var spans = btn.querySelectorAll('span');
-  spans[0].style.transform = '';
-  spans[1].style.opacity   = '';
-  spans[2].style.transform = '';
-}
+// ── Toast ───────────────────────────────────────────────────
+function showToast(msg,type){var icons={success:'fa-circle-check',error:'fa-circle-xmark',info:'fa-circle-info'};var t=document.createElement('div');t.className='toast '+(type||'info');t.innerHTML='<i class="fa '+(icons[type]||icons.info)+'"></i> <span>'+msg+'</span>';document.getElementById('toastContainer').appendChild(t);setTimeout(function(){t.style.opacity='0';t.style.transition='opacity .3s';setTimeout(function(){if(t.parentNode)t.parentNode.removeChild(t);},300);},4000);}
 
-// ── Toast ─────────────────────────────────────────────────
-function showToast(msg, type) {
-  var icons = { success: 'fa-circle-check', error: 'fa-circle-xmark', info: 'fa-circle-info' };
-  var t = document.createElement('div'); t.className = 'toast ' + (type || 'info');
-  t.innerHTML = '<i class="fa ' + (icons[type] || icons.info) + '"></i> <span>' + msg + '</span>';
-  document.getElementById('toastContainer').appendChild(t);
-  setTimeout(function() { t.style.opacity = '0'; t.style.transition = 'opacity .3s'; setTimeout(function() { if (t.parentNode) t.parentNode.removeChild(t); }, 300); }, 4000);
-}
+// ── Utilities ───────────────────────────────────────────────
+function formatDate(str){if(!str)return'—';var d=new Date(str);return isNaN(d)?str:d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');}
+function emptyState(t,s){return'<div class="state-box"><div class="state-icon empty"><i class="fa fa-folder-open"></i></div><div class="state-title">'+t+'</div><div class="state-sub">'+s+'</div></div>';}
+function errorState(t,s){return'<div class="state-box"><div class="state-icon warn"><i class="fa fa-triangle-exclamation"></i></div><div class="state-title">'+t+'</div><div class="state-sub">'+s+'</div></div>';}
+    </script>
 
-// ── Utilities ─────────────────────────────────────────────
-function formatDate(str) { if (!str) return ''; var d = new Date(str); return isNaN(d) ? str : d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' }); }
-function esc(s) { return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
-function emptyState(t, s) { return '<div class="state-box"><div class="state-icon empty"><i class="fa fa-folder-open"></i></div><div class="state-title">' + t + '</div><div class="state-sub">' + s + '</div></div>'; }
-function errorState(t, s) { return '<div class="state-box"><div class="state-icon warn"><i class="fa fa-triangle-exclamation"></i></div><div class="state-title">' + t + '</div><div class="state-sub">' + s + '</div></div>'; }
-</script>
-</body>
+    <!-- APPROVAL QUEUE MODAL -->
+    <div class="modal-overlay" id="approvalQueueOverlay">
+      <div class="modal aq-modal">
+        <div class="modal-header">
+          <span class="modal-title">
+            <i class="fa fa-tasks" style="color:#f76707;"></i>
+            Approval Queue
+            <span class="aq-modal-badge" id="aqModalBadge" style="display:none;">0</span>
+          </span>
+          <button class="modal-close" onclick="closeModal('approvalQueueOverlay')"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="modal-body aq-modal-body">
+          <div id="approvalQueueList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REJECT REASON MODAL -->
+    <div class="modal-overlay" id="rejectOverlay">
+      <div class="modal" style="max-width:440px;">
+        <div class="modal-header">
+          <span class="modal-title"><i class="fa fa-times-circle" style="color:#c92a2a;"></i> Reject Submission</span>
+          <button class="modal-close" onclick="closeModal('rejectOverlay')"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="modal-body">
+          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Rejecting: <strong id="rejectItemName"></strong></p>
+          <div class="form-group">
+            <label class="form-label">Reason (shown to contributor)</label>
+            <textarea class="form-control" id="rejectReason" placeholder="e.g. Duplicate entry, incorrect category, missing information..." style="min-height:80px;"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button class="btn btn-secondary" onclick="closeModal('rejectOverlay')">Cancel</button>
+          <button class="btn btn-danger" onclick="confirmReject()"><i class="fa fa-times"></i> Confirm Reject</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- MY SUBMISSIONS MODAL -->
+    <div class="modal-overlay" id="mySubmissionsOverlay">
+      <div class="modal aq-modal">
+        <div class="modal-header">
+          <span class="modal-title"><i class="fa fa-paper-plane" style="color:#9c36b5;"></i> My Submissions</span>
+          <button class="modal-close" onclick="closeModal('mySubmissionsOverlay')"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="modal-body aq-modal-body">
+          <div id="mySubmissionsList"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- NOTIFICATIONS MODAL -->
+    <div class="modal-overlay" id="notifOverlay">
+      <div class="modal aq-modal notif-modal">
+        <div class="modal-header">
+          <span class="modal-title"><i class="fa fa-bell" style="color:#2d4cc8;"></i> Notifications</span>
+          <button class="modal-close" onclick="closeModal('notifOverlay')"><i class="fa fa-times"></i></button>
+        </div>
+        <div class="modal-body aq-modal-body">
+          <div id="notifList"></div>
+        </div>
+      </div>
+    </div>
+
+  </body>
 </html>

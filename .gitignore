@@ -1,0 +1,8 @@
+client_secret_175649034228-uv2ekf5sjnikklibr40oou68t0cmrubv.apps.googleusercontent.com.json
+/vendor/
+/.env
+uploads/
+*.zip
+*.mp4
+*.exe
+*.sql
