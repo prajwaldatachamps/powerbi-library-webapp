@@ -4,7 +4,7 @@
     <script>
   // ── Auth guard: server-side check (survives browser close via remember-me) ──
   (function() {
-    fetch('api/api.api?action=session_check', { method: 'GET' })
+    fetch('api/api.php?action=session_check', { method: 'GET' })
       .then(function(r) { return r.json(); })
       .then(function(d) { if (!d.logged_in) window.location.replace('login.html'); })
       .catch(function() { /* allow page to load; each API call re-checks auth */ });
@@ -601,7 +601,7 @@
     <script>
 'use strict';
 
-var API_URL = 'api/api.api';
+var API_URL = 'api/api.php';
 
 var state = {
   view: 'industries',
