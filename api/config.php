@@ -21,80 +21,10 @@ define('GOOGLE_CLIENT_ID', env_value('GOOGLE_CLIENT_ID'));
 define('GOOGLE_CLIENT_SECRET', env_value('GOOGLE_CLIENT_SECRET'));
 define('GOOGLE_REDIRECT_URI', env_value('GOOGLE_REDIRECT_URI'));
 
+define('APP_SECRET', env_value('APP_SECRET', 'change_this_secret_key'));
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
-}
-
-function restore_login_from_cookie(): void {
-    if (!empty($_SESSION['user_id'])) {
-        return;
-    }
-
-    if (!empty($_COOKIE['user_id'])) {
-        $_SESSION['user_id']      = $_COOKIE['user_id'];
-        $_SESSION['user_name']    = $_COOKIE['user_name'] ?? '';
-        $_SESSION['user_email']   = $_COOKIE['user_email'] ?? '';
-        $_SESSION['user_role']    = $_COOKIE['user_role'] ?? '';
-        $_SESSION['user_picture'] = $_COOKIE['user_picture'] ?? '';
-    }
-}
-
-restore_login_from_cookie();
-
-function set_login_cookies(array $user): void {
-    $expiry = time() + (86400 * 7);
-
-    setcookie('user_id', (string)$user['id'], [
-        'expires'  => $expiry,
-        'path'     => '/',
-        'secure'   => true,
-        'httponly' => true,
-        'samesite' => 'Lax'
-    ]);
-
-    setcookie('user_name', (string)($user['name'] ?? ''), [
-        'expires'  => $expiry,
-        'path'     => '/',
-        'secure'   => true,
-        'httponly' => false,
-        'samesite' => 'Lax'
-    ]);
-
-    setcookie('user_email', (string)($user['email'] ?? ''), [
-        'expires'  => $expiry,
-        'path'     => '/',
-        'secure'   => true,
-        'httponly' => false,
-        'samesite' => 'Lax'
-    ]);
-
-    setcookie('user_role', (string)($user['role'] ?? ''), [
-        'expires'  => $expiry,
-        'path'     => '/',
-        'secure'   => true,
-        'httponly' => true,
-        'samesite' => 'Lax'
-    ]);
-
-    setcookie('user_picture', (string)($user['picture'] ?? ''), [
-        'expires'  => $expiry,
-        'path'     => '/',
-        'secure'   => true,
-        'httponly' => false,
-        'samesite' => 'Lax'
-    ]);
-}
-
-function clear_login_cookies(): void {
-    foreach (['user_id', 'user_name', 'user_email', 'user_role', 'user_picture'] as $cookie) {
-        setcookie($cookie, '', [
-            'expires'  => time() - 3600,
-            'path'     => '/',
-            'secure'   => true,
-            'httponly' => in_array($cookie, ['user_id', 'user_role']),
-            'samesite' => 'Lax'
-        ]);
-    }
 }
 
 function json_out(array $data, int $status = 200): void {
@@ -103,6 +33,79 @@ function json_out(array $data, int $status = 200): void {
     echo json_encode($data);
     exit;
 }
+
+function set_auth_cookie(array $user): void {
+    $expiry = time() + (86400 * 7);
+
+    $payload = [
+        'id'      => $user['id'],
+        'name'    => $user['name'],
+        'email'   => $user['email'],
+        'role'    => $user['role'],
+        'picture' => $user['picture'] ?? '',
+        'exp'     => $expiry
+    ];
+
+    $base64 = base64_encode(json_encode($payload));
+    $signature = hash_hmac('sha256', $base64, APP_SECRET);
+    $token = $base64 . '.' . $signature;
+
+    setcookie('auth_token', $token, [
+        'expires'  => $expiry,
+        'path'     => '/',
+        'secure'   => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+}
+
+function restore_auth_from_cookie(): void {
+    if (!empty($_SESSION['user_id'])) {
+        return;
+    }
+
+    if (empty($_COOKIE['auth_token'])) {
+        return;
+    }
+
+    $parts = explode('.', $_COOKIE['auth_token']);
+
+    if (count($parts) !== 2) {
+        return;
+    }
+
+    [$base64, $signature] = $parts;
+
+    $expectedSignature = hash_hmac('sha256', $base64, APP_SECRET);
+
+    if (!hash_equals($expectedSignature, $signature)) {
+        return;
+    }
+
+    $payload = json_decode(base64_decode($base64), true);
+
+    if (!$payload || empty($payload['exp']) || $payload['exp'] < time()) {
+        return;
+    }
+
+    $_SESSION['user_id']      = $payload['id'];
+    $_SESSION['user_name']    = $payload['name'];
+    $_SESSION['user_email']   = $payload['email'];
+    $_SESSION['user_role']    = $payload['role'];
+    $_SESSION['user_picture'] = $payload['picture'] ?? '';
+}
+
+function clear_auth_cookie(): void {
+    setcookie('auth_token', '', [
+        'expires'  => time() - 3600,
+        'path'     => '/',
+        'secure'   => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+}
+
+restore_auth_from_cookie();
 
 function getPDO(): PDO {
     static $pdo = null;
@@ -181,6 +184,6 @@ function notify(PDO $pdo, int $userId, string $itemType, int $itemId, string $it
             VALUES (?, ?, ?, ?, ?, ?)
         ")->execute([$userId, $itemType, $itemId, $itemName, $action, $message]);
     } catch (Exception $e) {
-        // Non-fatal notification error
+        // Non-fatal
     }
 }
