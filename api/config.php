@@ -25,6 +25,78 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 
+function restore_login_from_cookie(): void {
+    if (!empty($_SESSION['user_id'])) {
+        return;
+    }
+
+    if (!empty($_COOKIE['user_id'])) {
+        $_SESSION['user_id']      = $_COOKIE['user_id'];
+        $_SESSION['user_name']    = $_COOKIE['user_name'] ?? '';
+        $_SESSION['user_email']   = $_COOKIE['user_email'] ?? '';
+        $_SESSION['user_role']    = $_COOKIE['user_role'] ?? '';
+        $_SESSION['user_picture'] = $_COOKIE['user_picture'] ?? '';
+    }
+}
+
+restore_login_from_cookie();
+
+function set_login_cookies(array $user): void {
+    $expiry = time() + (86400 * 7);
+
+    setcookie('user_id', (string)$user['id'], [
+        'expires'  => $expiry,
+        'path'     => '/',
+        'secure'   => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+
+    setcookie('user_name', (string)($user['name'] ?? ''), [
+        'expires'  => $expiry,
+        'path'     => '/',
+        'secure'   => true,
+        'httponly' => false,
+        'samesite' => 'Lax'
+    ]);
+
+    setcookie('user_email', (string)($user['email'] ?? ''), [
+        'expires'  => $expiry,
+        'path'     => '/',
+        'secure'   => true,
+        'httponly' => false,
+        'samesite' => 'Lax'
+    ]);
+
+    setcookie('user_role', (string)($user['role'] ?? ''), [
+        'expires'  => $expiry,
+        'path'     => '/',
+        'secure'   => true,
+        'httponly' => true,
+        'samesite' => 'Lax'
+    ]);
+
+    setcookie('user_picture', (string)($user['picture'] ?? ''), [
+        'expires'  => $expiry,
+        'path'     => '/',
+        'secure'   => true,
+        'httponly' => false,
+        'samesite' => 'Lax'
+    ]);
+}
+
+function clear_login_cookies(): void {
+    foreach (['user_id', 'user_name', 'user_email', 'user_role', 'user_picture'] as $cookie) {
+        setcookie($cookie, '', [
+            'expires'  => time() - 3600,
+            'path'     => '/',
+            'secure'   => true,
+            'httponly' => in_array($cookie, ['user_id', 'user_role']),
+            'samesite' => 'Lax'
+        ]);
+    }
+}
+
 function json_out(array $data, int $status = 200): void {
     http_response_code($status);
     header('Content-Type: application/json');
