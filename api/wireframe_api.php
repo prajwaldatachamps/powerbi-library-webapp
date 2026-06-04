@@ -1,9 +1,9 @@
-<?php
-// php/wireframe_api.php
+<?api
+// api/wireframe_api.api
 
 set_error_handler(function($errno, $errstr, $errfile, $errline) {
     header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => "PHP Error [$errno]: $errstr in $errfile on line $errline"]);
+    echo json_encode(['success' => false, 'message' => "api Error [$errno]: $errstr in $errfile on line $errline"]);
     exit;
 });
 
@@ -13,7 +13,7 @@ set_exception_handler(function($e) {
     exit;
 });
 
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/config.api';
 
 header('Content-Type: application/json');
 header('X-Content-Type-Options: nosniff');
@@ -288,7 +288,7 @@ function update_wireframe(): void {
 function update_status(): void {
     require_super_admin();
     $pdo  = getPDO();
-    $body = json_decode(file_get_contents('php://input'), true) ?? [];
+    $body = json_decode(file_get_contents('api://input'), true) ?? [];
 
     $id      = (int)($body['id'] ?? 0);
     $status  = allowed_status(trim($body['status'] ?? ''));
@@ -315,7 +315,7 @@ function update_status(): void {
 function delete_wireframe(): void {
     require_super_admin();
     $pdo  = getPDO();
-    $body = json_decode(file_get_contents('php://input'), true) ?? [];
+    $body = json_decode(file_get_contents('api://input'), true) ?? [];
     $id   = (int)($body['id'] ?? 0);
 
     if (!$id) json_out(['success' => false, 'message' => 'Invalid ID'], 422);

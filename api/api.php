@@ -1,9 +1,9 @@
-<?php
-// php/api.php
+<?api
+// api/api.api
 
 set_error_handler(function($errno, $errstr, $errfile, $errline) {
     header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => "PHP Error [$errno]: $errstr in $errfile on line $errline"]);
+    echo json_encode(['success' => false, 'message' => "api Error [$errno]: $errstr in $errfile on line $errline"]);
     exit;
 });
 
@@ -13,7 +13,7 @@ set_exception_handler(function($e) {
     exit;
 });
 
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/config.api';
 
 header('Content-Type: application/json');
 header('Access-Control-Allow-Origin: *');
@@ -34,7 +34,7 @@ if (!is_dir(PBIX_UPLOAD_DIR)) { mkdir(PBIX_UPLOAD_DIR, 0755, true); }
 
 $body = [];
 if (in_array($method, ['PUT', 'DELETE', 'POST'])) {
-    $raw = file_get_contents('php://input');
+    $raw = file_get_contents('api://input');
     if ($raw) { $decoded = json_decode($raw, true); if (is_array($decoded)) $body = $decoded; }
     if (!empty($_POST)) $body = array_merge($body, $_POST);
 }

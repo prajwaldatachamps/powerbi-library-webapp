@@ -1,6 +1,6 @@
-<?php
+<?api
 // ============================================================
-//  generate_hash.php
+//  generate_hash.api
 //  Run this ONCE in your browser to get the bcrypt hash,
 //  then paste it into the SQL INSERT or run the UPDATE below.
 //  DELETE this file from the server afterwards!
@@ -10,7 +10,7 @@ $password = 'Admin@1234';                        // ← change before running
 $hash     = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
 
 // Auto-update the admin row in the database
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/config.api';
 $pdo = getPDO();
 $pdo->prepare("UPDATE admins SET password = ? WHERE email = 'admin@datachamps.com'")
     ->execute([$hash]);

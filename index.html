@@ -2,16 +2,12 @@
 <html lang="en">
   <head>
     <script>
+  // ── Auth guard: server-side check (survives browser close via remember-me) ──
   (function() {
-    var params = new URLSearchParams(window.location.search);
-    if (params.get('auth') === '1') {
-      sessionStorage.setItem('dc_authed', '1');
-      window.history.replaceState({}, '', window.location.pathname);
-      return;
-    }
-    if (!sessionStorage.getItem('dc_authed')) {
-      window.location.replace('login.html');
-    }
+    fetch('api/api.api?action=session_check', { method: 'GET' })
+      .then(function(r) { return r.json(); })
+      .then(function(d) { if (!d.logged_in) window.location.replace('login.html'); })
+      .catch(function() { /* allow page to load; each API call re-checks auth */ });
   })();
   </script>
 
@@ -20,8 +16,12 @@
     <title>Industry Wise Dashboards — DataChamps</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700;800&display=swap"
+      rel="stylesheet" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+      rel="stylesheet" />
     <link rel="icon" type="image/png" href="logo/favicon.png">
     <link rel="stylesheet" href="css/index.css" />
   </head>
@@ -30,15 +30,21 @@
     <!-- ═══════════════════════ NAVBAR ═══════════════════════ -->
     <nav class="navbar">
       <a class="navbar-brand" href="index.html">
-        <img src="logo/favicon.png" alt="DataChamps Logo" class="brand-logo" onerror="this.style.display='none'" />
+        <img src="logo/favicon.png" alt="DataChamps Logo" class="brand-logo"
+          onerror="this.style.display='none'" />
         <span class="brand-name">DataChamps</span>
       </a>
 
       <ul class="navbar-nav" id="navbarNav">
-        <li><a class="nav-link active" onclick="navigateTo('industries');closeNav()"><i class="fa fa-th-large"></i> Dashboards</a></li>
-        <li><a class="nav-link" href="kpi.html"><i class="fa fa-chart-line"></i> KPI Details</a></li>
-        <li><a class="nav-link" href="visual.html"><i class="fa fa-eye"></i> Visual Details</a></li>
-        <li><a class="nav-link" href="wireframe.html"><i class="fa fa-drafting-compass"></i> Wireframe</a></li>
+        <li><a class="nav-link active"
+            onclick="navigateTo('industries');closeNav()"><i
+              class="fa fa-th-large"></i> Dashboards</a></li>
+        <li><a class="nav-link" href="kpi.html"><i class="fa fa-chart-line"></i>
+            KPI Details</a></li>
+        <li><a class="nav-link" href="visual.html"><i class="fa fa-eye"></i>
+            Visual Details</a></li>
+        <li><a class="nav-link" href="wireframe.html"><i
+              class="fa fa-drafting-compass"></i> Wireframe</a></li>
       </ul>
 
       <div class="navbar-actions">
@@ -49,24 +55,30 @@
           </button>
         </div>
 
-        <div id="adminActions" style="display:none; align-items:center; gap:10px;" class="profile-wrapper">
+        <div id="adminActions"
+          style="display:none; align-items:center; gap:10px;"
+          class="profile-wrapper">
 
           <!-- Notification bell — visible to contributors AND super admins -->
-      
 
           <div class="profile-dropdown-wrap" id="profileDropdownWrap">
-            <button class="btn-profile" id="profileBtn" onclick="toggleProfileDropdown(event)" aria-haspopup="true" aria-expanded="false">
-              <div id="profileAvatarWrap"><div class="avatar" id="adminAvatar">A</div></div>
+            <button class="btn-profile" id="profileBtn"
+              onclick="toggleProfileDropdown(event)" aria-haspopup="true"
+              aria-expanded="false">
+              <div id="profileAvatarWrap"><div class="avatar"
+                  id="adminAvatar">A</div></div>
               <div class="profile-info">
                 <span class="admin-name" id="adminName">User</span>
                 <span class="role-badge" id="roleBadge">—</span>
               </div>
-              <i class="fa fa-chevron-down profile-chevron" id="profileChevron"></i>
+              <i class="fa fa-chevron-down profile-chevron"
+                id="profileChevron"></i>
             </button>
 
             <div class="profile-dropdown" id="profileDropdown" role="menu">
               <div class="dropdown-header">
-                <div class="dropdown-avatar" id="dropdownAvatarWrap"><div class="avatar-lg" id="dropdownAvatar">A</div></div>
+                <div class="dropdown-avatar" id="dropdownAvatarWrap"><div
+                    class="avatar-lg" id="dropdownAvatar">A</div></div>
                 <div class="dropdown-user-info">
                   <div class="dropdown-name" id="dropdownName">User</div>
                   <div class="dropdown-role" id="dropdownRole">—</div>
@@ -74,23 +86,35 @@
               </div>
               <div class="dropdown-divider"></div>
               <a class="dropdown-item" href="profile.html" role="menuitem">
-                <span class="dropdown-item-icon"><i class="fa fa-user-circle"></i></span>
+                <span class="dropdown-item-icon"><i
+                    class="fa fa-user-circle"></i></span>
                 <span class="dropdown-item-text">My Profile</span>
               </a>
               <!-- ✅ REMOVED: Manage Users option -->
-              <button class="dropdown-item" id="approvalQueueItem" style="display:none;" onclick="openApprovalQueueModal();" role="menuitem">
-                <span class="dropdown-item-icon admin-icon"><i class="fa fa-tasks"></i></span>
+              <button class="dropdown-item" id="approvalQueueItem"
+                style="display:none;" onclick="openApprovalQueueModal();"
+                role="menuitem">
+                <span class="dropdown-item-icon admin-icon"><i
+                    class="fa fa-tasks"></i></span>
                 <span class="dropdown-item-text">Approval Queue</span>
-                <span class="pending-badge-nav" id="pendingBadge" style="display:none;">0</span>
+                <span class="pending-badge-nav" id="pendingBadge"
+                  style="display:none;">0</span>
               </button>
-              <button class="dropdown-item" id="mySubmissionsItem" style="display:none;" onclick="openMySubmissionsModal();" role="menuitem">
-                <span class="dropdown-item-icon" style="background:#f5eaf9;color:#9c36b5;"><i class="fa fa-paper-plane"></i></span>
+              <button class="dropdown-item" id="mySubmissionsItem"
+                style="display:none;" onclick="openMySubmissionsModal();"
+                role="menuitem">
+                <span class="dropdown-item-icon"
+                  style="background:#f5eaf9;color:#9c36b5;"><i
+                    class="fa fa-paper-plane"></i></span>
                 <span class="dropdown-item-text">My Submissions</span>
-                <span class="submissions-badge-nav" id="submissionsBadge" style="display:none;">0</span>
+                <span class="submissions-badge-nav" id="submissionsBadge"
+                  style="display:none;">0</span>
               </button>
               <div class="dropdown-divider"></div>
-              <button class="dropdown-item danger" onclick="logout()" role="menuitem">
-                <span class="dropdown-item-icon"><i class="fa fa-sign-out-alt"></i></span>
+              <button class="dropdown-item danger" onclick="logout()"
+                role="menuitem">
+                <span class="dropdown-item-icon"><i
+                    class="fa fa-sign-out-alt"></i></span>
                 <span class="dropdown-item-text">Logout</span>
               </button>
             </div>
@@ -98,7 +122,8 @@
         </div>
       </div>
 
-      <button class="hamburger" id="hamburger" onclick="toggleNav()" aria-label="Menu" aria-expanded="false">
+      <button class="hamburger" id="hamburger" onclick="toggleNav()"
+        aria-label="Menu" aria-expanded="false">
         <span></span><span></span><span></span>
       </button>
     </nav>
@@ -117,38 +142,51 @@
     <div class="stat-bar">
       <div class="stat-item">
         <div class="stat-icon blue"><i class="fa fa-industry"></i></div>
-        <div class="stat-info"><span class="stat-num" id="statIndustries">—</span><span class="stat-lbl">Industries</span></div>
+        <div class="stat-info"><span class="stat-num"
+            id="statIndustries">—</span><span
+            class="stat-lbl">Industries</span></div>
       </div>
       <div class="stat-item">
         <div class="stat-icon purple"><i class="fa fa-sitemap"></i></div>
-        <div class="stat-info"><span class="stat-num" id="statFunctions">—</span><span class="stat-lbl">Functions</span></div>
+        <div class="stat-info"><span class="stat-num"
+            id="statFunctions">—</span><span
+            class="stat-lbl">Functions</span></div>
       </div>
       <div class="stat-item">
         <div class="stat-icon green"><i class="fa fa-building"></i></div>
-        <div class="stat-info"><span class="stat-num" id="statCompanySizes">—</span><span class="stat-lbl">Company Sizes</span></div>
+        <div class="stat-info"><span class="stat-num"
+            id="statCompanySizes">—</span><span class="stat-lbl">Company
+            Sizes</span></div>
       </div>
       <div class="stat-item">
         <div class="stat-icon amber"><i class="fa fa-chart-bar"></i></div>
-        <div class="stat-info"><span class="stat-num" id="statDashboards">—</span><span class="stat-lbl">Total Dashboards</span></div>
+        <div class="stat-info"><span class="stat-num"
+            id="statDashboards">—</span><span class="stat-lbl">Total
+            Dashboards</span></div>
       </div>
     </div>
 
     <!-- ═══════════════════════ MAIN ═════════════════════════ -->
     <div class="main-container">
-      <div class="page-breadcrumb" id="pageBreadcrumb" style="display:none;"></div>
+      <div class="page-breadcrumb" id="pageBreadcrumb"
+        style="display:none;"></div>
       <div class="section-heading">
         <h2 id="sectionTitle">Industries</h2>
         <span class="count-badge" id="sectionCount">0</span>
       </div>
-      <p class="section-sub" id="sectionSub">Click an industry to view its functions</p>
+      <p class="section-sub" id="sectionSub">Click an industry to view its
+        functions</p>
       <div class="toolbar">
         <div class="search-box">
           <i class="fa fa-search"></i>
-          <input type="text" id="searchInput" placeholder="Search industries..." oninput="onSearch()" />
+          <input type="text" id="searchInput" placeholder="Search industries..."
+            oninput="onSearch()" />
         </div>
         <div class="toolbar-right">
-          <button class="btn btn-primary" id="addBtn" style="display:none;" onclick="openAddModal()">
-            <i class="fa fa-plus"></i> <span id="addBtnLabel">Add Industry</span>
+          <button class="btn btn-primary" id="addBtn" style="display:none;"
+            onclick="openAddModal()">
+            <i class="fa fa-plus"></i> <span id="addBtnLabel">Add
+              Industry</span>
           </button>
         </div>
       </div>
@@ -168,19 +206,26 @@
           </div>
           <div class="access-notice" id="loginNotice" style="display:none;">
             <i class="fa fa-triangle-exclamation"></i>
-            <span id="loginNoticeMsg">Your account is not authorized. Contact your administrator.</span>
+            <span id="loginNoticeMsg">Your account is not authorized. Contact
+              your administrator.</span>
           </div>
-          <a class="btn-google" href="php/google_auth.php" id="googleLoginBtn">
+          <a class="btn-google" href="api/google_auth.api" id="googleLoginBtn">
             <svg width="20" height="20" viewBox="0 0 24 24">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+              <path fill="#4285F4"
+                d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853"
+                d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05"
+                d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+              <path fill="#EA4335"
+                d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
             Continue with Google
           </a>
-          <p style="text-align:center;font-family:'Sora',sans-serif;font-size:11px;color:var(--text-muted);margin-top:18px;line-height:1.6;">
-            Only pre-approved organization accounts can access this system.<br>Contact your admin if you need access.
+          <p
+            style="text-align:center;font-family:'Sora',sans-serif;font-size:11px;color:var(--text-muted);margin-top:18px;line-height:1.6;">
+            Only pre-approved organization accounts can access this
+            system.<br>Contact your admin if you need access.
           </p>
         </div>
       </div>
@@ -192,30 +237,40 @@
     <div class="modal-overlay" id="industryOverlay">
       <div class="modal">
         <div class="modal-header">
-          <span class="modal-title"><i class="fa fa-industry"></i> <span id="industryModalTitle">Add Industry</span></span>
-          <button class="modal-close" onclick="closeModal('industryOverlay')"><i class="fa fa-times"></i></button>
+          <span class="modal-title"><i class="fa fa-industry"></i> <span
+              id="industryModalTitle">Add Industry</span></span>
+          <button class="modal-close" onclick="closeModal('industryOverlay')"><i
+              class="fa fa-times"></i></button>
         </div>
         <div class="modal-body">
           <input type="hidden" id="industryId" />
           <div class="form-group">
-            <label class="form-label">Industry Name <span class="required">*</span></label>
-            <input type="text" class="form-control" id="industryName" placeholder="e.g. Pharma, IT, Retail" />
+            <label class="form-label">Industry Name <span
+                class="required">*</span></label>
+            <input type="text" class="form-control" id="industryName"
+              placeholder="e.g. Pharma, IT, Retail" />
           </div>
           <div class="form-group">
             <label class="form-label">Icon (Font Awesome class)</label>
-            <input type="text" class="form-control" id="industryIcon" placeholder="e.g. fa-building" value="fa-industry" />
-            <small style="color:var(--text-muted);font-size:11px;margin-top:5px;display:block;font-family:'Sora',sans-serif;">
-              Browse at <a href="https://fontawesome.com/icons" target="_blank" style="color:var(--blue);font-weight:600;">fontawesome.com</a>
+            <input type="text" class="form-control" id="industryIcon"
+              placeholder="e.g. fa-building" value="fa-industry" />
+            <small
+              style="color:var(--text-muted);font-size:11px;margin-top:5px;display:block;font-family:'Sora',sans-serif;">
+              Browse at <a href="https://fontawesome.com/icons" target="_blank"
+                style="color:var(--blue);font-weight:600;">fontawesome.com</a>
             </small>
           </div>
           <div class="form-group">
             <label class="form-label">Description</label>
-            <textarea class="form-control" id="industryDesc" placeholder="Brief description..."></textarea>
+            <textarea class="form-control" id="industryDesc"
+              placeholder="Brief description..."></textarea>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="closeModal('industryOverlay')">Cancel</button>
-          <button class="btn btn-primary" onclick="saveIndustry()"><i class="fa fa-save"></i> Save</button>
+          <button class="btn btn-secondary"
+            onclick="closeModal('industryOverlay')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveIndustry()"><i
+              class="fa fa-save"></i> Save</button>
         </div>
       </div>
     </div>
@@ -224,31 +279,41 @@
     <div class="modal-overlay" id="functionOverlay">
       <div class="modal">
         <div class="modal-header">
-          <span class="modal-title"><i class="fa fa-sitemap"></i> <span id="functionModalTitle">Add Function</span></span>
-          <button class="modal-close" onclick="closeModal('functionOverlay')"><i class="fa fa-times"></i></button>
+          <span class="modal-title"><i class="fa fa-sitemap"></i> <span
+              id="functionModalTitle">Add Function</span></span>
+          <button class="modal-close" onclick="closeModal('functionOverlay')"><i
+              class="fa fa-times"></i></button>
         </div>
         <div class="modal-body">
           <input type="hidden" id="functionId" />
           <input type="hidden" id="functionIndustryId" />
           <div class="form-group">
-            <label class="form-label">Function Name <span class="required">*</span></label>
-            <input type="text" class="form-control" id="functionName" placeholder="e.g. Sales, Inventory, Finance" />
+            <label class="form-label">Function Name <span
+                class="required">*</span></label>
+            <input type="text" class="form-control" id="functionName"
+              placeholder="e.g. Sales, Inventory, Finance" />
           </div>
           <div class="form-group">
             <label class="form-label">Icon (Font Awesome class)</label>
-            <input type="text" class="form-control" id="functionIcon" placeholder="e.g. fa-chart-line" value="fa-sitemap" />
-            <small style="color:var(--text-muted);font-size:11px;margin-top:5px;display:block;font-family:'Sora',sans-serif;">
-              Browse at <a href="https://fontawesome.com/icons" target="_blank" style="color:var(--blue);font-weight:600;">fontawesome.com</a>
+            <input type="text" class="form-control" id="functionIcon"
+              placeholder="e.g. fa-chart-line" value="fa-sitemap" />
+            <small
+              style="color:var(--text-muted);font-size:11px;margin-top:5px;display:block;font-family:'Sora',sans-serif;">
+              Browse at <a href="https://fontawesome.com/icons" target="_blank"
+                style="color:var(--blue);font-weight:600;">fontawesome.com</a>
             </small>
           </div>
           <div class="form-group">
             <label class="form-label">Description</label>
-            <textarea class="form-control" id="functionDesc" placeholder="About this function..."></textarea>
+            <textarea class="form-control" id="functionDesc"
+              placeholder="About this function..."></textarea>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="closeModal('functionOverlay')">Cancel</button>
-          <button class="btn btn-primary" onclick="saveFunction()"><i class="fa fa-save"></i> Save</button>
+          <button class="btn btn-secondary"
+            onclick="closeModal('functionOverlay')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveFunction()"><i
+              class="fa fa-save"></i> Save</button>
         </div>
       </div>
     </div>
@@ -257,32 +322,43 @@
     <div class="modal-overlay" id="companySizeOverlay">
       <div class="modal">
         <div class="modal-header">
-          <span class="modal-title"><i class="fa fa-building"></i> <span id="companySizeModalTitle">Add Company Size</span></span>
-          <button class="modal-close" onclick="closeModal('companySizeOverlay')"><i class="fa fa-times"></i></button>
+          <span class="modal-title"><i class="fa fa-building"></i> <span
+              id="companySizeModalTitle">Add Company Size</span></span>
+          <button class="modal-close"
+            onclick="closeModal('companySizeOverlay')"><i
+              class="fa fa-times"></i></button>
         </div>
         <div class="modal-body">
           <input type="hidden" id="companySizeId" />
           <input type="hidden" id="companySizeFunctionId" />
           <input type="hidden" id="companySizeIndustryId" />
           <div class="form-group">
-            <label class="form-label">Company Size Label <span class="required">*</span></label>
-            <input type="text" class="form-control" id="companySizeName" placeholder="e.g. Small, Mid-size, Enterprise" />
+            <label class="form-label">Company Size Label <span
+                class="required">*</span></label>
+            <input type="text" class="form-control" id="companySizeName"
+              placeholder="e.g. Small, Mid-size, Enterprise" />
           </div>
           <div class="form-group">
             <label class="form-label">Icon (Font Awesome class)</label>
-            <input type="text" class="form-control" id="companySizeIcon" placeholder="e.g. fa-building" value="fa-building" />
-            <small style="color:var(--text-muted);font-size:11px;margin-top:5px;display:block;font-family:'Sora',sans-serif;">
-              Browse at <a href="https://fontawesome.com/icons" target="_blank" style="color:var(--blue);font-weight:600;">fontawesome.com</a>
+            <input type="text" class="form-control" id="companySizeIcon"
+              placeholder="e.g. fa-building" value="fa-building" />
+            <small
+              style="color:var(--text-muted);font-size:11px;margin-top:5px;display:block;font-family:'Sora',sans-serif;">
+              Browse at <a href="https://fontawesome.com/icons" target="_blank"
+                style="color:var(--blue);font-weight:600;">fontawesome.com</a>
             </small>
           </div>
           <div class="form-group">
             <label class="form-label">Description</label>
-            <textarea class="form-control" id="companySizeDesc" placeholder="e.g. Companies with 1–50 employees..."></textarea>
+            <textarea class="form-control" id="companySizeDesc"
+              placeholder="e.g. Companies with 1–50 employees..."></textarea>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="closeModal('companySizeOverlay')">Cancel</button>
-          <button class="btn btn-primary" onclick="saveCompanySize()"><i class="fa fa-save"></i> Save</button>
+          <button class="btn btn-secondary"
+            onclick="closeModal('companySizeOverlay')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveCompanySize()"><i
+              class="fa fa-save"></i> Save</button>
         </div>
       </div>
     </div>
@@ -291,8 +367,11 @@
     <div class="modal-overlay" id="dashboardOverlay">
       <div class="modal">
         <div class="modal-header">
-          <span class="modal-title"><i class="fa fa-chart-pie"></i> <span id="dashboardModalTitle">Add Dashboard</span></span>
-          <button class="modal-close" onclick="closeModal('dashboardOverlay')"><i class="fa fa-times"></i></button>
+          <span class="modal-title"><i class="fa fa-chart-pie"></i> <span
+              id="dashboardModalTitle">Add Dashboard</span></span>
+          <button class="modal-close"
+            onclick="closeModal('dashboardOverlay')"><i
+              class="fa fa-times"></i></button>
         </div>
         <div class="modal-body">
           <input type="hidden" id="dashboardId" />
@@ -300,26 +379,34 @@
           <input type="hidden" id="dashboardFunctionId" />
           <input type="hidden" id="dashboardIndustryId" />
           <div class="form-group">
-            <label class="form-label">Dashboard Name <span class="required">*</span></label>
-            <input type="text" class="form-control" id="dashboardName" placeholder="e.g. Sales Dashboard" />
+            <label class="form-label">Dashboard Name <span
+                class="required">*</span></label>
+            <input type="text" class="form-control" id="dashboardName"
+              placeholder="e.g. Sales Dashboard" />
           </div>
           <div class="form-group">
-            <label class="form-label">Power BI Embed URL <span class="required">*</span></label>
-            <input type="url" class="form-control" id="dashboardUrl" placeholder="https://app.powerbi.com/reportEmbed?..." />
+            <label class="form-label">Power BI Embed URL <span
+                class="required">*</span></label>
+            <input type="url" class="form-control" id="dashboardUrl"
+              placeholder="https://app.powerbi.com/reportEmbed?..." />
           </div>
           <div class="form-group">
             <label class="form-label">Description</label>
-            <textarea class="form-control" id="dashboardDesc" placeholder="What insights does this dashboard show?"></textarea>
+            <textarea class="form-control" id="dashboardDesc"
+              placeholder="What insights does this dashboard show?"></textarea>
           </div>
           <div class="form-group">
             <label class="form-check">
-              <input type="checkbox" id="dashboardActive" checked /> Mark as Active
+              <input type="checkbox" id="dashboardActive" checked /> Mark as
+              Active
             </label>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="closeModal('dashboardOverlay')">Cancel</button>
-          <button class="btn btn-primary" onclick="saveDashboard()"><i class="fa fa-save"></i> Save</button>
+          <button class="btn btn-secondary"
+            onclick="closeModal('dashboardOverlay')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveDashboard()"><i
+              class="fa fa-save"></i> Save</button>
         </div>
       </div>
     </div>
@@ -328,14 +415,20 @@
     <div class="modal-overlay" id="usersOverlay">
       <div class="modal users-modal">
         <div class="modal-header">
-          <span class="modal-title"><i class="fa fa-users-cog"></i> Manage Users</span>
-          <button class="modal-close" onclick="closeModal('usersOverlay')"><i class="fa fa-times"></i></button>
+          <span class="modal-title"><i class="fa fa-users-cog"></i> Manage
+            Users</span>
+          <button class="modal-close" onclick="closeModal('usersOverlay')"><i
+              class="fa fa-times"></i></button>
         </div>
         <div class="modal-body">
-          <div style="display:flex;justify-content:flex-end;margin-bottom:16px;">
-            <button class="btn btn-primary btn-sm" onclick="openAddUserModal()"><i class="fa fa-plus"></i> Add User</button>
+          <div
+            style="display:flex;justify-content:flex-end;margin-bottom:16px;">
+            <button class="btn btn-primary btn-sm"
+              onclick="openAddUserModal()"><i class="fa fa-plus"></i> Add
+              User</button>
           </div>
-          <div id="usersList"><div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading users…</div></div>
+          <div id="usersList"><div class="pbix-loading"><i
+                class="fa fa-spinner fa-spin"></i> Loading users…</div></div>
         </div>
       </div>
     </div>
@@ -344,37 +437,51 @@
     <div class="modal-overlay" id="userFormOverlay">
       <div class="modal" style="max-width:440px;">
         <div class="modal-header">
-          <span class="modal-title"><i class="fa fa-user-plus"></i> <span id="userFormTitle">Add User</span></span>
-          <button class="modal-close" onclick="closeModal('userFormOverlay')"><i class="fa fa-times"></i></button>
+          <span class="modal-title"><i class="fa fa-user-plus"></i> <span
+              id="userFormTitle">Add User</span></span>
+          <button class="modal-close" onclick="closeModal('userFormOverlay')"><i
+              class="fa fa-times"></i></button>
         </div>
         <div class="modal-body">
           <input type="hidden" id="userFormId" />
           <div class="form-group">
-            <label class="form-label">Full Name <span class="required">*</span></label>
-            <input type="text" class="form-control" id="userFormName" placeholder="e.g. Prajwal Shendge" />
+            <label class="form-label">Full Name <span
+                class="required">*</span></label>
+            <input type="text" class="form-control" id="userFormName"
+              placeholder="e.g. Prajwal Shendge" />
           </div>
           <div class="form-group" id="userEmailGroup">
-            <label class="form-label">Gmail Address <span class="required">*</span></label>
-            <input type="email" class="form-control" id="userFormEmail" placeholder="user@gmail.com" />
-            <small style="color:var(--text-muted);font-size:11px;margin-top:4px;display:block;font-family:'Sora',sans-serif;">Must match their Google account email exactly.</small>
+            <label class="form-label">Gmail Address <span
+                class="required">*</span></label>
+            <input type="email" class="form-control" id="userFormEmail"
+              placeholder="user@gmail.com" />
+            <small
+              style="color:var(--text-muted);font-size:11px;margin-top:4px;display:block;font-family:'Sora',sans-serif;">Must
+              match their Google account email exactly.</small>
           </div>
           <div class="form-group">
-            <label class="form-label">Role <span class="required">*</span></label>
+            <label class="form-label">Role <span
+                class="required">*</span></label>
             <select class="form-control" id="userFormRole">
-              <option value="bi_developer">BI Developer — View &amp; Download only</option>
-              <option value="contributor">Contributor — Add content (requires approval)</option>
+              <option value="bi_developer">BI Developer — View &amp; Download
+                only</option>
+              <option value="contributor">Contributor — Add content (requires
+                approval)</option>
               <option value="super_admin">Super Admin — Full Access</option>
             </select>
           </div>
           <div class="form-group" id="userActiveGroup" style="display:none;">
             <label class="form-check">
-              <input type="checkbox" id="userFormActive" checked /> Account Active
+              <input type="checkbox" id="userFormActive" checked /> Account
+              Active
             </label>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="closeModal('userFormOverlay')">Cancel</button>
-          <button class="btn btn-primary" onclick="saveUser()"><i class="fa fa-save"></i> Save</button>
+          <button class="btn btn-secondary"
+            onclick="closeModal('userFormOverlay')">Cancel</button>
+          <button class="btn btn-primary" onclick="saveUser()"><i
+              class="fa fa-save"></i> Save</button>
         </div>
       </div>
     </div>
@@ -387,16 +494,21 @@
             <i class="fa fa-file-powerpoint" style="color:#f76707;"></i>
             <span id="pbixModalDashboardName">Power BI Files</span>
           </span>
-          <button class="modal-close" onclick="closeModal('pbixOverlay')"><i class="fa fa-times"></i></button>
+          <button class="modal-close" onclick="closeModal('pbixOverlay')"><i
+              class="fa fa-times"></i></button>
         </div>
         <div id="pbixUploadSection" style="display:none;">
           <div class="pbix-upload-area" id="pbixUploadArea">
             <div class="pbix-upload-inner">
-              <div class="pbix-upload-icon"><i class="fa fa-cloud-arrow-up"></i></div>
+              <div class="pbix-upload-icon"><i
+                  class="fa fa-cloud-arrow-up"></i></div>
               <div class="pbix-upload-label">Upload Power BI File</div>
-              <div class="pbix-upload-hint">Click to browse or drag &amp; drop · .pbix / .pbit · max 2 GB</div>
-              <input type="file" id="pbixFileInput" accept=".pbix,.pbit" style="display:none;" onchange="onPbixFileSelected(this)" />
-              <button class="btn btn-primary btn-sm" style="margin-top:12px;" onclick="document.getElementById('pbixFileInput').click()">
+              <div class="pbix-upload-hint">Click to browse or drag &amp; drop ·
+                .pbix / .pbit · max 2 GB</div>
+              <input type="file" id="pbixFileInput" accept=".pbix,.pbit"
+                style="display:none;" onchange="onPbixFileSelected(this)" />
+              <button class="btn btn-primary btn-sm" style="margin-top:12px;"
+                onclick="document.getElementById('pbixFileInput').click()">
                 <i class="fa fa-folder-open"></i> Choose File
               </button>
             </div>
@@ -404,22 +516,32 @@
           <div id="pbixUploadForm" style="display:none;padding:0 26px 20px;">
             <div class="pbix-selected-file" id="pbixSelectedFile"></div>
             <div class="form-group" style="margin-top:14px;">
-              <label class="form-label">Display Name <span class="required">*</span></label>
-              <input type="text" class="form-control" id="pbixDisplayName" placeholder="e.g. Sales Analysis v2" />
+              <label class="form-label">Display Name <span
+                  class="required">*</span></label>
+              <input type="text" class="form-control" id="pbixDisplayName"
+                placeholder="e.g. Sales Analysis v2" />
             </div>
             <div class="form-group">
               <label class="form-label">Notes / Description</label>
-              <textarea class="form-control" id="pbixDescription" placeholder="e.g. Contains DAX measures for Q1..." style="min-height:64px;"></textarea>
+              <textarea class="form-control" id="pbixDescription"
+                placeholder="e.g. Contains DAX measures for Q1..."
+                style="min-height:64px;"></textarea>
             </div>
             <div style="display:flex;gap:10px;justify-content:flex-end;">
-              <button class="btn btn-secondary btn-sm" onclick="cancelPbixUpload()"><i class="fa fa-times"></i> Cancel</button>
-              <button class="btn btn-primary btn-sm" id="pbixUploadBtn" onclick="uploadPbixFile()"><i class="fa fa-upload"></i> Upload File</button>
+              <button class="btn btn-secondary btn-sm"
+                onclick="cancelPbixUpload()"><i class="fa fa-times"></i>
+                Cancel</button>
+              <button class="btn btn-primary btn-sm" id="pbixUploadBtn"
+                onclick="uploadPbixFile()"><i class="fa fa-upload"></i> Upload
+                File</button>
             </div>
           </div>
         </div>
-        <div id="pbixDivider" style="height:1px;background:var(--border);display:none;"></div>
+        <div id="pbixDivider"
+          style="height:1px;background:var(--border);display:none;"></div>
         <div class="modal-body" style="padding-top:20px;">
-          <div id="pbixFileList"><div class="pbix-loading"><i class="fa fa-spinner fa-spin"></i> Loading files…</div></div>
+          <div id="pbixFileList"><div class="pbix-loading"><i
+                class="fa fa-spinner fa-spin"></i> Loading files…</div></div>
         </div>
       </div>
     </div>
@@ -428,23 +550,29 @@
     <div class="modal-overlay" id="pbixEditOverlay">
       <div class="modal" style="max-width:440px;">
         <div class="modal-header">
-          <span class="modal-title"><i class="fa fa-pen"></i> Edit File Info</span>
-          <button class="modal-close" onclick="closeModal('pbixEditOverlay')"><i class="fa fa-times"></i></button>
+          <span class="modal-title"><i class="fa fa-pen"></i> Edit File
+            Info</span>
+          <button class="modal-close" onclick="closeModal('pbixEditOverlay')"><i
+              class="fa fa-times"></i></button>
         </div>
         <div class="modal-body">
           <input type="hidden" id="pbixEditId" />
           <div class="form-group">
-            <label class="form-label">Display Name <span class="required">*</span></label>
+            <label class="form-label">Display Name <span
+                class="required">*</span></label>
             <input type="text" class="form-control" id="pbixEditDisplayName" />
           </div>
           <div class="form-group">
             <label class="form-label">Notes / Description</label>
-            <textarea class="form-control" id="pbixEditDescription" style="min-height:64px;"></textarea>
+            <textarea class="form-control" id="pbixEditDescription"
+              style="min-height:64px;"></textarea>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="closeModal('pbixEditOverlay')">Cancel</button>
-          <button class="btn btn-primary" onclick="savePbixEdit()"><i class="fa fa-save"></i> Save</button>
+          <button class="btn btn-secondary"
+            onclick="closeModal('pbixEditOverlay')">Cancel</button>
+          <button class="btn btn-primary" onclick="savePbixEdit()"><i
+              class="fa fa-save"></i> Save</button>
         </div>
       </div>
     </div>
@@ -453,13 +581,16 @@
     <div class="modal-overlay" id="confirmOverlay">
       <div class="modal confirm-dialog">
         <div class="confirm-body">
-          <div class="confirm-icon"><i class="fa fa-triangle-exclamation"></i></div>
+          <div class="confirm-icon"><i
+              class="fa fa-triangle-exclamation"></i></div>
           <h3 id="confirmTitle">Delete Item?</h3>
           <p id="confirmMsg">This action cannot be undone.</p>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="closeModal('confirmOverlay')">Cancel</button>
-          <button class="btn btn-danger" onclick="confirmDeleteAction()"><i class="fa fa-trash"></i> Delete</button>
+          <button class="btn btn-secondary"
+            onclick="closeModal('confirmOverlay')">Cancel</button>
+          <button class="btn btn-danger" onclick="confirmDeleteAction()"><i
+              class="fa fa-trash"></i> Delete</button>
         </div>
       </div>
     </div>
@@ -470,7 +601,7 @@
     <script>
 'use strict';
 
-var API_URL = 'php/api.php';
+var API_URL = 'api/api.api';
 
 var state = {
   view: 'industries',
@@ -1484,9 +1615,12 @@ function errorState(t,s){return'<div class="state-box"><div class="state-icon wa
           <span class="modal-title">
             <i class="fa fa-tasks" style="color:#f76707;"></i>
             Approval Queue
-            <span class="aq-modal-badge" id="aqModalBadge" style="display:none;">0</span>
+            <span class="aq-modal-badge" id="aqModalBadge"
+              style="display:none;">0</span>
           </span>
-          <button class="modal-close" onclick="closeModal('approvalQueueOverlay')"><i class="fa fa-times"></i></button>
+          <button class="modal-close"
+            onclick="closeModal('approvalQueueOverlay')"><i
+              class="fa fa-times"></i></button>
         </div>
         <div class="modal-body aq-modal-body">
           <div id="approvalQueueList"></div>
@@ -1498,19 +1632,27 @@ function errorState(t,s){return'<div class="state-box"><div class="state-icon wa
     <div class="modal-overlay" id="rejectOverlay">
       <div class="modal" style="max-width:440px;">
         <div class="modal-header">
-          <span class="modal-title"><i class="fa fa-times-circle" style="color:#c92a2a;"></i> Reject Submission</span>
-          <button class="modal-close" onclick="closeModal('rejectOverlay')"><i class="fa fa-times"></i></button>
+          <span class="modal-title"><i class="fa fa-times-circle"
+              style="color:#c92a2a;"></i> Reject Submission</span>
+          <button class="modal-close" onclick="closeModal('rejectOverlay')"><i
+              class="fa fa-times"></i></button>
         </div>
         <div class="modal-body">
-          <p style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Rejecting: <strong id="rejectItemName"></strong></p>
+          <p
+            style="font-size:13px;color:var(--text-muted);margin-bottom:16px;">Rejecting:
+            <strong id="rejectItemName"></strong></p>
           <div class="form-group">
             <label class="form-label">Reason (shown to contributor)</label>
-            <textarea class="form-control" id="rejectReason" placeholder="e.g. Duplicate entry, incorrect category, missing information..." style="min-height:80px;"></textarea>
+            <textarea class="form-control" id="rejectReason"
+              placeholder="e.g. Duplicate entry, incorrect category, missing information..."
+              style="min-height:80px;"></textarea>
           </div>
         </div>
         <div class="modal-footer">
-          <button class="btn btn-secondary" onclick="closeModal('rejectOverlay')">Cancel</button>
-          <button class="btn btn-danger" onclick="confirmReject()"><i class="fa fa-times"></i> Confirm Reject</button>
+          <button class="btn btn-secondary"
+            onclick="closeModal('rejectOverlay')">Cancel</button>
+          <button class="btn btn-danger" onclick="confirmReject()"><i
+              class="fa fa-times"></i> Confirm Reject</button>
         </div>
       </div>
     </div>
@@ -1519,8 +1661,11 @@ function errorState(t,s){return'<div class="state-box"><div class="state-icon wa
     <div class="modal-overlay" id="mySubmissionsOverlay">
       <div class="modal aq-modal">
         <div class="modal-header">
-          <span class="modal-title"><i class="fa fa-paper-plane" style="color:#9c36b5;"></i> My Submissions</span>
-          <button class="modal-close" onclick="closeModal('mySubmissionsOverlay')"><i class="fa fa-times"></i></button>
+          <span class="modal-title"><i class="fa fa-paper-plane"
+              style="color:#9c36b5;"></i> My Submissions</span>
+          <button class="modal-close"
+            onclick="closeModal('mySubmissionsOverlay')"><i
+              class="fa fa-times"></i></button>
         </div>
         <div class="modal-body aq-modal-body">
           <div id="mySubmissionsList"></div>
@@ -1532,8 +1677,10 @@ function errorState(t,s){return'<div class="state-box"><div class="state-icon wa
     <div class="modal-overlay" id="notifOverlay">
       <div class="modal aq-modal notif-modal">
         <div class="modal-header">
-          <span class="modal-title"><i class="fa fa-bell" style="color:#2d4cc8;"></i> Notifications</span>
-          <button class="modal-close" onclick="closeModal('notifOverlay')"><i class="fa fa-times"></i></button>
+          <span class="modal-title"><i class="fa fa-bell"
+              style="color:#2d4cc8;"></i> Notifications</span>
+          <button class="modal-close" onclick="closeModal('notifOverlay')"><i
+              class="fa fa-times"></i></button>
         </div>
         <div class="modal-body aq-modal-body">
           <div id="notifList"></div>

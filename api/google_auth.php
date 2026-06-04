@@ -1,8 +1,8 @@
-<?php
-// php/google_auth.php
+<?api
+// api/google_auth.api
 // Redirects the user to Google's OAuth consent screen
 
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/config.api';
 
 // Generate and store a random state value to prevent CSRF
 $state = bin2hex(random_bytes(16));

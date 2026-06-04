@@ -11,13 +11,15 @@
   <link rel="icon" type="image/png" href="logo/favicon.png" />
   <link rel="stylesheet" href="css/login.css" />
 
-  <script>
-  // ── Always destroy server session when login page loads ──
-  // This ensures every fresh open = logged out state
-  fetch('php/api.php?action=logout', { method: 'POST' }).catch(function() {});
-
-  // ── Also clear sessionStorage gate ───────────────────────
-  sessionStorage.removeItem('dc_authed');
+   <script>
+  // ── If already logged in (session alive or remember-me cookie present),
+  //    skip the login page and go straight to the app.
+  (function() {
+    fetch('api/api.api?action=session_check', { method: 'GET' })
+      .then(function(r) { return r.json(); })
+      .then(function(d) { if (d.logged_in) window.location.replace('index.html'); })
+      .catch(function() {});
+  })();
   </script>
 </head>
 <body>
@@ -79,7 +81,7 @@
         </div>
 
         <!-- Google Button -->
-        <a class="btn-google" href="php/google_auth.php" id="googleBtn">
+        <a class="btn-google" href="api/google_auth.api" id="googleBtn">
           <svg width="20" height="20" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
             <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
             <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>

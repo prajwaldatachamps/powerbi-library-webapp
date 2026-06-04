@@ -1,7 +1,7 @@
-<?php
-// php/google_callback.php
+<?api
+// api/google_callback.api
 
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/config.api';
 
 // ── Validate state (CSRF protection) ─────────────────────
 if (empty($_GET['state']) || empty($_SESSION['oauth_state']) || $_GET['state'] !== $_SESSION['oauth_state']) {
@@ -88,7 +88,6 @@ $stmt->execute([$googleEmail]);
 $user = $stmt->fetch();
 
 if (!$user) {
-    // Destroy session so nothing lingers
     session_unset();
     session_destroy();
     header('Location: ../login.html?error=not_authorized&email=' . urlencode($googleEmail));
@@ -106,8 +105,11 @@ $_SESSION['user_email']   = $googleEmail;
 $_SESSION['user_role']    = $user['role'];
 $_SESSION['user_picture'] = $googlePic;
 
-// ── Redirect to index with a one-time login token in URL ──
-// index.html reads this param, sets sessionStorage, then removes it from URL
-// This is the bridge between PHP session and sessionStorage
-header('Location: ../index.html?auth=1');
+// ── Set remember-me cookie (persists login for 25 days) ───
+// Closing the browser tab/window will NOT log the user out.
+// The cookie + DB token automatically restore the session on next visit.
+set_remember_me($pdo, (int) $user['id']);
+
+// ── Redirect to app ───────────────────────────────────────
+header('Location: ../index.html?login=success');
 exit;

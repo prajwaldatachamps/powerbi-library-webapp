@@ -1,0 +1,15 @@
+{
+  "functions": {
+    "api/*.api": {
+      "runtime": "vercel-api@0.9.0"
+    }
+  },
+  "routes": [
+    { "src": "/api/(.*)", "dest": "/api/$1" },
+    { "src": "/(.*\\.html)", "dest": "/$1" },
+    { "src": "/(.*\\.css)", "dest": "/$1" },
+    { "src": "/(.*\\.js)", "dest": "/$1" },
+    { "src": "/(.*\\.png|.*\\.jpg|.*\\.ico|.*\\.svg)", "dest": "/$1" },
+    { "src": "/", "dest": "/login.html" }
+  ]
+}

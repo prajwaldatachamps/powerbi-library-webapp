@@ -1,11 +1,11 @@
-<?php
+<?api
 /**
- * php/kpi_api.php — KPI REST API
+ * api/kpi_api.api — KPI REST API
  * Fixed: industry_id is fully optional for create_kpi
  * Added: bulk_add_tags endpoint for bulk tag assignment
  */
 
-require_once __DIR__ . '/config.php';
+require_once __DIR__ . '/config.api';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
@@ -23,7 +23,7 @@ $pdo    = getPDO();
 
 $body = [];
 if (in_array($method, ['POST', 'PUT', 'DELETE'], true)) {
-    $raw = file_get_contents('php://input');
+    $raw = file_get_contents('api://input');
     if ($raw !== false && $raw !== '') {
         $decoded = json_decode($raw, true);
         if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
