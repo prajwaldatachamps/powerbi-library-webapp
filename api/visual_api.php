@@ -1,4 +1,4 @@
-<?api
+<?php
 // api/visual_api.api
 // UPDATED: add_visual_usage now accepts plain-text client_name / dashboard_name
 //          (no foreign-key lookup required — text stored directly in visual_usage)
