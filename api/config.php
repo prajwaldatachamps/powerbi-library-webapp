@@ -1,15 +1,15 @@
 <?php
 // php/config.php
 
-define('DB_HOST', getenv('DB_HOST'));
-define('DB_NAME', getenv('DB_NAME'));
-define('DB_USER', getenv('DB_USER'));
-define('DB_PASS', getenv('DB_PASS'));
-define('DB_PORT', getenv('DB_PORT') ?: 3306);
+define('DB_HOST', env_value('DB_HOST'));
+define('DB_NAME', env_value('DB_NAME'));
+define('DB_USER', env_value('DB_USER'));
+define('DB_PASS', env_value('DB_PASS'));
+define('DB_PORT', env_value('DB_PORT') ?: 3306);
 
-define('GOOGLE_CLIENT_ID', getenv('GOOGLE_CLIENT_ID'));
-define('GOOGLE_CLIENT_SECRET', getenv('GOOGLE_CLIENT_SECRET'));
-define('GOOGLE_REDIRECT_URI', getenv('GOOGLE_REDIRECT_URI'));
+define('GOOGLE_CLIENT_ID', env_value('GOOGLE_CLIENT_ID'));
+define('GOOGLE_CLIENT_SECRET', env_value('GOOGLE_CLIENT_SECRET'));
+define('GOOGLE_REDIRECT_URI', env_value('GOOGLE_REDIRECT_URI'));
 
 function getPDO(): PDO {
     static $pdo = null;
