@@ -39,13 +39,14 @@ restore_auth_from_cookie();
 
 $pdo = getPDO();
 
-// define('PBIX_UPLOAD_DIR', __DIR__ . '/../uploads/pbix/');
+
+define('PBIX_UPLOAD_DIR', __DIR__ . '/../uploads/pbix/');
 define('PBIX_MAX_SIZE', 2 * 1024 * 1024 * 1024);
 define('PBIX_WEB_PATH', 'uploads/pbix/');
 
-if (!is_dir(PBIX_UPLOAD_DIR)) {
-    mkdir(PBIX_UPLOAD_DIR, 0755, true);
-}
+// if (!is_dir(PBIX_UPLOAD_DIR)) {
+//     mkdir(PBIX_UPLOAD_DIR, 0755, true);
+// }
 
 $body = [];
 
