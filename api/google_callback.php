@@ -1,4 +1,4 @@
-<?api
+<?php
 // api/google_callback.api
 
 require_once __DIR__ . '/config.api';
