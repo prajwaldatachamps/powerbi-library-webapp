@@ -1,7 +1,7 @@
 <?php
-// api/google_callback.api
+// api/google_callback.php
 
-require_once __DIR__ . '/config.api';
+require_once __DIR__ . '/config.php';
 
 // ── Validate state (CSRF protection) ─────────────────────
 if (empty($_GET['state']) || empty($_SESSION['oauth_state']) || $_GET['state'] !== $_SESSION['oauth_state']) {
