@@ -13,7 +13,7 @@ set_exception_handler(function($e) {
     exit;
 });
 
-require_once __DIR__ . '/config.api';
+require_once __DIR__ . '/config.php';
 
 header('Content-Type: application/json');
 header('X-Content-Type-Options: nosniff');
