@@ -15,7 +15,10 @@
   // ── If already logged in (session alive or remember-me cookie present),
   //    skip the login page and go straight to the app.
   (function() {
-    fetch('api/api.php?action=session_check', { method: 'GET' })
+  fetch('api/api.php?action=session_check', {
+    credentials: 'include',
+    cache: 'no-store'
+})
       .then(function(r) { return r.json(); })
       .then(function(d) { if (d.logged_in) window.location.replace('index.html'); })
       .catch(function() {});
