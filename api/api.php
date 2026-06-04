@@ -43,19 +43,25 @@ if (in_array($method, ['PUT', 'DELETE', 'POST'])) {
 //  SESSION CHECK
 // ============================================================
 if ($action === 'session_check') {
+
+    if (empty($_SESSION['user_id'])) {
+        restore_auth_from_cookie();
+    }
+
     $role = $_SESSION['user_role'] ?? '';
+
     json_out([
         'success'         => true,
         'logged_in'       => !empty($_SESSION['user_id']),
-        'name'            => $_SESSION['user_name']    ?? null,
-        'email'           => $_SESSION['user_email']   ?? null,
+        'name'            => $_SESSION['user_name'] ?? null,
+        'email'           => $_SESSION['user_email'] ?? null,
         'role'            => $role,
         'picture'         => $_SESSION['user_picture'] ?? null,
         'is_super_admin'  => $role === 'super_admin',
         'is_contributor'  => $role === 'contributor',
         'is_bi_developer' => $role === 'bi_developer',
         'can_add_content' => in_array($role, ['super_admin', 'contributor']),
-        'pending_count'   => $role === 'super_admin' ? get_pending_count($pdo) : 0,
+        'pending_count'   => $role === 'super_admin' ? get_pending_count($pdo) : 0
     ]);
 }
 
@@ -63,8 +69,15 @@ if ($action === 'session_check') {
 //  LOGOUT
 // ============================================================
 if ($action === 'logout' && $method === 'POST') {
-    session_unset(); session_destroy();
-    json_out(['success' => true]);
+
+    session_unset();
+    session_destroy();
+
+    clear_auth_cookie();
+
+    json_out([
+        'success' => true
+    ]);
 }
 
 // ============================================================
