@@ -1,4 +1,4 @@
-<?api
+<?php
 /**
  * api/kpi_api.api — KPI REST API
  * Fixed: industry_id is fully optional for create_kpi
