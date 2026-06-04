@@ -1,4 +1,4 @@
-<?api
+<?php
 // api/api.api
 
 set_error_handler(function($errno, $errstr, $errfile, $errline) {
