@@ -5,7 +5,7 @@
  * Added: bulk_add_tags endpoint for bulk tag assignment
  */
 
-require_once __DIR__ . '/config.api';
+require_once __DIR__ . '/config.php';
 
 header('Content-Type: application/json; charset=utf-8');
 header('Access-Control-Allow-Origin: *');
