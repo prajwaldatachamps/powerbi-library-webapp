@@ -1,4 +1,4 @@
-<?api
+<?php
 // api/google_auth.api
 // Redirects the user to Google's OAuth consent screen
 
