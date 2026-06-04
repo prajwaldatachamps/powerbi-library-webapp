@@ -10,7 +10,7 @@ $password = 'Admin@1234';                        // ← change before running
 $hash     = password_hash($password, PASSWORD_BCRYPT, ['cost' => 12]);
 
 // Auto-update the admin row in the database
-require_once __DIR__ . '/config.api';
+require_once __DIR__ . '/config.php';
 $pdo = getPDO();
 $pdo->prepare("UPDATE admins SET password = ? WHERE email = 'admin@datachamps.com'")
     ->execute([$hash]);
