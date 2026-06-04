@@ -7,6 +7,10 @@
   },
   "routes": [
     {
+      "src": "/$",
+      "dest": "/login.html"
+    },
+    {
       "src": "/api/(.*)\\.php",
       "dest": "/api/$1.php"
     },
