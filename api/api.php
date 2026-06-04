@@ -1,58 +1,81 @@
 <?php
-// api/api.api
+// api/api.php
 
 set_error_handler(function($errno, $errstr, $errfile, $errline) {
     header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => "api Error [$errno]: $errstr in $errfile on line $errline"]);
+    echo json_encode([
+        'success' => false,
+        'message' => "PHP Error [$errno]: $errstr in $errfile on line $errline"
+    ]);
     exit;
 });
 
 set_exception_handler(function($e) {
     header('Content-Type: application/json');
-    echo json_encode(['success' => false, 'message' => 'Exception: ' . $e->getMessage()]);
+    echo json_encode([
+        'success' => false,
+        'message' => 'Exception: ' . $e->getMessage()
+    ]);
     exit;
 });
 
 require_once __DIR__ . '/config.php';
 
 header('Content-Type: application/json');
-header('Access-Control-Allow-Origin: *');
+header('Access-Control-Allow-Origin: https://powerbi-library-webapp.vercel.app');
+header('Access-Control-Allow-Credentials: true');
 header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
 header('Access-Control-Allow-Headers: Content-Type');
 
-if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') { http_response_code(204); exit; }
+if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
+    http_response_code(204);
+    exit;
+}
 
 $method = $_SERVER['REQUEST_METHOD'];
 $action = isset($_GET['action']) ? trim($_GET['action']) : '';
-$pdo    = getPDO();
+
+restore_auth_from_cookie();
+
+$pdo = getPDO();
 
 define('PBIX_UPLOAD_DIR', __DIR__ . '/../uploads/pbix/');
-define('PBIX_MAX_SIZE',   2 * 1024 * 1024 * 1024);
-define('PBIX_WEB_PATH',   'uploads/pbix/');
+define('PBIX_MAX_SIZE', 2 * 1024 * 1024 * 1024);
+define('PBIX_WEB_PATH', 'uploads/pbix/');
 
-if (!is_dir(PBIX_UPLOAD_DIR)) { mkdir(PBIX_UPLOAD_DIR, 0755, true); }
+if (!is_dir(PBIX_UPLOAD_DIR)) {
+    mkdir(PBIX_UPLOAD_DIR, 0755, true);
+}
 
 $body = [];
+
 if (in_array($method, ['PUT', 'DELETE', 'POST'])) {
-    $raw = file_get_contents('api://input');
-    if ($raw) { $decoded = json_decode($raw, true); if (is_array($decoded)) $body = $decoded; }
-    if (!empty($_POST)) $body = array_merge($body, $_POST);
+    $raw = file_get_contents('php://input');
+
+    if ($raw) {
+        $decoded = json_decode($raw, true);
+        if (is_array($decoded)) {
+            $body = $decoded;
+        }
+    }
+
+    if (!empty($_POST)) {
+        $body = array_merge($body, $_POST);
+    }
 }
 
 // ============================================================
 //  SESSION CHECK
 // ============================================================
 if ($action === 'session_check') {
-
-    if (empty($_SESSION['user_id'])) {
-        restore_auth_from_cookie();
-    }
+    restore_auth_from_cookie();
 
     $role = $_SESSION['user_role'] ?? '';
 
     json_out([
         'success'         => true,
         'logged_in'       => !empty($_SESSION['user_id']),
+        'user_id'         => $_SESSION['user_id'] ?? null,
         'name'            => $_SESSION['user_name'] ?? null,
         'email'           => $_SESSION['user_email'] ?? null,
         'role'            => $role,
@@ -69,15 +92,11 @@ if ($action === 'session_check') {
 //  LOGOUT
 // ============================================================
 if ($action === 'logout' && $method === 'POST') {
-
     session_unset();
     session_destroy();
-
     clear_auth_cookie();
 
-    json_out([
-        'success' => true
-    ]);
+    json_out(['success' => true]);
 }
 
 // ============================================================
