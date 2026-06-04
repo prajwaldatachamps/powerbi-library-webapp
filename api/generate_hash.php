@@ -1,4 +1,4 @@
-<?api
+<?php
 // ============================================================
 //  generate_hash.api
 //  Run this ONCE in your browser to get the bcrypt hash,
