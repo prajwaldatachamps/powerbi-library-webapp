@@ -86,7 +86,7 @@ $user = $stmt->fetch();
 if (!$user) {
     session_unset();
     session_destroy();
-    clear_login_cookies();
+    clear_auth_cookie();
 
     header('Location: ../login.html?error=not_authorized&email=' . urlencode($googleEmail));
     exit;
@@ -101,7 +101,7 @@ $_SESSION['user_email']   = $googleEmail;
 $_SESSION['user_role']    = $user['role'];
 $_SESSION['user_picture'] = $googlePic;
 
-set_login_cookies([
+set_auth_cookie([
     'id'      => $user['id'],
     'name'    => $googleName,
     'email'   => $googleEmail,
