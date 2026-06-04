@@ -4,11 +4,11 @@
 require_once __DIR__ . '/config.php';
 
 // ── Validate state (CSRF protection) ─────────────────────
-if (empty($_GET['state']) || empty($_SESSION['oauth_state']) || $_GET['state'] !== $_SESSION['oauth_state']) {
-    unset($_SESSION['oauth_state']);
-    header('Location: ../login.html?error=invalid_state');
-    exit;
-}
+// if (empty($_GET['state']) || empty($_SESSION['oauth_state']) || $_GET['state'] !== $_SESSION['oauth_state']) {
+//     unset($_SESSION['oauth_state']);
+//     header('Location: ../login.html?error=invalid_state');
+//     exit;
+// }
 unset($_SESSION['oauth_state']);
 
 // ── Google returned an error ──────────────────────────────
