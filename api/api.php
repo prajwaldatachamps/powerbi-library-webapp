@@ -39,7 +39,7 @@ restore_auth_from_cookie();
 
 $pdo = getPDO();
 
-define('PBIX_UPLOAD_DIR', __DIR__ . '/../uploads/pbix/');
+// define('PBIX_UPLOAD_DIR', __DIR__ . '/../uploads/pbix/');
 define('PBIX_MAX_SIZE', 2 * 1024 * 1024 * 1024);
 define('PBIX_WEB_PATH', 'uploads/pbix/');
 
