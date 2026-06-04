@@ -108,7 +108,7 @@ $_SESSION['user_picture'] = $googlePic;
 // ── Set remember-me cookie (persists login for 25 days) ───
 // Closing the browser tab/window will NOT log the user out.
 // The cookie + DB token automatically restore the session on next visit.
-set_remember_me($pdo, (int) $user['id']);
+// set_remember_me($pdo, (int) $user['id']);
 
 // ── Redirect to app ───────────────────────────────────────
 header('Location: ../index.html?login=success');
